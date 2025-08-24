@@ -1,0 +1,79 @@
+# Example configuration for a hypothetical app
+
+title = "Example TOML Config"
+# version = "1.2.3"
+# debug = true
+# max_connections = 256
+# pi_value = 3.1415926535
+
+# Arrays
+# servers = ["alpha", "beta", "gamma"]
+# ports = [8000, 8001, 8002]
+# enabled_features = ["logging", "metrics", "cache"]
+
+# database.replica_backup = { host = "replica2.local", port = 5434 }
+
+# Dates and times
+# release_date = 2025-08-24T12:00:00Z
+# last_backup = 2025-08-23T23:45:12-07:00
+
+# Nested table for database settings
+# [database]
+# type = "postgres"
+# host = "localhost"
+# port = 5432
+# username = "dbuser"
+# password = "secret"
+# pool_size = 10
+
+# Nested tables with subtables
+# [database.replica]
+# host = "replica1.local"
+# port = 5433
+
+# Table for application modules
+# [modules]
+
+# [modules.logging]
+# level = "info"
+# file = "/var/log/app.log"
+
+# [modules.metrics]
+# enabled = true
+# interval_seconds = 30
+
+# [modules.cache]
+# enabled = true
+# type = "redis"
+# host = "127.0.0.1"
+# port = 6379
+# ttl_seconds = 600
+
+# Table array for users
+# [[users]]
+# name = "Alice"
+# email = "alice@example.com"
+# roles = ["admin", "developer"]
+
+# [[users]]
+# name = "Bob"
+# email = "bob@example.com"
+# roles = ["developer"]
+
+# [[users]]
+# name = "Carol"
+# email = "carol@example.com"
+# roles = ["tester"]
+
+# Inline tables
+# [app]
+# name = "SuperApp"
+# authors = ["Alice", "Bob"]
+# license = "MIT"
+
+# [notifications]
+# enabled = true
+# channel = "🌐-general"
+# welcome_message = "Hello, new user! 🎉👋"
+# reminder_message = "Don't forget to check updates! 🕒🔔"
+# priority_levels = ["low", "medium", "high 🚨"]
