@@ -46,11 +46,6 @@ local toml_data = [=[
 -- Number of iterations for the benchmark
 local iterations = 1
 
--- Warm-up (optional, helps with LuaJIT)
-for _ = 1, 10 do
-    local data, err = tomlua.decode(toml_data)
-end
-
 -- Benchmark
 local start_time = os.clock()
 
