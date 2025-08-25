@@ -402,7 +402,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
             if (d == '}') {
                 iter_next(src);
                 return true;
-            } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
+            } else if (d == ',' || d == ' ' || d == '\t') {
                 iter_next(src);
                 continue;
             }
