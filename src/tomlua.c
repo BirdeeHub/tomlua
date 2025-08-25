@@ -409,7 +409,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
             struct Keys k = parse_keys(src);
             if (k.err != NULL) { free_keys(&k); return false; }
             if (!parse_value(L, src)) { free_keys(&k); return false; }
-            set_kv(L, &k);
+            if (!set_kv(L, &k)) { free_keys(&k); return false; }
             free_keys(&k);
         }
         return false; // missing closing }
