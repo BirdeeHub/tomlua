@@ -15,11 +15,7 @@ local toml_data = [=[
     testkey6 = [
         1, 2, 3, 4, 5
     ]
-    testkey7 = {
-        a.d = 1,
-        b = [ 2, 3 ], # testing
-        c = 3
-    }
+    testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
     # dasdsadsa = aaa2121dasssss22
     # dasdsadsa = 22aaa2121dasssss22
     [[test]]
@@ -40,7 +36,7 @@ local toml_data = [=[
 -- print(contents)
 -- print(inspect(tomlua))
 -- Number of iterations for the benchmark
-local iterations = 100000
+local iterations = 1
 
 -- Warm-up (optional, helps with LuaJIT)
 for _ = 1, 10 do
