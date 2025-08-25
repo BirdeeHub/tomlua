@@ -6,9 +6,7 @@
 -- end
 local inspect = require('inspect')
 local tomlua = require("tomlua")
--- print(contents)
--- print(inspect(tomlua))
-local data, err = tomlua.decode([=[
+local toml_data = [=[
     testkey = "value"
     testkey2 = true
     testkey3 = false
@@ -25,7 +23,7 @@ local data, err = tomlua.decode([=[
     # dasdsadsa = aaa2121dasssss22
     # dasdsadsa = 22aaa2121dasssss22
     [[test]]
-    names.hello = "hi"
+    names.hello = "h\u1234i"
     key = "value"
     [[test]]
     key = "value"
@@ -38,7 +36,35 @@ local data, err = tomlua.decode([=[
     "tk1-assass.com" = "value"
     [[test2.key2]]
     das = "dasda"
-]=])
-print(inspect(data), inspect(err))
+]=]
+-- print(contents)
+-- print(inspect(tomlua))
+-- Number of iterations for the benchmark
+local iterations = 100000
+
+-- Warm-up (optional, helps with LuaJIT)
+for _ = 1, 10 do
+    local data, err = tomlua.decode(toml_data)
+end
+
+-- Benchmark
+local start_time = os.clock()
+
+local last_result
+local last_error
+
+for i = 1, iterations do
+    local data, err = tomlua.decode(toml_data)
+    last_result = data
+    last_error = err
+end
+
+local elapsed = os.clock() - start_time
+
+print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f ns/iteration", iterations, elapsed, iterations / elapsed))
+print("Last result:", inspect(last_result))
+print("Last error:", last_error)
+
+-- print("run", tostring(i), " : ", inspect(data), " : ", inspect(err))
 -- data = tomlua.decode(contents)
 -- print(inspect(data))
