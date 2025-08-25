@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <lua.h>
-#include <string.h>
 #include <lauxlib.h>
 #include <stdint.h>
 #include "str_buf.h"
@@ -44,6 +43,7 @@ enum ExprType {
     EXPR_K_V,
     HEADING_TABLE,
     HEADING_ARRAY,
+    END_OF_FILE,
 };
 
 struct Keys {
@@ -222,7 +222,7 @@ static struct Keys parse_keys(struct str_iter *src) {
         }
     }
     if (!iter_peek(src).ok) {
-        dst.err = "EOF";
+        dst.type = END_OF_FILE;
     }
     return dst;
 }
@@ -464,7 +464,7 @@ static int tomlua_parse(lua_State *L) {
         size_t depth = 0;
         enum ExprType *type;
         struct Keys keys = parse_keys(&src);
-        if (keys.err != NULL && strcmp(keys.err, "EOF") == 0) { // doing literal string compare here works but strcmp doesnt?
+        if (keys.type == END_OF_FILE) {
             free_keys(&keys);
             break;
         }
