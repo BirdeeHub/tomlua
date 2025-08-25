@@ -491,7 +491,6 @@ static int tomlua_parse(lua_State *L) {
                 return 2;
             }
             // [1] current root table
-            continue;
         } else if (keys.type == HEADING_TABLE) {
             lua_pop(L, 1); // pop the table
             if (!heading_nav(L, &keys, false, top)) {
@@ -501,7 +500,6 @@ static int tomlua_parse(lua_State *L) {
                 free_keys(&keys);
                 return 2;
             }
-            continue;
         } else if (keys.type == HEADING_ARRAY) {
             lua_pop(L, 1); // pop the table
             if (!heading_nav(L, &keys, true, top)) {
@@ -511,7 +509,6 @@ static int tomlua_parse(lua_State *L) {
                 free_keys(&keys);
                 return 2;
             }
-            continue;
         }
         free_keys(&keys);
     }
