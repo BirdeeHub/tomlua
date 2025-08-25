@@ -57,7 +57,9 @@ struct Keys {
 static bool push_buf_to_keys(struct Keys *dst, struct str_buf buf) {
     if (dst->len >= dst->capacity) {
         dst->capacity *= 2;
-        dst->vals = realloc(dst->vals, dst->capacity * sizeof(struct str_buf));
+        struct str_buf *tmp = realloc(dst->vals, dst->capacity * sizeof(struct str_buf));
+        if (!tmp) { dst->err = "OOM"; return false; }
+        dst->vals = tmp;
         if (dst->vals == NULL) {
             dst->err = "OOM";
             return false;
