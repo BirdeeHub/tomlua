@@ -23,6 +23,7 @@ local data, err = tomlua.decode([=[
         c = 3
     }
     # dasdsadsa = aaa2121dasssss22
+    # dasdsadsa = 22aaa2121dasssss22
     [[test]]
     names.hello = "hi"
     key = "value"

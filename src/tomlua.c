@@ -342,7 +342,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         return true;
     }
 
-    // --- number (integer or float) ---
+    // --- number (integer or float) --- Should date be done here too?
     if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
         struct str_buf buf = new_str_buf();
         bool is_float = false;
@@ -368,7 +368,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         free_str_buf(&buf);
     }
 
-    // --- array ---
+    // --- array --- should allow trailing comma
     if (curr.v == '[') {
         iter_next(src);
         lua_newtable(L);
@@ -388,7 +388,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         return false; // missing closing ]
     }
 
-    // --- inline table ---
+    // --- inline table --- should not support multiline or trailing comma
     if (curr.v == '{') {
         iter_next(src);
         lua_newtable(L);
@@ -410,6 +410,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         return false; // missing closing }
     }
 
+    // skips through the end of the line on trailing comments and failed parses
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '#') {
