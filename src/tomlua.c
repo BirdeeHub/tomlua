@@ -457,6 +457,7 @@ static int tomlua_parse(lua_State *L) {
         enum ExprType *type;
         struct Keys keys = parse_keys(&src);
         if (keys.err != NULL && strcmp(keys.err, "EOF") == 0) { // doing literal string compare here works but strcmp doesnt?
+            free_keys(&keys);
             break;
         }
         if (keys.err != NULL) {
