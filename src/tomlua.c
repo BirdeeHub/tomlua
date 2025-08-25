@@ -216,6 +216,11 @@ static struct Keys parse_keys(struct str_iter *src) {
             }
         }
     }
+    if (res.len != 0) {
+        if (!push_buf_to_keys(&dst, res)) {
+            return dst;
+        }
+    }
     if (!iter_peek(src).ok) {
         dst.err = "EOF";
     }
