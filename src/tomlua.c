@@ -86,27 +86,25 @@ static struct Keys parse_keys(struct str_iter *src) {
         .err = NULL,
     };
     struct str_buf res = new_str_buf();
-    bool in_comment = false;
-    bool started = false;
     while (iter_peek(src).ok) {
         char c = iter_peek(src).v;
         if (c == '#') {
-            if (started) {
+            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
                 dst.err = "keys must be followed by ] ]] or =";
                 return dst;
             }
-            in_comment = true;
             iter_next(src);
-            continue;
-        }
-        if (in_comment) {
-            if (c == '\n') {
-                in_comment = false;
-            } else if (iter_starts_with(src, "\r\n", 2)) {
-                in_comment = false;
+            while (iter_peek(src).ok) {
+                if (iter_peek(src).v == '\n') {
+                    iter_next(src);
+                    break;
+                } else if (iter_starts_with(src, "\r\n", 2)) {
+                    iter_next(src);
+                    iter_next(src);
+                    break;
+                }
                 iter_next(src);
             }
-            iter_next(src);
             continue;
         }
         if (c == ' ' || c == '\t') {
@@ -115,25 +113,22 @@ static struct Keys parse_keys(struct str_iter *src) {
         } else if (iter_starts_with(src, "[[", 2)) {
             iter_next(src);
             iter_next(src);
-            if (started) {
+            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
                 dst.err = "[[ headings may not start in the middle of keys";
                 return dst;
             } else {
                 dst.type = HEADING_ARRAY;
-                started = true;
             }
         } else if (c == '[') {
             iter_next(src);
-            if (started) {
+            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
                 dst.err = "[ headings may not start in the middle of keys";
                 return dst;
             } else {
                 dst.type = HEADING_TABLE;
-                started = true;
             }
         } else if (c == '"') {
             iter_next(src);
-            started = true;
             char *err = parse_basic_string(&res, src);
             if (err != NULL) {
                 dst.err = err;
@@ -146,7 +141,7 @@ static struct Keys parse_keys(struct str_iter *src) {
             continue;
         } else if (c == '.') {
             iter_next(src);
-            if (!started) {
+            if (!(res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V)) {
                 dst.err = "key cannot start with a dot";
                 return dst;
             }
@@ -159,7 +154,6 @@ static struct Keys parse_keys(struct str_iter *src) {
             continue;
         } else if (is_identifier_char(c)) {
             iter_next(src);
-            started = true;
             if (!buf_push(&res, c)) {
                 dst.err = "OOM";
                 return dst;
@@ -167,7 +161,7 @@ static struct Keys parse_keys(struct str_iter *src) {
             continue;
         } else if (c == '\n') {
             iter_next(src);
-            if (started) {
+            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
                 dst.err = "literal newlines not allowed in keys without being in strings";
                 return dst;
             }
@@ -175,7 +169,7 @@ static struct Keys parse_keys(struct str_iter *src) {
         } else if(iter_starts_with(src, "\r\n", 2)) {
             iter_next(src);
             iter_next(src);
-            if (started) {
+            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
                 dst.err = "literal newlines not allowed in keys without being in strings";
                 return dst;
             }
