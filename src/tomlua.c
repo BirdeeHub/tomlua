@@ -412,7 +412,29 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
 
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
-        if (d == '\n' || d == '\r' || d == '#' || d == ' ' || d == '\t') break;
+        if (d == '#') {
+            iter_next(src);
+            while (iter_peek(src).ok) {
+                if (iter_peek(src).v == '\n') {
+                    iter_next(src);
+                    break;
+                } else if (iter_starts_with(src, "\r\n", 2)) {
+                    iter_next(src);
+                    iter_next(src);
+                    break;
+                }
+                iter_next(src);
+            }
+            break;
+        }
+        if (d == '\n') {
+            iter_next(src);
+            break;
+        } else if (iter_starts_with(src, "\r\n", 2)) {
+            iter_next(src);
+            iter_next(src);
+            break;
+        }
         iter_next(src);
     }
     return false;
@@ -448,7 +470,7 @@ static int tomlua_parse(lua_State *L) {
             if (!parse_value(L, &src)) {  // parse_value should push value on top of stack
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "failed to parse value for key %.*s", (int)keys.vals[keys.len - 1].len, keys.vals[keys.len - 1].data);
+                lua_pushfstring(L, "failed to parse value for key %s", keys.vals[keys.len - 1].data);
                 free_keys(&keys);
                 return 2;
             }
@@ -457,7 +479,7 @@ static int tomlua_parse(lua_State *L) {
             if (!set_kv(L, &keys)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "cannot set key %.*s, path blocked by non-table", (int)keys.vals[keys.len - 1].len, keys.vals[keys.len - 1].data);
+                lua_pushfstring(L, "cannot set key %s, path blocked by non-table", keys.vals[keys.len - 1].data);
                 free_keys(&keys);
                 return 2;
             }
@@ -468,7 +490,7 @@ static int tomlua_parse(lua_State *L) {
             if (!heading_nav(L, &keys, false, top)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "unable to heading_nav to %.*s", (int)keys.vals[keys.len - 1].len, keys.vals[keys.len - 1].data);
+                lua_pushfstring(L, "unable to heading_nav to %s", keys.vals[keys.len - 1].data);
                 free_keys(&keys);
                 return 2;
             }
@@ -478,7 +500,7 @@ static int tomlua_parse(lua_State *L) {
             if (!heading_nav(L, &keys, true, top)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "unable to heading_nav to %.*s", (int)keys.vals[keys.len - 1].len, keys.vals[keys.len - 1].data);
+                lua_pushfstring(L, "unable to heading_nav to %s", keys.vals[keys.len - 1].data);
                 free_keys(&keys);
                 return 2;
             }

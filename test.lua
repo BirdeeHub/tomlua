@@ -19,10 +19,10 @@ local data, err = tomlua.decode([=[
     ]
     testkey7 = {
         a.d = 1,
-        b = [ 2, 3 ],
+        b = [ 2, 3 ], # testing
         c = 3
     }
-    # dasdsadsa = 2121dasssss22
+    # dasdsadsa = aaa2121dasssss22
     # dasdsadsa = 2121dasssss22 # these are giving me weird errors
     [[test]]
     names.hello = "hi"
