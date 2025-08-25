@@ -402,7 +402,10 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
             if (d == '}') {
                 iter_next(src);
                 return true;
-            } else if (d == ',' || d == ' ' || d == '\t') {
+            } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
+                // we should not be skipping over \n or \r we should be throwing probably due to the spec (yeah I would rather be allowed multiline tables, but I didn't make toml)
+                // unfortunately currently it is freezing rather than failing so fix that first.
+                // we should not be supporting trailing commas either (yeah...)
                 iter_next(src);
                 continue;
             }
