@@ -23,7 +23,6 @@ local data, err = tomlua.decode([=[
         c = 3
     }
     # dasdsadsa = aaa2121dasssss22
-    # dasdsadsa = 2121dasssss22 # these are giving me weird errors
     [[test]]
     names.hello = "hi"
     key = "value"
