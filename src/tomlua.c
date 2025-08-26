@@ -39,36 +39,41 @@ static bool is_identifier_char(char c) {
            (c == '_') || (c == '-');
 }
 
-static void consume_whitespace_to_line(struct str_iter *src) {
+// returns true if the end of the line or file was found
+static bool consume_whitespace_to_line(struct str_iter *src) {
     // skips through the end of the line on trailing comments and failed parses
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '#') {
             iter_next(src);
-            while (iter_peek(src).ok) {
-                if (iter_peek(src).v == '\n') {
+            struct iter_result curr = iter_next(src);
+            while (curr.ok) {
+                if (curr.v == '\n') {
+                    return true;
+                } else if (curr.v == '\r' && iter_peek(src).v == '\n') {
                     iter_next(src);
-                    break;
-                } else if (iter_starts_with(src, "\r\n", 2)) {
-                    iter_next(src);
-                    iter_next(src);
-                    break;
+                    return true;
                 }
-                iter_next(src);
+                curr = iter_next(src);
             }
-            break;
-        }
-        if (d == '\n') {
+            // reached EOF in a comment
+            return true;
+        } else if (d == '\n') {
             iter_next(src);
-            break;
+            return true;
         } else if (iter_starts_with(src, "\r\n", 2)) {
             iter_next(src);
             iter_next(src);
-            break;
+            return true;
         } else if (d == ' ' || d == '\t') {
             iter_next(src);
+        } else {
+            // read non-whitespace
+            return false;
         }
     }
+    // read whitespace until EOF
+    return true;
 }
 
 enum ExprType {
@@ -367,7 +372,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         lua_pushboolean(L, 0);
         return NULL;
     }
-    // --- string ---
+    // --- string --- TODO: add the rest of the types of string
     if (curr.v == '"') {
         struct str_buf buf = new_str_buf();
         iter_next(src);
@@ -459,8 +464,6 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         }
         return "missing closing }";
     }
-
-    consume_whitespace_to_line(src);
     return "invalid value";
 }
 
@@ -505,6 +508,13 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
                 lua_pushfstring(L, "failed to parse value for key %s due to error: %s", keys.vals[keys.len - 1].data, err);
+                free_keys(&keys);
+                return 2;
+            }
+            if (strict && !consume_whitespace_to_line(&src)) {
+                lua_pop(L, 1); // pop the table
+                lua_pushnil(L);
+                lua_pushfstring(L, "key value pairs must be followed by a new line (or end of file)");
                 free_keys(&keys);
                 return 2;
             }
