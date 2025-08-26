@@ -459,7 +459,6 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
     }
     return "invalid value";
 }
-// TODO: parse_value } // (it goes until here)
 
 static int tomlua_parse(lua_State *L) {
     size_t len;
