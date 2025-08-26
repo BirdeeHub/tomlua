@@ -13,7 +13,7 @@ local toml_data = [=[
     testkey4 = 1
     testkey5 = 1.5
     testkey6 = [
-        1, 2, 3, 4, 5
+        1, 2, 3, 4, 5,
     ]
     testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
 
