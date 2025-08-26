@@ -39,6 +39,39 @@ static bool is_identifier_char(char c) {
            (c == '_') || (c == '-');
 }
 
+static void consume_whitespace_to_line(struct str_iter *src) {
+    // skips through the end of the line on trailing comments and failed parses
+    while (iter_peek(src).ok) {
+        char d = iter_peek(src).v;
+        if (d == '#') {
+            iter_next(src);
+            while (iter_peek(src).ok) {
+                if (iter_peek(src).v == '\n') {
+                    iter_next(src);
+                    break;
+                } else if (iter_starts_with(src, "\r\n", 2)) {
+                    iter_next(src);
+                    iter_next(src);
+                    break;
+                }
+                iter_next(src);
+            }
+            break;
+        }
+        if (d == '\n') {
+            iter_next(src);
+            break;
+        } else if (iter_starts_with(src, "\r\n", 2)) {
+            iter_next(src);
+            iter_next(src);
+            break;
+        }
+        if (d == ' ' || d == '\t') {
+            iter_next(src);
+        }
+    }
+}
+
 enum ExprType {
     EXPR_K_V,
     HEADING_TABLE,
@@ -428,34 +461,6 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         return "missing closing }";
     }
 
-    // skips through the end of the line on trailing comments and failed parses
-    while (iter_peek(src).ok) {
-        char d = iter_peek(src).v;
-        if (d == '#') {
-            iter_next(src);
-            while (iter_peek(src).ok) {
-                if (iter_peek(src).v == '\n') {
-                    iter_next(src);
-                    break;
-                } else if (iter_starts_with(src, "\r\n", 2)) {
-                    iter_next(src);
-                    iter_next(src);
-                    break;
-                }
-                iter_next(src);
-            }
-            break;
-        }
-        if (d == '\n') {
-            iter_next(src);
-            break;
-        } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_next(src);
-            iter_next(src);
-            break;
-        }
-        iter_next(src);
-    }
     return "invalid value";
 }
 
@@ -503,6 +508,7 @@ static int tomlua_parse(lua_State *L) {
                 free_keys(&keys);
                 return 2;
             }
+            consume_whitespace_to_line(&src);
             // [1] value
             // [2] current root table
             if (!set_kv(L, &keys)) {
