@@ -397,6 +397,8 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
     }
 
     // --- inline table --- should not support multiline or trailing comma
+    // TODO: make it fail on trailing comma
+    // TODO: make it so that it does accept those in non-strict mode
     if (curr.v == '{') {
         iter_next(src);
         lua_newtable(L);
