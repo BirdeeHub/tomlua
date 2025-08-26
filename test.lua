@@ -17,19 +17,19 @@ local toml_data = [=[
     ]
     testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
 
-    # trailing comma not allowed in strict mode:
-    testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
-
     # todo: ??
     # release_date = 2025-08-24T12:00:00Z
     # last_backup = 2025-08-23T23:45:12-07:00
 
-    # invalid syntax
+    # trailing comma in table and multiline not allowed in strict mode:
+    # testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
     # testkey8 = {
     #    a.d = 1,
     #    b = [ 2, 3 ],
     #    c = 3
     # }
+
+    # more invalid syntax
     # dasdsadsa = aaa2121dasssss22
     # dasdsadsa = 22aaa2121dasssss22
 

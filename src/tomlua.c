@@ -346,22 +346,16 @@ enum ValueType {
     OFFSET_DATETIME, // string for now
 };
 
-// TODO: parse_value { // (it starts here)
+// TODO:
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 // this function does not work very well yet
 static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
-    // skip leading whitespace
-    while (iter_peek(src).ok) {
-        char c = iter_peek(src).v;
-        if (c == ' ' || c == '\t') {
-            iter_next(src);
-            continue;
-        }
-        break;
+    if (consume_whitespace_to_line(src) && strict) { // ? allow in non-strict?
+        return "expected value, got newline";
     }
     struct iter_result curr = iter_peek(src);
-    if (!curr.ok) return "invalid value";
+    if (!curr.ok) return "expected value, got end of file";
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
         for (int i = 0; i < 4; i++) iter_next(src);
@@ -379,7 +373,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         char *err = parse_basic_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
-            return "invalid value";
+            return err;
         }
         push_buf_to_lua_string(L, &buf);
         free_str_buf(&buf);
@@ -412,7 +406,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         free_str_buf(&buf);
     }
 
-    // --- array --- should allow trailing comma
+    // --- array --- allows trailing comma and multiline
     if (curr.v == '[') {
         iter_next(src);
         lua_newtable(L);
@@ -433,33 +427,40 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         return "missing closing ]";
     }
 
-    // --- inline table --- should not support multiline or trailing comma
-    // TODO: make it fail on trailing comma
-    // TODO: make it so that it does accept those in non-strict mode
+    // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
     if (curr.v == '{') {
         iter_next(src);
         lua_newtable(L);
+        bool last_was_comma = false;
         while (iter_peek(src).ok) {
             char d = iter_peek(src).v;
             if (d == '}') {
                 iter_next(src);
+                if (strict && last_was_comma) {
+                    return "trailing comma in inline table not allowed (in strict mode)";
+                }
                 return NULL;
             } else if (strict && iter_peek(src).v == '\n') {
                 iter_next(src);
-                return "inline tables can not be multi-line";
+                return "inline tables can not be multi-line (in strict mode)";
             } else if (strict && iter_starts_with(src, "\r\n", 2)) {
                 iter_next(src);
                 iter_next(src);
-                return "inline tables can not be multi-line";
-            } else if (d == ',' || d == ' ' || d == '\t' || d == '\r' || d == '\n') {
+                return "inline tables can not be multi-line (in strict mode)";
+            } else if (d == ',') {
+                last_was_comma = true;
+                iter_next(src);
+                continue;
+            } else if (d == ' ' || d == '\t' || d == '\r' || d == '\n') {
                 iter_next(src);
                 continue;
             }
+            last_was_comma = false;
             struct Keys k = parse_keys(src, strict);
-            if (k.err != NULL) { free_keys(&k); return "invalid value"; }
+            if (k.err != NULL) { free_keys(&k); return k.err; }
             char *err = parse_value(L, src, strict);
             if (err != NULL) { free_keys(&k); return err; }
-            if (!set_kv(L, &k)) { free_keys(&k); return "invalid value"; }
+            if (!set_kv(L, &k)) { free_keys(&k); return "failed to set value"; }
             free_keys(&k);
         }
         return "missing closing }";
