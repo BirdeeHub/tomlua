@@ -413,9 +413,6 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
                 iter_next(src);
                 return "inline tables can not be multi-line";
             } else if (d == ',' || d == ' ' || d == '\t' || d == '\r' || d == '\n') {
-                // we should not be skipping over \n or \r we should be throwing probably due to the spec (yeah I would rather be allowed multiline tables, but I didn't make toml)
-                // unfortunately currently it is freezing rather than failing so fix that first.
-                // we should not be supporting trailing commas either (yeah...)
                 iter_next(src);
                 continue;
             }
