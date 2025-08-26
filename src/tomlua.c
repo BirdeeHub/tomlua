@@ -65,8 +65,7 @@ static void consume_whitespace_to_line(struct str_iter *src) {
             iter_next(src);
             iter_next(src);
             break;
-        }
-        if (d == ' ' || d == '\t') {
+        } else if (d == ' ' || d == '\t') {
             iter_next(src);
         }
     }
@@ -461,6 +460,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         return "missing closing }";
     }
 
+    consume_whitespace_to_line(src);
     return "invalid value";
 }
 
@@ -508,7 +508,6 @@ static int tomlua_parse(lua_State *L) {
                 free_keys(&keys);
                 return 2;
             }
-            consume_whitespace_to_line(&src);
             // [1] value
             // [2] current root table
             if (!set_kv(L, &keys)) {
