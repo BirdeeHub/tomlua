@@ -116,6 +116,7 @@ static void free_keys(struct Keys *keys) {
     keys->len = keys->capacity = 0;
 }
 
+// TODO: pull the skipping of whitespace prior to the line out of here, and do it at callsites using consume_whitespace_to_line
 static struct Keys parse_keys(struct str_iter *src, bool strict) {
     struct Keys dst = {
         .type = EXPR_K_V,
