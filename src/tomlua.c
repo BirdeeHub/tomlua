@@ -313,7 +313,7 @@ enum ValueType {
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 // this function does not work very well yet
-static bool parse_value(lua_State *L, struct str_iter *src) {
+static char *parse_value(lua_State *L, struct str_iter *src) {
     // skip leading whitespace
     while (iter_peek(src).ok) {
         char c = iter_peek(src).v;
@@ -324,16 +324,16 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         break;
     }
     struct iter_result curr = iter_peek(src);
-    if (!curr.ok) return false;
+    if (!curr.ok) return "invalid value";
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
         for (int i = 0; i < 4; i++) iter_next(src);
         lua_pushboolean(L, 1);
-        return true;
+        return NULL;
     } else if (iter_starts_with(src, "false", 5)) {
         for (int i = 0; i < 5; i++) iter_next(src);
         lua_pushboolean(L, 0);
-        return true;
+        return NULL;
     }
     // --- string ---
     if (curr.v == '"') {
@@ -342,11 +342,11 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         char *err = parse_basic_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
-            return false;
+            return "invalid value";
         }
         push_buf_to_lua_string(L, &buf);
         free_str_buf(&buf);
-        return true;
+        return NULL;
     }
 
     // --- number (integer or float) --- Should date be done here too?
@@ -370,7 +370,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
                 lua_pushinteger(L, strtoll(buf.data, NULL, 10));
             }
             free_str_buf(&buf);
-            return true;
+            return NULL;
         }
         free_str_buf(&buf);
     }
@@ -384,15 +384,16 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
             char d = iter_peek(src).v;
             if (d == ']') {
                 iter_next(src);
-                return true;
+                return NULL;
             } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
                 iter_next(src);
                 continue;
             }
-            if (!parse_value(L, src)) return false;
+            char *err = parse_value(L, src);
+            if (err != NULL) return err;
             lua_rawseti(L, -2, idx++);
         }
-        return false; // missing closing ]
+        return "missing closing ]";
     }
 
     // --- inline table --- should not support multiline or trailing comma
@@ -403,21 +404,29 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
             char d = iter_peek(src).v;
             if (d == '}') {
                 iter_next(src);
-                return true;
+                return NULL;
             } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
                 // we should not be skipping over \n or \r we should be throwing probably due to the spec (yeah I would rather be allowed multiline tables, but I didn't make toml)
                 // unfortunately currently it is freezing rather than failing so fix that first.
                 // we should not be supporting trailing commas either (yeah...)
                 iter_next(src);
                 continue;
+            } else if (iter_peek(src).v == '\n') {
+                iter_next(src);
+                break;
+            } else if (iter_starts_with(src, "\r\n", 2)) {
+                iter_next(src);
+                iter_next(src);
+                break;
             }
             struct Keys k = parse_keys(src);
-            if (k.err != NULL) { free_keys(&k); return false; }
-            if (!parse_value(L, src)) { free_keys(&k); return false; }
-            if (!set_kv(L, &k)) { free_keys(&k); return false; }
+            if (k.err != NULL) { free_keys(&k); return "invalid value"; }
+            char *err = parse_value(L, src);
+            if (err != NULL) { free_keys(&k); return err; }
+            if (!set_kv(L, &k)) { free_keys(&k); return "invalid value"; }
             free_keys(&k);
         }
-        return false; // missing closing }
+        return "missing closing }";
     }
 
     // skips through the end of the line on trailing comments and failed parses
@@ -448,7 +457,7 @@ static bool parse_value(lua_State *L, struct str_iter *src) {
         }
         iter_next(src);
     }
-    return false;
+    return "invalid value";
 }
 // TODO: parse_value } // (it goes until here)
 
@@ -479,10 +488,11 @@ static int tomlua_parse(lua_State *L) {
         }
         if (keys.type == EXPR_K_V) {
             // [1] current root table
-            if (!parse_value(L, &src)) {  // parse_value should push value on top of stack
+            char *err = parse_value(L, &src);
+            if (err != NULL) {  // parse_value should push value on top of stack
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "failed to parse value for key %s", keys.vals[keys.len - 1].data);
+                lua_pushfstring(L, "failed to parse value for key %s due to error: %s", keys.vals[keys.len - 1].data, err);
                 free_keys(&keys);
                 return 2;
             }
