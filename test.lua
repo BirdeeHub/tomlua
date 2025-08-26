@@ -17,6 +17,10 @@ local toml_data = [=[
     ]
     testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
 
+    # todo: ??
+    # release_date = 2025-08-24T12:00:00Z
+    # last_backup = 2025-08-23T23:45:12-07:00
+
     # invalid syntax
     # testkey8 = {
     #    a.d = 1,
@@ -63,7 +67,3 @@ local elapsed = os.clock() - start_time
 print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f ns/iteration", iterations, elapsed, iterations / elapsed))
 print("Last result:", inspect(last_result))
 print("Last error:", last_error)
-
--- print("run", tostring(i), " : ", inspect(data), " : ", inspect(err))
--- data = tomlua.decode(contents)
--- print(inspect(data))

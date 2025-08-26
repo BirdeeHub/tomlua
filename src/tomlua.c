@@ -79,7 +79,7 @@ static void free_keys(struct Keys *keys) {
     keys->len = keys->capacity = 0;
 }
 
-static struct Keys parse_keys(struct str_iter *src) {
+static struct Keys parse_keys(struct str_iter *src, bool strict) {
     struct Keys dst = {
         .type = EXPR_K_V,
         .capacity = 4,
@@ -313,7 +313,7 @@ enum ValueType {
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 // this function does not work very well yet
-static char *parse_value(lua_State *L, struct str_iter *src) {
+static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
     // skip leading whitespace
     while (iter_peek(src).ok) {
         char c = iter_peek(src).v;
@@ -389,7 +389,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
                 iter_next(src);
                 continue;
             }
-            char *err = parse_value(L, src);
+            char *err = parse_value(L, src, strict);
             if (err != NULL) return err;
             lua_rawseti(L, -2, idx++);
         }
@@ -405,23 +405,23 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             if (d == '}') {
                 iter_next(src);
                 return NULL;
-            } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
+            } else if (strict && iter_peek(src).v == '\n') {
+                iter_next(src);
+                return "inline tables can not be multi-line";
+            } else if (strict && iter_starts_with(src, "\r\n", 2)) {
+                iter_next(src);
+                iter_next(src);
+                return "inline tables can not be multi-line";
+            } else if (d == ',' || d == ' ' || d == '\t' || d == '\r' || d == '\n') {
                 // we should not be skipping over \n or \r we should be throwing probably due to the spec (yeah I would rather be allowed multiline tables, but I didn't make toml)
                 // unfortunately currently it is freezing rather than failing so fix that first.
                 // we should not be supporting trailing commas either (yeah...)
                 iter_next(src);
                 continue;
-            } else if (iter_peek(src).v == '\n') {
-                iter_next(src);
-                break;
-            } else if (iter_starts_with(src, "\r\n", 2)) {
-                iter_next(src);
-                iter_next(src);
-                break;
             }
-            struct Keys k = parse_keys(src);
+            struct Keys k = parse_keys(src, strict);
             if (k.err != NULL) { free_keys(&k); return "invalid value"; }
-            char *err = parse_value(L, src);
+            char *err = parse_value(L, src, strict);
             if (err != NULL) { free_keys(&k); return err; }
             if (!set_kv(L, &k)) { free_keys(&k); return "invalid value"; }
             free_keys(&k);
@@ -464,8 +464,17 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
 static int tomlua_parse(lua_State *L) {
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
-    lua_pop(L, 1); // pop the table
+    lua_pop(L, 1); // pop the string
     struct str_iter src = str_to_iter(s, len);
+
+    bool strict = true;
+    if (lua_gettop(L) >= 1 && lua_istable(L, 1)) {
+        lua_getfield(L, 1, "strict");   // stack: opts.strict
+        if (lua_isboolean(L, -1)) {
+            strict = lua_toboolean(L, -1) ? true : false;
+        }
+        lua_pop(L, 1); // pop opts.strict
+    }
 
     lua_newtable(L);
     int top = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -474,7 +483,7 @@ static int tomlua_parse(lua_State *L) {
     while (iter_peek(&src).ok) {
         size_t depth = 0;
         enum ExprType *type;
-        struct Keys keys = parse_keys(&src);
+        struct Keys keys = parse_keys(&src, strict);
         if (keys.type == END_OF_FILE) {
             free_keys(&keys);
             break;
@@ -488,7 +497,7 @@ static int tomlua_parse(lua_State *L) {
         }
         if (keys.type == EXPR_K_V) {
             // [1] current root table
-            char *err = parse_value(L, &src);
+            char *err = parse_value(L, &src, strict);
             if (err != NULL) {  // parse_value should push value on top of stack
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
