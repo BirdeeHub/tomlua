@@ -4,7 +4,7 @@ endif
 CC       ?= gcc
 CFLAGS   = -O3 -fPIC -flto -finline-functions -shared -Wl,-s
 DESTDIR  ?= ./lib
-SRCS     = ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/parse.c
+SRCS     = ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/decode.c ./src/encode.c
 INCLUDES = -I"$(LUA_INCDIR)"
 
 all: build

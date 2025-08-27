@@ -1,6 +1,7 @@
 #include <lua.h>
 #include <lauxlib.h>
-#include "parse.h"
+#include "decode.h"
+#include "encode.h"
 
 int luaopen_tomlua(lua_State *L) {
     // --- 64-bit integer check ---
@@ -9,7 +10,7 @@ int luaopen_tomlua(lua_State *L) {
     }
 
     lua_newtable(L); // module table
-    lua_pushcfunction(L, tomlua_parse);
+    lua_pushcfunction(L, tomlua_decode);
     lua_setfield(L, -2, "decode");
     return 1;
 }

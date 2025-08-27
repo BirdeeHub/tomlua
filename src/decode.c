@@ -493,7 +493,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
     return strdup("invalid value");
 }
 
-int tomlua_parse(lua_State *L) {
+int tomlua_decode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
     if (argno < 1) {
