@@ -93,11 +93,11 @@ void clear_keys_result(struct keys_result *dst) {
     for (size_t i = 0; i < dst->len; i++) {
         free_str_buf(&dst->v[i]);
     }
-    dst->len = 0;
-    dst->cap = 0;
     free(dst->err);
     free(dst->v);
     dst->v = NULL;
+    dst->len = 0;
+    dst->cap = 0;
 }
 
 struct keys_result parse_keys(struct str_iter *src) {
@@ -109,19 +109,16 @@ struct keys_result parse_keys(struct str_iter *src) {
     };
     while (iter_peek(src).ok) {
         if (consume_whitespace_to_line(src)) {
-            clear_keys_result(&dst);
             dst.err = "newlines not allowed between keys";
             break;
         }
         struct key_result key = parse_key(src);
         if (key.err != NULL) {
-            clear_keys_result(&dst);
             dst.err = key.err;
             break;
         }
         keys_push(&dst, key.v);
         if (consume_whitespace_to_line(src)) {
-            clear_keys_result(&dst);
             dst.err = "newlines not allowed between keys and their terminators: =, ], or ]]";
             break;
         }
@@ -133,7 +130,6 @@ struct keys_result parse_keys(struct str_iter *src) {
                 iter_next(src);
             }
         } else {
-            clear_keys_result(&dst);
             dst.err = "trailing key!";
             break;
         }
