@@ -4,7 +4,8 @@ debug = true
 max_connections = 256
 pi_value = 3.1415926535
 
-# Arrays why does uncommenting this do free(): invalid pointer core dumped instead of something sensible? I double free somewhere, but where
+# why does uncommenting this do free(): invalid pointer core dumped instead of something sensible? I double free somewhere, but where
+
 servers = ["alpha", "beta", "gamma"]
 ports = [8000, 8001, 8002]
 enabled_features = ["logging", "metrics", "cache"]
