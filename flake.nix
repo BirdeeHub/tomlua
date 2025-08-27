@@ -25,7 +25,7 @@
     });
     devShells = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
-      lua = pkgs.luajit.withPackages (lp: [lp.inspect]);
+      lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson]);
       devbuild = pkgs.writeShellScriptBin "build_cc" ''
         mkdir -p ./build
         ${pkgs.bear}/bin/bear -- $CC -O3 -fPIC -shared -o ./build/tomlua.so ./src/tomlua.c ./src/str_buf.c ./src/parse_str.c ./src/parse_keys.c -I"${lua}/include"

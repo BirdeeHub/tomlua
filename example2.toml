@@ -20,6 +20,13 @@ testkey6 = [
 
 database.replica_backup = { host = "replica2.local", port = 5434 }
 
+# Dates and times
+# release_date = 2025-08-24T12:00:00Z
+# last_backup = 2025-08-23T23:45:12-07:00
+
+# TODO: hex and other bases
+# testhexnumber = 0xDEADBEEF
+
 [[test]]
 names.hello = "h\u1234i"
 key = "value"
@@ -39,6 +46,17 @@ das2 = 'dasda'
 sda'''
 das4 = """da
 sda"""
+
+# trailing comma in table and multiline not allowed
+# testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
+# testkey8 = {
+#    a.d = 1,
+#    b = [ 2, 3 ],
+#    c = 3
+# }
+# more invalid syntax
+# dasdsadsa = aaa2121dasssss22
+# dasdsadsa = 22aaa2121dasssss22
 
 [database]
 type = "postgres"
