@@ -1,6 +1,6 @@
 Just me practicing some C
 
-Error reporting is bad.
+Error reporting is bad currently.
 
 It only has a decode function and that is it.
 
