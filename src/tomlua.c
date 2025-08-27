@@ -208,7 +208,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         lua_pushboolean(L, 0);
         return NULL;
     }
-    // --- string --- TODO: add the rest of the types of string
+    // --- string --- TODO: add the last type of string
     if (curr.v == '"') {
         struct str_buf buf = new_str_buf();
         iter_next(src);
