@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include "str_buf.h"
 
 static uint32_t hex_to_codepoint(const struct str_buf *src) {
@@ -61,13 +62,13 @@ static bool is_hex_char(char c) {
 
 static char *push_unicode(struct str_buf *dst, struct str_buf *src, bool is_long) {
     size_t expected_len = is_long ? 8 : 4;
-    if (src->len != expected_len) return "invalid unicode specifier length";
+    if (src->len != expected_len) return strdup("invalid unicode specifier length");
     for (size_t i = 0; i < src->len; i++) {
-        if (!is_hex_char(src->data[i])) return "unexpected unicode specifier char";
+        if (!is_hex_char(src->data[i])) return strdup("unexpected unicode specifier char");
     }
 
     uint32_t cp = hex_to_codepoint(src);
-    if (!utf8_encode(cp, dst)) return "OOM";
+    if (!utf8_encode(cp, dst)) return strdup("OOM");
     return NULL;
 }
 
@@ -80,13 +81,15 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
         if (c == '\\' && nextres.ok) {
             char next = iter_next(src).v;
             switch (next) {
-                case 'b': if (!buf_push(dst, '\b')) return "OOM"; break;
-                case 't': if (!buf_push(dst, '\t')) return "OOM"; break;
-                case 'n': if (!buf_push(dst, '\n')) return "OOM"; break;
-                case 'f': if (!buf_push(dst, '\f')) return "OOM"; break;
-                case 'r': if (!buf_push(dst, '\r')) return "OOM"; break;
-                case '"': if (!buf_push(dst, '\"')) return "OOM"; break;
-                case '\\': if (!buf_push(dst, '\\')) return "OOM"; break;
+                // Yes, using strdup on OOM error is stupid.
+                // No, I do not want to find a way to track which of my errors are heap allocated for when I free them.
+                case 'b': if (!buf_push(dst, '\b')) return strdup("OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return strdup("OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return strdup("OOM"); break;
+                case 'f': if (!buf_push(dst, '\f')) return strdup("OOM"); break;
+                case 'r': if (!buf_push(dst, '\r')) return strdup("OOM"); break;
+                case '"': if (!buf_push(dst, '\"')) return strdup("OOM"); break;
+                case '\\': if (!buf_push(dst, '\\')) return strdup("OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
@@ -96,7 +99,7 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         if (!buf_push(&escaped, iter_next(src).v)) {
                             free_str_buf(&escaped);
-                            return "OOM";
+                            return strdup("OOM");
                         }
                     }
                     char *err = push_unicode(dst, &escaped, is_long);
@@ -104,17 +107,17 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
                     if (err != NULL) return err;
                 } break;
                 default:
-                    if (!buf_push(dst, next)) return "OOM";
+                    if (!buf_push(dst, next)) return strdup("OOM");
             }
         } else if (c == '\n' || c == '\r' && nextres.v == '\n') {
-            return "basic strings are single-line only";
+            return strdup("basic strings are single-line only");
         } else if (c == '"') {
             return NULL;
         } else {
-            if (!buf_push(dst, c)) return "OOM";
+            if (!buf_push(dst, c)) return strdup("OOM");
         }
     }
-    return "end of content reached before end of string";
+    return strdup("end of content reached before end of string");
 }
 
 char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
@@ -125,13 +128,15 @@ char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
         if (c == '\\' && nextres.ok) {
             char next = iter_next(src).v;
             switch (next) {
-                case 'b': if (!buf_push(dst, '\b')) return "OOM"; break;
-                case 't': if (!buf_push(dst, '\t')) return "OOM"; break;
-                case 'n': if (!buf_push(dst, '\n')) return "OOM"; break;
-                case 'f': if (!buf_push(dst, '\f')) return "OOM"; break;
-                case 'r': if (!buf_push(dst, '\r')) return "OOM"; break;
-                case '"': if (!buf_push(dst, '\"')) return "OOM"; break;
-                case '\\': if (!buf_push(dst, '\\')) return "OOM"; break;
+                // Yes, using strdup on OOM error is stupid.
+                // No, I do not want to find a way to track which of my errors are heap allocated for when I free them.
+                case 'b': if (!buf_push(dst, '\b')) return strdup("OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return strdup("OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return strdup("OOM"); break;
+                case 'f': if (!buf_push(dst, '\f')) return strdup("OOM"); break;
+                case 'r': if (!buf_push(dst, '\r')) return strdup("OOM"); break;
+                case '"': if (!buf_push(dst, '\"')) return strdup("OOM"); break;
+                case '\\': if (!buf_push(dst, '\\')) return strdup("OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
@@ -141,7 +146,7 @@ char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         if (!buf_push(&escaped, iter_next(src).v)) {
                             free_str_buf(&escaped);
-                            return "OOM";
+                            return strdup("OOM");
                         }
                     }
                     char *err = push_unicode(dst, &escaped, is_long);
@@ -149,17 +154,17 @@ char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
                     if (err != NULL) return err;
                 } break;
                 default:
-                    if (!buf_push(dst, next)) return "OOM";
+                    if (!buf_push(dst, next)) return strdup("OOM");
             }
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
             iter_next(src);
             iter_next(src);
             return NULL;
         } else {
-            if (!buf_push(dst, c)) return "OOM";
+            if (!buf_push(dst, c)) return strdup("OOM");
         }
     }
-    return "end of content reached before end of string";
+    return strdup("end of content reached before end of string");
 }
 
 char *parse_literal_string(struct str_buf *dst, struct str_iter *src) {
@@ -168,14 +173,14 @@ char *parse_literal_string(struct str_buf *dst, struct str_iter *src) {
         char c = current.v;
         struct iter_result nextres = iter_peek(src);
         if (c == '\n' || c == '\r' && nextres.v == '\n') {
-            return "literal strings are single-line only";
+            return strdup("literal strings are single-line only");
         } else if (c == '\'') {
             return NULL;
         } else {
-            if (!buf_push(dst, c)) return "OOM";
+            if (!buf_push(dst, c)) return strdup("OOM");
         }
     }
-    return "end of content reached before end of string";
+    return strdup("end of content reached before end of string");
 }
 
 char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src) {
@@ -187,8 +192,8 @@ char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src) {
             iter_next(src);
             return NULL;
         } else {
-            if (!buf_push(dst, c)) return "OOM";
+            if (!buf_push(dst, c)) return strdup("OOM");
         }
     }
-    return "end of content reached before end of string";
+    return strdup("end of content reached before end of string");
 }

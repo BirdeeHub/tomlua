@@ -81,7 +81,7 @@ static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type,
 static bool set_kv(lua_State *L, struct keys_result *keys) {
     if (keys->err != NULL) { return false; }
     if (keys->len <= 0) {
-        keys->err = "no key provided to set";
+        keys->err = strdup("no key provided to set");
         return false;
     }
     int value_idx = lua_gettop(L);  // value is on top
@@ -101,7 +101,7 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
         } else if (!lua_istable(L, -1)) {
             lua_pop(L, 1); // pop the table
             lua_pop(L, 1); // pop the value
-            keys->err = "key is not a table";
+            keys->err = strdup("key is not a table");
             return false;
         }
         lua_remove(L, -2); // remove parent table
@@ -129,21 +129,21 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
             iter_next(src);
             if (last_was_comma) {
                 lua_pop(L, 1);
-                return "trailing comma in inline table not allowed";
+                return strdup("trailing comma in inline table not allowed");
             }
             return NULL;
         } else if (iter_peek(src).v == '\n') {
             iter_next(src);
-            return "inline tables can not be multi-line";
+            return strdup("inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
             iter_next(src);
             iter_next(src);
-            return "inline tables can not be multi-line";
+            return strdup("inline tables can not be multi-line");
         } else if (d == ',') {
             iter_next(src);
             if (last_was_comma) {
                 lua_pop(L, 1);
-                return "2 commas in a row!";
+                return strdup("2 commas in a row!");
             }
             last_was_comma = true;
             continue;
@@ -157,17 +157,16 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
             char *err = keys.err;
             keys.err = NULL;
             clear_keys_result(&keys);
-            keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
             return err;
         }
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
             clear_keys_result(&keys);
-            return "keys for assignment must end with =";
+            return strdup("keys for assignment must end with =");
         }
         iter_next(src);
         if (consume_whitespace_to_line(src)) {
             clear_keys_result(&keys);
-            return "the value in key = value expressions must begin on the same line as the key!";
+            return strdup("the value in key = value expressions must begin on the same line as the key!");
         }
         char *err = parse_value(L, src);
         if (err != NULL) {
@@ -182,21 +181,21 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
         }
         clear_keys_result(&keys);
         if (consume_whitespace_to_line(src)) {
-            return "toml inline tables cannot be multi-line";
+            return strdup("toml inline tables cannot be multi-line");
         }
         struct iter_result next = iter_peek(src);
         if (next.ok && (next.v != ',' && next.v != '}')) {
-            return "toml inline table values must be separated with , or ended with }";
+            return strdup("toml inline table values must be separated with , or ended with }");
         }
     }
-    return "missing closing }";
+    return strdup("missing closing }");
 }
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 static char *parse_value(lua_State *L, struct str_iter *src) {
     struct iter_result curr = iter_peek(src);
-    if (!curr.ok) return "expected value, got end of content";
+    if (!curr.ok) return strdup("expected value, got end of content");
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
         for (int i = 0; i < 4; i++) iter_next(src);
@@ -298,13 +297,13 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             if (err != NULL) return err;
             lua_rawseti(L, -2, idx++);
         }
-        return "missing closing ]";
+        return strdup("missing closing ]");
     // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
     } else if (curr.v == '{') {
         iter_next(src);
         return parse_table(L, src);
     }
-    return "invalid value";
+    return strdup("invalid value");
 }
 
 static int tomlua_parse(lua_State *L) {
@@ -333,7 +332,6 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
-                keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
                 clear_keys_result(&keys);
                 return 2;
             }
@@ -369,7 +367,6 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
-                keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
                 clear_keys_result(&keys);
                 return 2;
             }
@@ -403,7 +400,6 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
-                keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
                 clear_keys_result(&keys);
                 return 2;
             }
@@ -427,6 +423,7 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
                 lua_pushfstring(L, "failed to parse value for key due to error: %s", err);
+                free(err);
                 clear_keys_result(&keys);
                 return 2;
             }

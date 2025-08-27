@@ -2,6 +2,7 @@
 #include "parse_str.h"
 #include "str_buf.h"
 #include <stdlib.h>
+#include <string.h>
 
 bool is_identifier_char(char c) {
     return (c >= 'A' && c <= 'Z') ||
@@ -54,7 +55,7 @@ struct key_result parse_key(struct str_iter *src) {
     };
     struct iter_result current = iter_peek(src);
     if (!current.ok) {
-        dst.err = "expected key, got end of content";
+        dst.err = strdup("expected key, got end of content");
         return dst;
     }
     char c = current.v;
@@ -68,13 +69,13 @@ struct key_result parse_key(struct str_iter *src) {
         current = iter_peek(src);
         while (is_identifier_char(current.v)) {
             if (!buf_push(&dst.v, current.v)) {
-                dst.err = "OOM";
+                dst.err = strdup("OOM");
             }
             iter_next(src);
             current = iter_peek(src);
         }
     } else {
-        dst.err = "called parse_key with invalid first char";
+        dst.err = strdup("called parse_key with invalid first char");
     }
     if (dst.err != NULL) free_str_buf(&dst.v);
     return dst;
@@ -124,7 +125,7 @@ struct keys_result parse_keys(struct str_iter *src) {
     };
     while (iter_peek(src).ok) {
         if (consume_whitespace_to_line(src)) {
-            dst.err = "newlines not allowed between keys";
+            dst.err = strdup("newlines not allowed between keys");
             break;
         }
         struct key_result key = parse_key(src);
@@ -135,7 +136,7 @@ struct keys_result parse_keys(struct str_iter *src) {
         }
         keys_push_move(&dst, key.v);
         if (consume_whitespace_to_line(src)) {
-            dst.err = "newlines not allowed between keys and their terminators: =, ], or ]]";
+            dst.err = strdup("newlines not allowed between keys and their terminators: =, ], or ]]");
             break;
         }
         struct iter_result next = iter_peek(src);
@@ -146,7 +147,7 @@ struct keys_result parse_keys(struct str_iter *src) {
                 iter_next(src);
             }
         } else {
-            dst.err = "trailing key!";
+            dst.err = strdup("trailing key!");
             break;
         }
     }
