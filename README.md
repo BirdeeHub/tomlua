@@ -8,7 +8,7 @@ Maybe it will get an encode function at some point.
 
 Maybe it will also get a real README, and some proper build instructions (although, it is in a nix flake so you can flake.nix for now idk)
 
-Basic benchmarking shows decode compares at between 1.25-200 cjson in speed.
+Basic benchmarking shows decode compares at between 1.25-2.00 cjson in runtime duration for 100000 iterations of processing the example.toml file.
 
 ```c
 enum ValueType {
