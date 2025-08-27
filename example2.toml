@@ -4,6 +4,14 @@ debug = true
 max_connections = 256
 pi_value = 3.1415926535
 
+testhexnumber = 0xDEADBEEF
+testoctnumber = 0o755
+testbinnumber = 0b11010110
+
+# Dates and times
+# release_date = 2025-08-24T12:00:00Z
+# last_backup = 2025-08-23T23:45:12-07:00
+
 servers = ["alpha", "beta", "gamma"]
 ports = [8000, 8001, 8002]
 enabled_features = ["logging", "metrics", "cache"]
@@ -19,13 +27,6 @@ testkey6 = [
 ]
 
 database.replica_backup = { host = "replica2.local", port = 5434 }
-
-# Dates and times
-# release_date = 2025-08-24T12:00:00Z
-# last_backup = 2025-08-23T23:45:12-07:00
-
-# TODO: hex and other bases
-# testhexnumber = 0xDEADBEEF
 
 [[test]]
 names.hello = "h\u1234i"

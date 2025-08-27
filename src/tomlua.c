@@ -285,30 +285,132 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
                 lua_pushnumber(L, -NAN);
                 return NULL;
             }
-        }
-        // TODO: add dates and base detection for 0x 0o and the like
-        struct str_buf buf = new_str_buf();
-        bool is_float = false;
-        while (iter_peek(src).ok) {
-            char ch = iter_peek(src).v;
-            if ((ch >= '0' && ch <= '9') || ch == '-' || ch == '+' || ch == '.' || ch == 'e' || ch == 'E') {
-                if (ch == '.' || ch == 'e' || ch == 'E') is_float = true;
-                buf_push(&buf, ch);
-                iter_next(src);
-            } else {
-                break;
+        } else if (iter_starts_with(src, "0x", 2)) {
+            // Hex integer
+            struct str_buf buf = new_str_buf();
+            iter_next(src); iter_next(src);
+            bool was_underscore = false;
+            while (iter_peek(src).ok) {
+                char ch = iter_peek(src).v;
+                if (is_hex_char(ch)) {
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (ch == '_') {
+                    if (was_underscore) {
+                        free_str_buf(&buf);
+                        return strdup("consecutive underscores not allowed in hex literals");
+                    }
+                    was_underscore = true;
+                    iter_next(src);
+                } else break;
             }
-        }
-        if (buf.len > 0) {
-            if (is_float) {
-                lua_pushnumber(L, strtod(buf.data, NULL));
-            } else {
-                lua_pushinteger(L, strtoll(buf.data, NULL, 10));
+            if (was_underscore) {
+                free_str_buf(&buf);
+                return strdup("hex literals not allowed to have trailing underscores");
             }
+            if (buf.len == 0) {
+                free_str_buf(&buf);
+                return strdup("empty hex literal");
+            }
+            // Convert buffer to integer
+            long long val = strtoll(buf.data, NULL, 16);
+            lua_pushinteger(L, val);
             free_str_buf(&buf);
             return NULL;
+        } else if (iter_starts_with(src, "0o", 2)) {
+            // Octal integer
+            struct str_buf buf = new_str_buf();
+            iter_next(src); iter_next(src);
+            bool was_underscore = false;
+            while (iter_peek(src).ok) {
+                char ch = iter_peek(src).v;
+                if ((ch >= '0' && ch <= '7')) {
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (ch == '_') {
+                    if (was_underscore) {
+                        free_str_buf(&buf);
+                        return strdup("consecutive underscores not allowed in octal literals");
+                    }
+                    was_underscore = true;
+                    iter_next(src);
+                } else break;
+            }
+            if (was_underscore) {
+                free_str_buf(&buf);
+                return strdup("octal literals not allowed to have trailing underscores");
+            }
+            if (buf.len == 0) {
+                free_str_buf(&buf);
+                return strdup("empty octal literal");
+            }
+            long long val = strtoll(buf.data, NULL, 8);
+            lua_pushinteger(L, val);
+            free_str_buf(&buf);
+            return NULL;
+        } else if (iter_starts_with(src, "0b", 2)) {
+            // binary integer
+            struct str_buf buf = new_str_buf();
+            iter_next(src); iter_next(src);
+            bool was_underscore = false;
+            while (iter_peek(src).ok) {
+                char ch = iter_peek(src).v;
+                if ((ch == '0' || ch == '1')) {
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (ch == '_') {
+                    if (was_underscore) {
+                        free_str_buf(&buf);
+                        return strdup("consecutive underscores not allowed in binary literals");
+                    }
+                    was_underscore = true;
+                    iter_next(src);
+                } else break;
+            }
+            if (was_underscore) {
+                free_str_buf(&buf);
+                return strdup("binary literals not allowed to have trailing underscores");
+            }
+            if (buf.len == 0) {
+                free_str_buf(&buf);
+                return strdup("empty binary literal");
+            }
+            long long val = strtoll(buf.data, NULL, 2);
+            lua_pushinteger(L, val);
+            free_str_buf(&buf);
+            return NULL;
+        } else {
+            // TODO: detect dates and pass on as strings, and numbers are allowed to have underscores in them (only 1 consecutive underscore at a time)
+            // is date if it has a - in it not immediately preceded by e or E
+            // is date if it has a : in it
+            struct str_buf buf = new_str_buf();
+            bool is_float = false;
+            bool is_date = false;
+            if (curr.v == '-' || curr.v == '+') buf_push(&buf, curr.v);
+            while (iter_peek(src).ok) {
+                char ch = iter_peek(src).v;
+                if ((ch >= '0' && ch <= '9') || ch == '-' || ch == '+' || ch == '.' || ch == 'e' || ch == 'E') {
+                    if (ch == '.' || ch == 'e' || ch == 'E') is_float = true;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else {
+                    break;
+                }
+            }
+            if (buf.len > 0) {
+                if (is_float) {
+                    lua_pushnumber(L, strtod(buf.data, NULL));
+                } else {
+                    lua_pushinteger(L, strtoll(buf.data, NULL, 10));
+                }
+                free_str_buf(&buf);
+                return NULL;
+            }
+            free_str_buf(&buf);
         }
-        free_str_buf(&buf);
     // --- array --- allows trailing comma and multiline
     } else if (curr.v == '[') {
         iter_next(src);

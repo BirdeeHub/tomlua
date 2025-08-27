@@ -4,6 +4,10 @@ debug = true
 max_connections = 256
 pi_value = 3.1415926535
 
+testhexnumber = 0xDEADBEEF
+testoctnumber = 0o755
+testbinnumber = 0b11010110
+
 servers = ["alpha", "beta", "gamma"]
 ports = [8000, 8001, 8002]
 enabled_features = ["logging", "metrics", "cache"]
