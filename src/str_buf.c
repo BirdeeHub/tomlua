@@ -71,13 +71,6 @@ void free_str_buf(struct str_buf *buf) {
     }
 }
 
-struct str_iter buf_to_iter(struct str_buf buf) {
-    struct str_iter iter;
-    iter.buf = buf.data;
-    iter.len = buf.len;
-    iter.pos = 0;
-    return iter;
-}
 struct str_iter str_to_iter(const char *str, size_t len) {
     struct str_iter iter;
     iter.buf = str;

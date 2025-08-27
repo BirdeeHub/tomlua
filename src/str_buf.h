@@ -30,7 +30,6 @@ struct iter_result {
     char v;
     bool ok;
 };
-struct str_iter buf_to_iter(struct str_buf buf);
 struct str_iter str_to_iter(const char *str, size_t len);
 bool iter_starts_with(const struct str_iter *a, char *b, size_t len);
 struct iter_result iter_next(struct str_iter *iter);
