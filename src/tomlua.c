@@ -170,6 +170,7 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
         }
         char *err = parse_value(L, src);
         if (err != NULL) {
+            clear_keys_result(&keys);
             return err;
         }
         if (!set_kv(L, &keys)) {
