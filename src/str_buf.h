@@ -2,7 +2,6 @@
 #ifndef SRC_STR_BUF_H_
 #define SRC_STR_BUF_H_
 
-#include <lua.h>
 #include <stddef.h>
 
 #ifndef __cplusplus
@@ -23,7 +22,6 @@ bool buf_push(struct str_buf *buf, const char c);
 bool buf_push_str(struct str_buf *buf, const char *str, const size_t len);
 bool buf_append(struct str_buf *dst, const struct str_buf *src);
 bool buf_equals(const struct str_buf *a, const struct str_buf *b);
-bool push_buf_to_lua_string(lua_State *L, const struct str_buf *buf);
 
 struct str_iter {
     const char *buf;
