@@ -10,7 +10,7 @@ local inspect = require('inspect')
 local cjson = require('cjson.safe')
 local tomlua = require("tomlua")
 -- Number of iterations for the benchmark
-local iterations = 1
+local iterations = 100000
 
 -- Benchmark
 local start_time = os.clock()

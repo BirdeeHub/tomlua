@@ -4,51 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool is_identifier_char(char c) {
-    return (c >= 'A' && c <= 'Z') ||
-           (c >= 'a' && c <= 'z') ||
-           (c >= '0' && c <= '9') ||
-           (c == '_') || (c == '-');
-}
-
-// returns true if the end of the line or file was found
-bool consume_whitespace_to_line(struct str_iter *src) {
-    // skips through the end of the line on trailing comments and failed parses
-    while (iter_peek(src).ok) {
-        char d = iter_peek(src).v;
-        if (d == '#') {
-            iter_next(src);
-            struct iter_result curr = iter_next(src);
-            while (curr.ok) {
-                if (curr.v == '\n') {
-                    return true;
-                } else if (curr.v == '\r' && iter_peek(src).v == '\n') {
-                    iter_next(src);
-                    return true;
-                }
-                curr = iter_next(src);
-            }
-            // reached EOF in a comment
-            return true;
-        } else if (d == '\n') {
-            iter_next(src);
-            return true;
-        } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_next(src);
-            iter_next(src);
-            return true;
-        } else if (d == ' ' || d == '\t') {
-            iter_next(src);
-        } else {
-            // read non-whitespace
-            return false;
-        }
-    }
-    // read whitespace until EOF
-    return true;
-}
-
-struct key_result parse_key(struct str_iter *src) {
+static struct key_result parse_key(struct str_iter *src) {
     struct key_result dst = {
         .err = NULL,
         .v = new_str_buf(),
@@ -96,24 +52,6 @@ static bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
     buf.data = NULL;
     buf.len = buf.capacity = 0;
     return true;
-}
-
-void clear_keys_result(struct keys_result *dst) {
-    if (dst) {
-        if (dst->v) {
-            for (size_t i = 0; i < dst->len; i++) {
-                free_str_buf(&dst->v[i]);
-            }
-            free(dst->v);
-        }
-        if (dst->err) {
-            free(dst->err);
-        }
-        dst->err = NULL;
-        dst->v = NULL;
-        dst->len = 0;
-        dst->cap = 0;
-    }
 }
 
 struct keys_result parse_keys(struct str_iter *src) {
