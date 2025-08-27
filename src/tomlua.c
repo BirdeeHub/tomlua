@@ -400,6 +400,7 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
+                keys.err = NULL;
                 clear_keys_result(&keys);
                 return 2;
             }
