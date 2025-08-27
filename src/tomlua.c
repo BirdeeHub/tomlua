@@ -157,6 +157,7 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
             char *err = keys.err;
             keys.err = NULL;
             clear_keys_result(&keys);
+            keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
             return err;
         }
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
@@ -332,6 +333,7 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
+                keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
                 clear_keys_result(&keys);
                 return 2;
             }
@@ -367,6 +369,7 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
+                keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
                 clear_keys_result(&keys);
                 return 2;
             }
@@ -400,7 +403,7 @@ static int tomlua_parse(lua_State *L) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
-                keys.err = NULL;
+                keys.err = NULL; // TODO: Apparently if the err was a literal it throws when you free it, so figure out what to do about that
                 clear_keys_result(&keys);
                 return 2;
             }
