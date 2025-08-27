@@ -83,7 +83,9 @@ struct key_result parse_key(struct str_iter *src) {
 static bool keys_push_move(struct keys_result *dst, struct str_buf *buf) {
     if (dst->len >= dst->cap) {
         dst->cap *= 2;
-        dst->v = realloc(dst->v, dst->cap * sizeof(struct str_buf));
+        struct str_buf *tmp = realloc(dst->v, dst->cap * sizeof(struct str_buf));
+        if (!tmp) return false; // or handle OOM properly
+        dst->v = tmp;
     }
     dst->v[dst->len++] = (struct str_buf) {
         .data = buf->data,
