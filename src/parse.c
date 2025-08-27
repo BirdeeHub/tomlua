@@ -64,7 +64,11 @@ static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type,
         if (!lua_istable(L, -1)) {
             return false;
         }
+#if LUA_VERSION_NUM == 501
         size_t len = lua_objlen(L, -1);
+#else
+        size_t len = lua_rawlen(L, -1);
+#endif
         // append new table at len+1
         lua_newtable(L);               // new element
         lua_pushinteger(L, len + 1);
