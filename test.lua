@@ -1,3 +1,7 @@
+local inspect = require('inspect')
+local tomlua = require("tomlua")
+local cjson = require('cjson.safe')
+
 local f = io.open("./example.toml", "r")
 local contents
 if f then
@@ -5,10 +9,6 @@ if f then
     f:close()
 end
 -- print(contents)
-
-local inspect = require('inspect')
-local cjson = require('cjson.safe')
-local tomlua = require("tomlua")
 
 -- Number of iterations for the benchmark
 local iterations = 100000
@@ -45,3 +45,26 @@ end
 local elapsed2 = os.clock() - start_time
 print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed2, iterations / elapsed2))
 print(string.format("tomlua/cjson: %.2f%%", (elapsed / elapsed2) * 100))
+
+local testdata = {
+    a = {
+        b = { "1b", "2b" },
+    },
+    c = "hello",
+    e = {
+        f = { "1f", "2f" },
+    },
+}
+
+local testtoml = [=[
+a.b = [ "3b", "4b" ]
+d = "hahaha"
+[[e.f]]
+testtable.value = true
+[a]
+newval = "nope"
+]=]
+
+local data, err = tomlua.decode(testtoml, testdata)
+print(inspect(data))
+print(inspect(err))

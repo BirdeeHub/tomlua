@@ -494,15 +494,27 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
 }
 
 int tomlua_parse(lua_State *L) {
+    // process arguments
+    int argno = lua_gettop(L);
+    if (argno < 1) {
+        return luaL_error(L, "tomlua requires at least 1 argument! tomlua.decode(str, defaults?)");
+    } else if (argno == 1 || (argno == 2 && !lua_istable(L, -1))) {
+        // add a new table to use as top if none was provided
+        lua_newtable(L);
+    } else if (argno > 2) {
+        return luaL_error(L, "tomlua takes only 1 or 2 arguments! tomlua.decode(str, defaults?)");
+    }
+    // pops and saves the table
+    int top = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    // get the toml string
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string
     struct str_iter src = str_to_iter(s, len);
 
-    lua_newtable(L);
-    int top = luaL_ref(L, LUA_REGISTRYINDEX);
+    // set top as the starting location
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
-
     while (iter_peek(&src).ok) {
         // consume until non-blank line, consume initial whitespace, then end loop
         while (consume_whitespace_to_line(&src)) {
@@ -634,8 +646,8 @@ int tomlua_parse(lua_State *L) {
             clear_keys_result(&keys);
         }
     }
-    lua_pop(L, 1);
 
+    lua_pop(L, 1); // pop current target, add top back
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     luaL_unref(L, LUA_REGISTRYINDEX, top);
     return 1; // on fail return 2; lua nil and an error
