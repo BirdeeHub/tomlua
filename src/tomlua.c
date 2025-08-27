@@ -207,9 +207,8 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         for (int i = 0; i < 5; i++) iter_next(src);
         lua_pushboolean(L, 0);
         return NULL;
-    }
     // --- strings ---
-    if (iter_starts_with(src, "\"\"\"", 3)) {
+    } else if (iter_starts_with(src, "\"\"\"", 3)) {
         struct str_buf buf = new_str_buf();
         iter_next(src);
         iter_next(src);
@@ -257,10 +256,8 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         push_buf_to_lua_string(L, &buf);
         free_str_buf(&buf);
         return NULL;
-    }
-
-    // --- number (integer or float) --- //TODO: Should date be done here too?
-    if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
+    // --- numbers (and dates?) ---
+    } else if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
         struct str_buf buf = new_str_buf();
         bool is_float = false;
         while (iter_peek(src).ok) {
@@ -283,10 +280,8 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             return NULL;
         }
         free_str_buf(&buf);
-    }
-
     // --- array --- allows trailing comma and multiline
-    if (curr.v == '[') {
+    } else if (curr.v == '[') {
         iter_next(src);
         lua_newtable(L);
         int idx = 1;
@@ -304,10 +299,8 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             lua_rawseti(L, -2, idx++);
         }
         return "missing closing ]";
-    }
-
     // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
-    if (curr.v == '{') {
+    } else if (curr.v == '{') {
         iter_next(src);
         return parse_table(L, src);
     }
