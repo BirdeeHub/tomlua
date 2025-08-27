@@ -33,7 +33,6 @@ struct iter_result {
 struct str_iter buf_to_iter(struct str_buf buf);
 struct str_iter str_to_iter(const char *str, size_t len);
 bool iter_starts_with(const struct str_iter *a, char *b, size_t len);
-bool iter_is_empty(const struct str_iter *a);
 struct iter_result iter_next(struct str_iter *iter);
 struct iter_result iter_peek(struct str_iter *iter);
 #endif  // SRC_STR_BUF_H_
