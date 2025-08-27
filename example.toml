@@ -103,3 +103,14 @@ channel = "🌐-general"
 welcome_message = "Hello, new user! 🎉👋"
 reminder_message = "Don't forget to check updates! 🕒🔔"
 priority_levels = ["low", "medium", "high 🚨"]
+
+# trailing comma in table and multiline not allowed
+# testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
+# testkey8 = {
+#    a.d = 1,
+#    b = [ 2, 3 ],
+#    c = 3
+# }
+# more invalid syntax
+# dasdsadsa = aaa2121dasssss22
+# dasdsadsa = 22aaa2121dasssss22
