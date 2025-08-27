@@ -7,7 +7,7 @@ DESTDIR  ?= ./lib
 SRCS     = ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/parse.c
 INCLUDES = -I"$(LUA_INCDIR)"
 
-install: build
+all: build
 
 build: $(SRCS)
 	@mkdir -p $(DESTDIR)
