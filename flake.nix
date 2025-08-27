@@ -9,10 +9,10 @@
       lua,
       runCommandCC
     , ...
-    }: runCommandCC APPNAME {} ''
-      mkdir -p "$out"
-      $CC -O3 -fPIC -flto -ffast-math -fomit-frame-pointer -finline-functions -funroll-loops -shared -o "$out/${APPNAME}.so" '${./src/tomlua.c}' '${./src/parse_str.c}' '${./src/parse_keys.c}' '${./src/parse.c}' -I'${lua}/include' -Wl,-s
-    '';
+    }: runCommandCC APPNAME {
+      LUA_INCDIR = "${lua}/include";
+      DESTDIR = "${placeholder "out"}/lib";
+    } "make";
   in {
     overlays.default = final: prev: {
       ${APPNAME} = prev.callPackage app { lua = prev.luajit; };
@@ -26,18 +26,16 @@
     devShells = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
       lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson]);
-      devbuild = pkgs.writeShellScriptBin "build_cc" ''
-        mkdir -p ./build
-        ${pkgs.bear}/bin/bear -- $CC -O3 -fPIC -flto -ffast-math -fomit-frame-pointer -finline-functions -funroll-loops -shared -o ./build/tomlua.so ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/parse.c -I"${lua}/include" -Wl,-s
-      '';
     in {
       default = pkgs.mkShell {
         name = "tomlua-dev";
-        packages = [ lua devbuild ];
+        packages = [ lua pkgs.bear ];
         inputsFrom = [ ];
+        LUA_INCDIR = "${lua}/include";
+        DESTDIR = "./lib";
         shellHook = ''
-          build_cc
-          export LUA_CPATH="./build/?.so;$LUA_CPATH"
+          make bear
+          export LUA_CPATH="./lib/?.so;$LUA_CPATH"
           exec zsh
         '';
       };
