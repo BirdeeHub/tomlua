@@ -98,8 +98,10 @@ static bool keys_push_move(struct keys_result *dst, struct str_buf *buf) {
 }
 
 void clear_keys_result(struct keys_result *dst) {
-    for (size_t i = 0; i < dst->len; i++) {
-        free_str_buf(&dst->v[i]);
+    if (dst->v) {
+        for (size_t i = 0; i < dst->len; i++) {
+            free_str_buf(&dst->v[i]);
+        }
     }
     free(dst->err);
     free(dst->v);
