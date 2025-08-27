@@ -4,11 +4,12 @@ if f then
     contents = f:read("*a")
     f:close()
 end
+-- print(contents)
+
 local inspect = require('inspect')
 local tomlua = require("tomlua")
-print(contents)
 -- Number of iterations for the benchmark
-local iterations = 1
+local iterations = 100000
 
 -- Benchmark
 local start_time = os.clock()
@@ -24,6 +25,6 @@ end
 
 local elapsed = os.clock() - start_time
 
-print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed, iterations / elapsed))
 print("Last result:", inspect(last_result))
 print("Last error:", last_error)
+print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed, iterations / elapsed))
