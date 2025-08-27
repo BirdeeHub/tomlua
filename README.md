@@ -8,7 +8,7 @@ Maybe it will get an encode function at some point.
 
 Maybe it will also get a real README, and some proper build instructions (although, it is in a nix flake so you can flake.nix for now idk)
 
-Benchmarking shows decode approaches cjson in speed though so far. So that is cool.
+Basic benchmarking shows decode approaches cjson in speed though so far. So that is cool.
 
 ```c
 enum ValueType {
