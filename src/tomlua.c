@@ -1,10 +1,9 @@
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <lua.h>
-#include <lauxlib.h>
 #include <string.h>
 #include <math.h>
+#include <lua.h>
+#include <lauxlib.h>
 
 #include "str_buf.h"
 #include "parse_str.h"
