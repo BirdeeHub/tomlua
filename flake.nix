@@ -29,7 +29,7 @@
     in {
       default = pkgs.mkShell {
         name = "tomlua-dev";
-        packages = [ lua pkgs.bear ];
+        packages = [ lua pkgs.luarocks pkgs.bear ];
         inputsFrom = [ ];
         LUA_INCDIR = "${lua}/include";
         DESTDIR = "./lib";
