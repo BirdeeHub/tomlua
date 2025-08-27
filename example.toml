@@ -10,6 +10,7 @@ testbinnumber = 0b11010110
 
 release_date = 2025-08-24T12:00:00Z
 last_backup = 2025-08-23T23:45:12-07:00
+last_modified = 2025-08-24 12:00:00Z
 
 servers = ["alpha", "beta", "gamma"]
 ports = [8000, 8001, 8002]
