@@ -20,8 +20,6 @@ struct str_buf new_buf_from_str(const char *str, size_t len);
 void free_str_buf(struct str_buf *buf);
 bool buf_push(struct str_buf *buf, const char c);
 bool buf_push_str(struct str_buf *buf, const char *str, const size_t len);
-bool buf_append(struct str_buf *dst, const struct str_buf *src);
-bool buf_equals(const struct str_buf *a, const struct str_buf *b);
 
 struct str_iter {
     const char *buf;

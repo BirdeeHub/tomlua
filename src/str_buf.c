@@ -63,38 +63,6 @@ bool buf_push_str(struct str_buf *buf, const char *str, size_t len) {
     return true;
 }
 
-bool buf_append(struct str_buf *dst, const struct str_buf *src) {
-    if (!dst || !src) return false;
-    size_t required_len = dst->len + src->len;
-    if (required_len > dst->capacity) {
-        size_t new_capacity = dst->capacity;
-        while (new_capacity < required_len) {
-            new_capacity *= 2;
-        }
-        char *tmp = realloc(dst->data, new_capacity * sizeof(char));
-        if (!tmp) return false;
-        dst->data = tmp;
-        dst->capacity = new_capacity;
-    }
-
-    for (size_t i = 0; i < src->len; i++) {
-        dst->data[dst->len + i] = src->data[i];
-    }
-    dst->len += src->len;
-
-    return true;
-}
-
-bool buf_equals(const struct str_buf *a, const struct str_buf *b) {
-    if (!a || !b) return false;
-    if (a->len != b->len) return false;
-
-    for (size_t i = 0; i < a->len; i++) {
-        if (a->data[i] != b->data[i]) return false;
-    }
-    return true;
-}
-
 void free_str_buf(struct str_buf *buf) {
     if (buf) {
         if (buf->data) free(buf->data);
