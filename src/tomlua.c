@@ -4,6 +4,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "str_buf.h"
 #include "parse_str.h"
@@ -255,8 +256,37 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         free_str_buf(&buf);
         return NULL;
     // --- numbers (and dates?) ---
-    // TODO: add dates and base detection for 0x 0o and the like
+    } else if (iter_starts_with(src, "inf", 3)) {
+        for (int i = 0; i < 3; i++) iter_next(src);
+        lua_pushnumber(L, INFINITY);
+        return NULL;
+    } else if (iter_starts_with(src, "nan", 3)) {
+        for (int i = 0; i < 3; i++) iter_next(src);
+        lua_pushnumber(L, NAN);
+        return NULL;
     } else if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
+        if (curr.v == '+') {
+            if (iter_starts_with(src, "+inf", 4)) {
+                for (int i = 0; i < 4; i++) iter_next(src);
+                lua_pushnumber(L, INFINITY);
+                return NULL;
+            } else if (iter_starts_with(src, "+nan", 4)) {
+                for (int i = 0; i < 4; i++) iter_next(src);
+                lua_pushnumber(L, NAN);
+                return NULL;
+            }
+        } else if (curr.v == '-') {
+            if (iter_starts_with(src, "-inf", 4)) {
+                for (int i = 0; i < 4; i++) iter_next(src);
+                lua_pushnumber(L, -INFINITY);
+                return NULL;
+            } else if (iter_starts_with(src, "-nan", 4)) {
+                for (int i = 0; i < 4; i++) iter_next(src);
+                lua_pushnumber(L, -NAN);
+                return NULL;
+            }
+        }
+        // TODO: add dates and base detection for 0x 0o and the like
         struct str_buf buf = new_str_buf();
         bool is_float = false;
         while (iter_peek(src).ok) {
