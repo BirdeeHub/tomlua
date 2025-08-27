@@ -11,7 +11,7 @@
     , ...
     }: runCommandCC APPNAME {} ''
       mkdir -p "$out"
-      $CC -O3 -fPIC -flto -finline-functions -funroll-loops -shared -o "$out/${APPNAME}.so" '${./src/tomlua.c}' '${./src/parse_str.c}' '${./src/parse_keys.c}' '${./src/parse.c}' -I'${lua}/include'
+      $CC -O3 -fPIC -flto -ffast-math -fomit-frame-pointer -finline-functions -funroll-loops -shared -o "$out/${APPNAME}.so" '${./src/tomlua.c}' '${./src/parse_str.c}' '${./src/parse_keys.c}' '${./src/parse.c}' -I'${lua}/include'
     '';
   in {
     overlays.default = final: prev: {
@@ -28,7 +28,7 @@
       lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson]);
       devbuild = pkgs.writeShellScriptBin "build_cc" ''
         mkdir -p ./build
-        ${pkgs.bear}/bin/bear -- $CC -O3 -fPIC -flto -finline-functions -funroll-loops -shared -o ./build/tomlua.so ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/parse.c -I"${lua}/include"
+        ${pkgs.bear}/bin/bear -- $CC -O3 -fPIC -flto -ffast-math -fomit-frame-pointer -finline-functions -funroll-loops -shared -o ./build/tomlua.so ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/parse.c -I"${lua}/include"
       '';
     in {
       default = pkgs.mkShell {
