@@ -97,7 +97,7 @@ bool buf_equals(const struct str_buf *a, const struct str_buf *b) {
 
 void free_str_buf(struct str_buf *buf) {
     if (buf) {
-        free(buf->data);
+        if (buf->data) free(buf->data);
         buf->data = NULL;
         buf->len = buf->capacity = 0;
     }
@@ -150,8 +150,4 @@ struct iter_result iter_peek(struct str_iter *iter) {
     res.v = iter->buf[iter->pos];
     res.ok = true;
     return res;
-}
-
-void free_str_iter(struct str_iter *iter) {
-    free(iter);
 }

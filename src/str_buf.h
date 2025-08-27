@@ -38,5 +38,4 @@ bool iter_starts_with(const struct str_iter *a, char *b, size_t len);
 bool iter_is_empty(const struct str_iter *a);
 struct iter_result iter_next(struct str_iter *iter);
 struct iter_result iter_peek(struct str_iter *iter);
-void free_str_iter(struct str_iter *iter);
 #endif  // SRC_STR_BUF_H_
