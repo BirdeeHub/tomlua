@@ -128,6 +128,7 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
         if (d == '}') {
             iter_next(src);
             if (last_was_comma) {
+                lua_pop(L, 1);
                 return "trailing comma in inline table not allowed";
             }
             return NULL;
@@ -139,12 +140,12 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
             iter_next(src);
             return "inline tables can not be multi-line";
         } else if (d == ',') {
+            iter_next(src);
             if (last_was_comma) {
-                iter_next(src);
+                lua_pop(L, 1);
                 return "2 commas in a row!";
             }
             last_was_comma = true;
-            iter_next(src);
             continue;
         } else if (d == ' ' || d == '\t') {
             iter_next(src);
