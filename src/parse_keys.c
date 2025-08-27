@@ -98,19 +98,21 @@ static bool keys_push_move(struct keys_result *dst, struct str_buf *buf) {
 }
 
 void clear_keys_result(struct keys_result *dst) {
-    if (dst->v) {
-        for (size_t i = 0; i < dst->len; i++) {
-            free_str_buf(&dst->v[i]);
+    if (dst) {
+        if (dst->v) {
+            for (size_t i = 0; i < dst->len; i++) {
+                free_str_buf(&dst->v[i]);
+            }
+            free(dst->v);
         }
-        free(dst->v);
+        if (dst->err) {
+            free(dst->err);
+        }
+        dst->err = NULL;
+        dst->v = NULL;
+        dst->len = 0;
+        dst->cap = 0;
     }
-    if (dst->err) {
-        free(dst->err);
-    }
-    dst->err = NULL;
-    dst->v = NULL;
-    dst->len = 0;
-    dst->cap = 0;
 }
 
 struct keys_result parse_keys(struct str_iter *src) {
