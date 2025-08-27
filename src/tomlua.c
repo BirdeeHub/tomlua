@@ -257,7 +257,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         free_str_buf(&buf);
         return NULL;
     // --- numbers (and dates?) ---
-    // TODO: add dates
+    // TODO: add dates and fix base detection
     } else if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
         struct str_buf buf = new_str_buf();
         bool is_float = false;

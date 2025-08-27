@@ -16,6 +16,7 @@ local toml_data = [=[
         1, 2, 3, 4, 5,
     ]
     testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
+    testhexnumber = 0xDEADBEEF
 
     [[test]]
     names.hello = "h\u1234i"
