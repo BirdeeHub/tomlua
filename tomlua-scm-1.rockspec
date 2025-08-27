@@ -9,7 +9,6 @@ source = {
 
 description = {
    summary = "TOML parser for Lua implemented in C",
-   detailed = "High-performance TOML parser for Lua using Lua C API",
    homepage = "https://github.com/BirdeeHub/"..package,
    license = "MIT"
 }
