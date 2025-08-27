@@ -194,8 +194,6 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
-// TODO:
-// this function does not work very well yet
 static char *parse_value(lua_State *L, struct str_iter *src) {
     struct iter_result curr = iter_peek(src);
     if (!curr.ok) return "expected value, got end of file";
@@ -283,17 +281,6 @@ static int tomlua_parse(lua_State *L) {
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string
     struct str_iter src = str_to_iter(s, len);
-
-    // nicer tables if strict == false
-    // allows multiline and trailing comma
-    // bool strict = true;
-    // if (lua_gettop(L) >= 1 && lua_istable(L, 1)) {
-    //     lua_getfield(L, 1, "strict");   // stack: opts.strict
-    //     if (lua_isboolean(L, -1)) {
-    //         strict = lua_toboolean(L, -1) ? true : false;
-    //     }
-    //     lua_pop(L, 1); // pop opts.strict
-    // }
 
     lua_newtable(L);
     int top = luaL_ref(L, LUA_REGISTRYINDEX);
