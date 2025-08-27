@@ -631,6 +631,7 @@ static int tomlua_parse(lua_State *L) {
             clear_keys_result(&keys);
         }
     }
+    lua_pop(L, 1);
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     luaL_unref(L, LUA_REGISTRYINDEX, top);
