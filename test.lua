@@ -54,7 +54,7 @@ local toml_data = [=[
 -- print(contents)
 -- print(inspect(tomlua))
 -- Number of iterations for the benchmark
-local iterations = 1
+local iterations = 100000
 
 -- Benchmark
 local start_time = os.clock()
