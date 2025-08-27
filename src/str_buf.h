@@ -54,7 +54,7 @@ static inline struct str_buf new_buf_from_str(const char *str, size_t len) {
 static inline bool buf_push(struct str_buf *buf, char c) {
     if (!buf) return false;
     if (buf->len >= buf->capacity) {
-        size_t new_capacity = buf->capacity * 2;
+        size_t new_capacity = buf->capacity > 0 ? buf->capacity * 2 : 1;
         char *tmp = realloc(buf->data, new_capacity * sizeof(char));
         if (!tmp) {
             return false;
@@ -70,7 +70,7 @@ static inline bool buf_push_str(struct str_buf *buf, const char *str, size_t len
     if (!buf || !str) return false;
     size_t required_len = buf->len + len;
     if (required_len > buf->capacity) {
-        size_t new_capacity = buf->capacity;
+        size_t new_capacity = buf->capacity > 0 ? buf->capacity : 1;
         while (new_capacity < required_len) {
             new_capacity *= 2;
         }

@@ -39,7 +39,7 @@ static struct key_result parse_key(struct str_iter *src) {
 
 static bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
     if (dst->len >= dst->cap) {
-        dst->cap *= 2;
+        dst-> cap = dst->cap > 0 ? dst->cap * 2 : 1;
         struct str_buf *tmp = realloc(dst->v, dst->cap * sizeof(struct str_buf));
         if (!tmp) return false;
         dst->v = tmp;
