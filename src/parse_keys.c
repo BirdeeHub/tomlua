@@ -80,20 +80,20 @@ struct key_result parse_key(struct str_iter *src) {
     return dst;
 }
 
-static bool keys_push_move(struct keys_result *dst, struct str_buf *buf) {
+static bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
     if (dst->len >= dst->cap) {
         dst->cap *= 2;
         struct str_buf *tmp = realloc(dst->v, dst->cap * sizeof(struct str_buf));
-        if (!tmp) return false; // or handle OOM properly
+        if (!tmp) return false;
         dst->v = tmp;
     }
     dst->v[dst->len++] = (struct str_buf) {
-        .data = buf->data,
-        .len = buf->len,
-        .capacity = buf->capacity
+        .data = buf.data,
+        .len = buf.len,
+        .capacity = buf.capacity
     };
-    buf->data = NULL;
-    buf->len = buf->capacity = 0;
+    buf.data = NULL;
+    buf.len = buf.capacity = 0;
     return true;
 }
 
@@ -133,7 +133,7 @@ struct keys_result parse_keys(struct str_iter *src) {
             key.err = NULL;
             break;
         }
-        keys_push_move(&dst, &key.v);
+        keys_push_move(&dst, key.v);
         if (consume_whitespace_to_line(src)) {
             dst.err = "newlines not allowed between keys and their terminators: =, ], or ]]";
             break;
