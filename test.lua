@@ -12,11 +12,11 @@ local tomlua = require("tomlua")
 -- Number of iterations for the benchmark
 local iterations = 100000
 
--- Benchmark
-local start_time = os.clock()
-
 local last_result
 local last_error
+
+-- Benchmark
+local start_time = os.clock()
 
 for _ = 1, iterations do
     local data, err = tomlua.decode(contents)
