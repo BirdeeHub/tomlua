@@ -42,5 +42,5 @@ for _ = 1, iterations do
 end
 
 local elapsed2 = os.clock() - start_time
-print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed, iterations / elapsed))
+print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed2, iterations / elapsed2))
 print(string.format("tomlua/cjson: %.2f%%", (elapsed / elapsed2) * 100))
