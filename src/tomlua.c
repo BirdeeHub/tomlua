@@ -383,26 +383,78 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             free_str_buf(&buf);
             return NULL;
         } else {
-            // TODO: detect dates and pass on as strings, and numbers are allowed to have underscores in them (only 1 consecutive underscore at a time)
+            // detect dates and pass on as strings, and numbers are allowed to have underscores in them (only 1 consecutive underscore at a time)
             // is date if it has a - in it not immediately preceded by e or E
             // is date if it has a : in it
             struct str_buf buf = new_str_buf();
             bool is_float = false;
             bool is_date = false;
+            bool t_used = false;
+            bool z_used = false;
+            bool was_underscore = true;
             if (curr.v == '-' || curr.v == '+') buf_push(&buf, curr.v);
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
-                if ((ch >= '0' && ch <= '9') || ch == '-' || ch == '+' || ch == '.' || ch == 'e' || ch == 'E') {
-                    if (ch == '.' || ch == 'e' || ch == 'E') is_float = true;
+                if (ch == '_') {
+                    iter_next(src);
+                    if (was_underscore) {
+                        free_str_buf(&buf);
+                        return strdup("consecutive underscores not allowed in numbers");
+                    }
+                    was_underscore = true;
+                } else if (ch == 'e' || ch == 'E') {
+                    is_float = true;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                    struct iter_result next = iter_peek(src);
+                    if (next.ok && (next.v == '+' || next.v == '-')) {
+                        buf_push(&buf, ch);
+                        iter_next(src);
+                    }
+                    was_underscore = false;
+                } else if (ch == ':') {
+                    is_date = true;
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (ch == '-') {
+                    is_date = true;
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (is_date && !t_used && (ch == 'T' || ch == ' ')) {
+                    t_used = true;
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (is_date && !z_used && ch == 'Z') {
+                    z_used = true;
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (ch == '.') {
+                    is_float = true;
+                    was_underscore = false;
+                    buf_push(&buf, ch);
+                    iter_next(src);
+                } else if (ch >= '0' && ch <= '9') {
+                    was_underscore = false;
                     buf_push(&buf, ch);
                     iter_next(src);
                 } else {
+                    was_underscore = false;
                     break;
                 }
+            }
+            if (was_underscore) {
+                free_str_buf(&buf);
+                return strdup("number literals not allowed to have trailing underscores");
             }
             if (buf.len > 0) {
                 if (is_float) {
                     lua_pushnumber(L, strtod(buf.data, NULL));
+                } else if (is_date) {
+                    push_buf_to_lua_string(L, &buf);
                 } else {
                     lua_pushinteger(L, strtoll(buf.data, NULL, 10));
                 }
