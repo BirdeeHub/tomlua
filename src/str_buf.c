@@ -1,5 +1,4 @@
 #include "str_buf.h"
-#include "lua.h"
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -102,12 +101,6 @@ void free_str_buf(struct str_buf *buf) {
         buf->data = NULL;
         buf->len = buf->capacity = 0;
     }
-}
-
-bool push_buf_to_lua_string(lua_State *L, const struct str_buf *buf) {
-    if (!buf || !buf->data) return false;
-    lua_pushlstring(L, buf->data, buf->len);
-    return true;
 }
 
 struct str_iter buf_to_iter(struct str_buf buf) {

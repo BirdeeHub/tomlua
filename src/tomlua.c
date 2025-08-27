@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
-#include <stdint.h>
+#include <string.h>
+
 #include "str_buf.h"
 #include "parse_str.h"
+#include "parse_keys.h"
 
 // TODO: delete this, just for debugging
 static void print_lua_stack(lua_State *L, const char *label) {
@@ -32,253 +34,27 @@ static bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
-static bool is_identifier_char(char c) {
-    return (c >= 'A' && c <= 'Z') ||
-           (c >= 'a' && c <= 'z') ||
-           (c >= '0' && c <= '9') ||
-           (c == '_') || (c == '-');
-}
-
-// returns true if the end of the line or file was found
-static bool consume_whitespace_to_line(struct str_iter *src) {
-    // skips through the end of the line on trailing comments and failed parses
-    while (iter_peek(src).ok) {
-        char d = iter_peek(src).v;
-        if (d == '#') {
-            iter_next(src);
-            struct iter_result curr = iter_next(src);
-            while (curr.ok) {
-                if (curr.v == '\n') {
-                    return true;
-                } else if (curr.v == '\r' && iter_peek(src).v == '\n') {
-                    iter_next(src);
-                    return true;
-                }
-                curr = iter_next(src);
-            }
-            // reached EOF in a comment
-            return true;
-        } else if (d == '\n') {
-            iter_next(src);
-            return true;
-        } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_next(src);
-            iter_next(src);
-            return true;
-        } else if (d == ' ' || d == '\t') {
-            iter_next(src);
-        } else {
-            // read non-whitespace
-            return false;
-        }
-    }
-    // read whitespace until EOF
+static bool push_buf_to_lua_string(lua_State *L, const struct str_buf *buf) {
+    if (!buf || !buf->data) return false;
+    lua_pushlstring(L, buf->data, buf->len);
     return true;
 }
 
-enum ExprType {
-    EXPR_K_V,
-    HEADING_TABLE,
-    HEADING_ARRAY,
-    END_OF_FILE,
-};
-
-struct Keys {
-    enum ExprType type;
-    struct str_buf *vals;
-    size_t capacity;
-    size_t len;
-    char *err;
-};
-
-static bool push_buf_to_keys(struct Keys *dst, struct str_buf buf) {
-    if (dst->len >= dst->capacity) {
-        dst->capacity *= 2;
-        struct str_buf *tmp = realloc(dst->vals, dst->capacity * sizeof(struct str_buf));
-        if (!tmp) { dst->err = "OOM"; return false; }
-        dst->vals = tmp;
-        if (dst->vals == NULL) {
-            dst->err = "OOM";
-            return false;
-        }
-    }
-    dst->vals[dst->len++] = buf;
-    return true;
-}
-
-static void free_keys(struct Keys *keys) {
-    if (!keys || !keys->vals) return;
-    for (size_t i = 0; i < keys->len; i++) {
-        free_str_buf(&keys->vals[i]);
-    }
-    free(keys->vals);
-    keys->vals = NULL;
-    keys->len = keys->capacity = 0;
-}
-
-// TODO: pull the skipping of whitespace prior to the line out of here, and do it at callsites using consume_whitespace_to_line
-static struct Keys parse_keys(struct str_iter *src, bool strict) {
-    struct Keys dst = {
-        .type = EXPR_K_V,
-        .capacity = 4,
-        .len = 0,
-        .vals = malloc(4 * sizeof(struct str_buf)),
-        .err = NULL,
-    };
-    struct str_buf res = new_str_buf();
-    while (iter_peek(src).ok) {
-        char c = iter_peek(src).v;
-        if (c == '#') {
-            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
-                dst.err = "keys must be followed by ] ]] or =";
-                return dst;
-            }
-            iter_next(src);
-            while (iter_peek(src).ok) {
-                if (iter_peek(src).v == '\n') {
-                    iter_next(src);
-                    break;
-                } else if (iter_starts_with(src, "\r\n", 2)) {
-                    iter_next(src);
-                    iter_next(src);
-                    break;
-                }
-                iter_next(src);
-            }
-            continue;
-        }
-        if (c == ' ' || c == '\t') {
-            iter_next(src);
-            continue;
-        } else if (iter_starts_with(src, "[[", 2)) {
-            iter_next(src);
-            iter_next(src);
-            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
-                dst.err = "[[ headings may not start in the middle of keys";
-                return dst;
-            } else {
-                dst.type = HEADING_ARRAY;
-            }
-        } else if (c == '[') {
-            iter_next(src);
-            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
-                dst.err = "[ headings may not start in the middle of keys";
-                return dst;
-            } else {
-                dst.type = HEADING_TABLE;
-            }
-        } else if (c == '"') {
-            iter_next(src);
-            char *err = parse_basic_string(&res, src);
-            if (err != NULL) {
-                dst.err = err;
-                return dst;
-            }
-            if (!push_buf_to_keys(&dst, res)) {
-                return dst;
-            }
-            res = new_str_buf();
-            continue;
-        } else if (c == '.') {
-            iter_next(src);
-            if (!(res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V)) {
-                dst.err = "key cannot start with a dot";
-                return dst;
-            }
-            if (res.len > 0) {
-                if (!push_buf_to_keys(&dst, res)) {
-                    return dst;
-                }
-                res = new_str_buf();
-            }
-            continue;
-        } else if (is_identifier_char(c)) {
-            iter_next(src);
-            if (!buf_push(&res, c)) {
-                dst.err = "OOM";
-                return dst;
-            }
-            continue;
-        } else if (c == '\n') {
-            iter_next(src);
-            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
-                dst.err = "literal newlines not allowed in keys without being in strings";
-                return dst;
-            }
-            continue;
-        } else if(iter_starts_with(src, "\r\n", 2)) {
-            iter_next(src);
-            iter_next(src);
-            if (res.len > 0 || dst.len > 0 || dst.type != EXPR_K_V) {
-                dst.err = "literal newlines not allowed in keys without being in strings";
-                return dst;
-            }
-            continue;
-        } else if (dst.type == EXPR_K_V && c == '=') {
-            iter_next(src);
-            if (res.len != 0) {
-                if (!push_buf_to_keys(&dst, res)) {
-                    return dst;
-                }
-            }
-            if (dst.len == 0) {
-                dst.err = "you must have a key before the = or [in] [[headers]]";
-                return dst;
-            } else {
-                return dst;
-            }
-        } else if (dst.type == HEADING_ARRAY && iter_starts_with(src, "]]", 2)) {
-            iter_next(src);
-            iter_next(src);
-            if (res.len != 0) {
-                if (!push_buf_to_keys(&dst, res)) {
-                    return dst;
-                }
-            }
-            if (dst.len == 0) {
-                dst.err = "you must have a key in [[headers]]";
-                return dst;
-            } else {
-                return dst;
-            }
-        } else if (dst.type == HEADING_TABLE && c == ']') {
-            iter_next(src);
-            if (res.len != 0) {
-                if (!push_buf_to_keys(&dst, res)) {
-                    return dst;
-                }
-            }
-            if (dst.len == 0) {
-                dst.err = "you must have a key in [headers]";
-                return dst;
-            } else {
-                return dst;
-            }
-        }
-    }
-    if (res.len != 0) {
-        if (!push_buf_to_keys(&dst, res)) {
-            return dst;
-        }
-    }
-    if (!iter_peek(src).ok) {
-        dst.type = END_OF_FILE;
-    }
-    return dst;
-}
-
-static bool heading_nav(lua_State *L, struct Keys *keys, bool array_type, int top) {
+static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type, int top) {
+    if (keys->err != NULL) { return false; }
+    if (keys->len <= 0) { return false; }
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     for (size_t i = 0; i < keys->len; i++) {
-        push_buf_to_lua_string(L, &keys->vals[i]); // push key
+        push_buf_to_lua_string(L, &keys->v[i]); // push key
         lua_gettable(L, -2); // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1); // remove non-table
             lua_newtable(L); // create table
-            push_buf_to_lua_string(L, &keys->vals[i]);
+            push_buf_to_lua_string(L, &keys->v[i]);
             lua_pushvalue(L, -2); // push new table
             lua_settable(L, -4); // t[key] = new table
         } else if (!lua_istable(L, -1)) {
+            lua_pop(L, 1); // remove non-table
             return false;
         }
         lua_remove(L, -2); // remove parent table, keep child on top
@@ -302,30 +78,37 @@ static bool heading_nav(lua_State *L, struct Keys *keys, bool array_type, int to
 }
 
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
-static bool set_kv(lua_State *L, struct Keys *keys) {
+static bool set_kv(lua_State *L, struct keys_result *keys) {
+    if (keys->err != NULL) { return false; }
+    if (keys->len <= 0) {
+        keys->err = "no key provided to set";
+        return false;
+    }
     int value_idx = lua_gettop(L);  // value is on top
     int root_idx = value_idx - 1;   // the table to start navigation from
     lua_pushvalue(L, root_idx);     // copy root table to top
 
     // Navigate through all keys except the last
     for (size_t i = 0; i < keys->len - 1; i++) {
-        push_buf_to_lua_string(L, &keys->vals[i]); // push key
+        push_buf_to_lua_string(L, &keys->v[i]); // push key
         lua_gettable(L, -2);                        // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);      // remove nil
             lua_newtable(L);    // create new table
-            push_buf_to_lua_string(L, &keys->vals[i]);
+            push_buf_to_lua_string(L, &keys->v[i]);
             lua_pushvalue(L, -2); // push new table
             lua_settable(L, -4);  // t[key] = new table
         } else if (!lua_istable(L, -1)) {
-            // can't navigate through non-table
+            lua_pop(L, 1); // pop the table
+            lua_pop(L, 1); // pop the value
+            keys->err = "key is not a table";
             return false;
         }
         lua_remove(L, -2); // remove parent table
     }
 
     // Now top table is where we want to set the value
-    push_buf_to_lua_string(L, &keys->vals[keys->len - 1]); // push last key
+    push_buf_to_lua_string(L, &keys->v[keys->len - 1]); // push last key
     lua_pushvalue(L, value_idx); // push value
     lua_settable(L, -3);         // t[last_key] = value
 
@@ -334,27 +117,84 @@ static bool set_kv(lua_State *L, struct Keys *keys) {
     return true;
 }
 
-enum ValueType {
-    VALUE_STRING, // lua string
-    VALUE_INTEGER, // lua number
-    VALUE_FLOAT, // lua number
-    VALUE_BOOL, // lua bool
-    VALUE_ARRAY, // lua table
-    VALUE_TABLE, // lua table
-    LOCAL_DATE, // string for now
-    LOCAL_TIME, // string for now
-    LOCAL_DATETIME, // string for now
-    OFFSET_DATETIME, // string for now
-};
+static char *parse_value(lua_State *L, struct str_iter *src);
 
-// TODO:
+// adds a table to the lua stack and return NULL or error
+static char *parse_table(lua_State *L, struct str_iter *src) {
+    lua_newtable(L);
+    bool last_was_comma = false;
+    while (iter_peek(src).ok) {
+        char d = iter_peek(src).v;
+        if (d == '}') {
+            iter_next(src);
+            if (last_was_comma) {
+                return "trailing comma in inline table not allowed";
+            }
+            return NULL;
+        } else if (iter_peek(src).v == '\n') {
+            iter_next(src);
+            return "inline tables can not be multi-line";
+        } else if (iter_starts_with(src, "\r\n", 2)) {
+            iter_next(src);
+            iter_next(src);
+            return "inline tables can not be multi-line";
+        } else if (d == ',') {
+            if (last_was_comma) {
+                iter_next(src);
+                return "2 commas in a row!";
+            }
+            last_was_comma = true;
+            iter_next(src);
+            continue;
+        } else if (d == ' ' || d == '\t') {
+            iter_next(src);
+            continue;
+        }
+        last_was_comma = false;
+        struct keys_result keys = parse_keys(src);
+        if (keys.err != NULL) {
+            char *err = keys.err;
+            keys.err = NULL;
+            clear_keys_result(&keys);
+            return err;
+        }
+        if (iter_peek(src).ok && iter_peek(src).v != '=') {
+            clear_keys_result(&keys);
+            return "keys for assignment must end with =";
+        }
+        iter_next(src);
+        if (consume_whitespace_to_line(src)) {
+            clear_keys_result(&keys);
+            return "the value in key = value expressions must begin on the same line as the key!";
+        }
+        char *err = parse_value(L, src);
+        if (err != NULL) {
+            char *err = keys.err;
+            keys.err = NULL;
+            clear_keys_result(&keys);
+            return err;
+        }
+        if (!set_kv(L, &keys)) {
+            char *err = keys.err;
+            keys.err = NULL;
+            clear_keys_result(&keys);
+            return err;
+        }
+        clear_keys_result(&keys);
+        if (consume_whitespace_to_line(src)) {
+            return "toml inline tables cannot be multi-line";
+        }
+        struct iter_result next = iter_peek(src);
+        if (next.ok && (next.v != ',' && next.v != '}')) {
+            return "toml inline table values must be separated with , or ended with }";
+        }
+    }
+    return "missing closing }";
+}
+
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
-// this function does not work very well yet
-static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
-    if (consume_whitespace_to_line(src) && strict) { // ? allow in non-strict?
-        return "expected value, got newline";
-    }
+static char *parse_value(lua_State *L, struct str_iter *src) {
     struct iter_result curr = iter_peek(src);
     if (!curr.ok) return "expected value, got end of file";
     // --- boolean ---
@@ -381,7 +221,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
         return NULL;
     }
 
-    // --- number (integer or float) --- Should date be done here too?
+    // --- number (integer or float) --- //TODO: Should date be done here too?
     if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
         struct str_buf buf = new_str_buf();
         bool is_float = false;
@@ -421,7 +261,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
                 iter_next(src);
                 continue;
             }
-            char *err = parse_value(L, src, strict);
+            char *err = parse_value(L, src);
             if (err != NULL) return err;
             lua_rawseti(L, -2, idx++);
         }
@@ -431,40 +271,7 @@ static char *parse_value(lua_State *L, struct str_iter *src, bool strict) {
     // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
     if (curr.v == '{') {
         iter_next(src);
-        lua_newtable(L);
-        bool last_was_comma = false;
-        while (iter_peek(src).ok) {
-            char d = iter_peek(src).v;
-            if (d == '}') {
-                iter_next(src);
-                if (strict && last_was_comma) {
-                    return "trailing comma in inline table not allowed (in strict mode)";
-                }
-                return NULL;
-            } else if (strict && iter_peek(src).v == '\n') {
-                iter_next(src);
-                return "inline tables can not be multi-line (in strict mode)";
-            } else if (strict && iter_starts_with(src, "\r\n", 2)) {
-                iter_next(src);
-                iter_next(src);
-                return "inline tables can not be multi-line (in strict mode)";
-            } else if (d == ',') {
-                last_was_comma = true;
-                iter_next(src);
-                continue;
-            } else if (d == ' ' || d == '\t' || d == '\r' || d == '\n') {
-                iter_next(src);
-                continue;
-            }
-            last_was_comma = false;
-            struct Keys k = parse_keys(src, strict);
-            if (k.err != NULL) { free_keys(&k); return k.err; }
-            char *err = parse_value(L, src, strict);
-            if (err != NULL) { free_keys(&k); return err; }
-            if (!set_kv(L, &k)) { free_keys(&k); return "failed to set value"; }
-            free_keys(&k);
-        }
-        return "missing closing }";
+        return parse_table(L, src);
     }
     return "invalid value";
 }
@@ -475,49 +282,125 @@ static int tomlua_parse(lua_State *L) {
     lua_pop(L, 1); // pop the string
     struct str_iter src = str_to_iter(s, len);
 
-    bool strict = true;
-    if (lua_gettop(L) >= 1 && lua_istable(L, 1)) {
-        lua_getfield(L, 1, "strict");   // stack: opts.strict
-        if (lua_isboolean(L, -1)) {
-            strict = lua_toboolean(L, -1) ? true : false;
-        }
-        lua_pop(L, 1); // pop opts.strict
-    }
-
     lua_newtable(L);
     int top = luaL_ref(L, LUA_REGISTRYINDEX);
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
 
     while (iter_peek(&src).ok) {
-        size_t depth = 0;
-        enum ExprType *type;
-        struct Keys keys = parse_keys(&src, strict);
-        if (keys.type == END_OF_FILE) {
-            free_keys(&keys);
-            break;
+        // consume until non-blank line, consume initial whitespace, then end loop
+        while (consume_whitespace_to_line(&src)) {
+            if (iter_peek(&src).ok == false) break;
         }
-        if (keys.err != NULL) {
-            lua_pop(L, 1); // pop the table
-            lua_pushnil(L);
-            lua_pushfstring(L, "%s", keys.err);
-            free_keys(&keys);
-            return 2;
-        }
-        if (keys.type == EXPR_K_V) {
-            // [1] current root table
-            char *err = parse_value(L, &src, strict);
+        struct iter_result curr = iter_peek(&src);
+        if (!curr.ok) break;
+        char c = curr.v;
+        if (iter_starts_with(&src, "[[", 2)) {
+            iter_next(&src);
+            iter_next(&src);
+            struct keys_result keys = parse_keys(&src);
+            if (keys.err != NULL) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushfstring(L, "%s", keys.err);
+                clear_keys_result(&keys);
+                return 2;
+            }
+            if (iter_peek(&src).ok && !iter_starts_with(&src, "]]", 2)) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushstring(L, "table heading must end with ]]");
+                clear_keys_result(&keys);
+                return 2;
+            }
+            iter_next(&src);
+            iter_next(&src);
+            if (!consume_whitespace_to_line(&src)) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushstring(L, "array [[headers]] must have a new line before new values");
+                clear_keys_result(&keys);
+                return 2;
+            }
+            lua_pop(L, 1);
+            if (!heading_nav(L, &keys, true, top)) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushfstring(L, "%s", keys.err);
+                clear_keys_result(&keys);
+                return 2;
+            }
+            clear_keys_result(&keys);
+        } else if (c == '[') {
+            iter_next(&src);
+            struct keys_result keys = parse_keys(&src);
+            if (keys.err != NULL) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushfstring(L, "%s", keys.err);
+                clear_keys_result(&keys);
+                return 2;
+            }
+            if (iter_peek(&src).ok && iter_peek(&src).v != ']') {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushstring(L, "table heading must end with ]");
+                clear_keys_result(&keys);
+                return 2;
+            }
+            iter_next(&src);
+            if (!consume_whitespace_to_line(&src)) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushstring(L, "table [headers] must have a new line before new values");
+                clear_keys_result(&keys);
+                return 2;
+            }
+            lua_pop(L, 1);
+            if (!heading_nav(L, &keys, false, top)) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushfstring(L, "%s", keys.err);
+                clear_keys_result(&keys);
+                return 2;
+            }
+            clear_keys_result(&keys);
+        } else if (is_identifier_char(c) || c == '\'' || c == '"') {
+            struct keys_result keys = parse_keys(&src);
+            if (keys.err != NULL) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushfstring(L, "%s", keys.err);
+                clear_keys_result(&keys);
+                return 2;
+            }
+            if (iter_peek(&src).ok && iter_peek(&src).v != '=') {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushstring(L, "keys for assignment must end with =");
+                clear_keys_result(&keys);
+                return 2;
+            }
+            iter_next(&src);
+            if (consume_whitespace_to_line(&src)) {
+                lua_pop(L, 1);
+                lua_pushnil(L);
+                lua_pushstring(L, "the value in key = value expressions must begin on the same line as the key!");
+                clear_keys_result(&keys);
+                return 2;
+            }
+            char *err = parse_value(L, &src);
             if (err != NULL) {  // parse_value should push value on top of stack
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "failed to parse value for key %s due to error: %s", keys.vals[keys.len - 1].data, err);
-                free_keys(&keys);
+                lua_pushfstring(L, "failed to parse value for key due to error: %s", err);
+                clear_keys_result(&keys);
                 return 2;
             }
-            if (strict && !consume_whitespace_to_line(&src)) {
+            if (!consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
                 lua_pushfstring(L, "key value pairs must be followed by a new line (or end of file)");
-                free_keys(&keys);
+                clear_keys_result(&keys);
                 return 2;
             }
             // [1] value
@@ -525,31 +408,13 @@ static int tomlua_parse(lua_State *L) {
             if (!set_kv(L, &keys)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "cannot set key %s, path blocked by non-table", keys.vals[keys.len - 1].data);
-                free_keys(&keys);
+                lua_pushfstring(L, "cannot set key due to: %s", keys.err);
+                clear_keys_result(&keys);
                 return 2;
             }
             // [1] current root table
-        } else if (keys.type == HEADING_TABLE) {
-            lua_pop(L, 1); // pop the table
-            if (!heading_nav(L, &keys, false, top)) {
-                lua_pop(L, 1); // pop the table
-                lua_pushnil(L);
-                lua_pushfstring(L, "unable to heading_nav to %s", keys.vals[keys.len - 1].data);
-                free_keys(&keys);
-                return 2;
-            }
-        } else if (keys.type == HEADING_ARRAY) {
-            lua_pop(L, 1); // pop the table
-            if (!heading_nav(L, &keys, true, top)) {
-                lua_pop(L, 1); // pop the table
-                lua_pushnil(L);
-                lua_pushfstring(L, "unable to heading_nav to %s", keys.vals[keys.len - 1].data);
-                free_keys(&keys);
-                return 2;
-            }
+            clear_keys_result(&keys);
         }
-        free_keys(&keys);
     }
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);

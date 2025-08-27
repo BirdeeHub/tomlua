@@ -11,7 +11,7 @@
     , ...
     }: runCommandCC APPNAME {} ''
       mkdir -p "$out"
-      $CC -O2 -fPIC -shared -o "$out/${APPNAME}.so" '${./src/tomlua.c}' '${./src/str_buf.c}' '${./src/parse_str.c}' -I'${lua}/include'
+      $CC -O2 -fPIC -shared -o "$out/${APPNAME}.so" '${./src/tomlua.c}' '${./src/str_buf.c}' '${./src/parse_str.c}' '${./src/parse_keys.c}' -I'${lua}/include'
     '';
   in {
     overlays.default = final: prev: {
@@ -28,7 +28,7 @@
       lua = pkgs.luajit.withPackages (lp: [lp.inspect]);
       devbuild = pkgs.writeShellScriptBin "build_cc" ''
         mkdir -p ./build
-        ${pkgs.bear}/bin/bear -- $CC -O2 -fPIC -shared -o ./build/tomlua.so ./src/tomlua.c ./src/str_buf.c ./src/parse_str.c -I"${lua}/include"
+        ${pkgs.bear}/bin/bear -- $CC -O2 -fPIC -shared -o ./build/tomlua.so ./src/tomlua.c ./src/str_buf.c ./src/parse_str.c ./src/parse_keys.c -I"${lua}/include"
       '';
     in {
       default = pkgs.mkShell {

@@ -17,22 +17,6 @@ local toml_data = [=[
     ]
     testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
 
-    # todo: ??
-    # release_date = 2025-08-24T12:00:00Z
-    # last_backup = 2025-08-23T23:45:12-07:00
-
-    # trailing comma in table and multiline not allowed in strict mode:
-    # testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
-    # testkey8 = {
-    #    a.d = 1,
-    #    b = [ 2, 3 ],
-    #    c = 3
-    # }
-
-    # more invalid syntax
-    # dasdsadsa = aaa2121dasssss22
-    # dasdsadsa = 22aaa2121dasssss22
-
     [[test]]
     names.hello = "h\u1234i"
     key = "value"
@@ -47,6 +31,20 @@ local toml_data = [=[
     "tk1-assass.com" = "value"
     [[test2.key2]]
     das = "dasda"
+
+    # todo: ??
+    # release_date = 2025-08-24T12:00:00Z
+    # last_backup = 2025-08-23T23:45:12-07:00
+    # trailing comma in table and multiline not allowed
+    # testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
+    # testkey8 = {
+    #    a.d = 1,
+    #    b = [ 2, 3 ],
+    #    c = 3
+    # }
+    # more invalid syntax
+    # dasdsadsa = aaa2121dasssss22
+    # dasdsadsa = 22aaa2121dasssss22
 ]=]
 -- print(contents)
 -- print(inspect(tomlua))
