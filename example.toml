@@ -4,6 +4,7 @@ debug = true
 max_connections = 256
 pi_value = 3.1415926535
 
+# Arrays why does this do invalid pointer core dumped instead of something sensible?
 servers = ["alpha", "beta", "gamma"]
 ports = [8000, 8001, 8002]
 enabled_features = ["logging", "metrics", "cache"]
