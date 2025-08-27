@@ -70,6 +70,6 @@ end
 
 local elapsed = os.clock() - start_time
 
-print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f ns/iteration", iterations, elapsed, iterations / elapsed))
+print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed, iterations / elapsed))
 print("Last result:", inspect(last_result))
 print("Last error:", last_error)
