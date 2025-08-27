@@ -1,79 +1,115 @@
-# Example configuration for a hypothetical app
-
 title = "Example TOML Config"
-# version = "1.2.3"
-# debug = true
-# max_connections = 256
-# pi_value = 3.1415926535
+version = "1.2.3"
+debug = true
+max_connections = 256
+pi_value = 3.1415926535
 
-# Arrays
-# servers = ["alpha", "beta", "gamma"]
-# ports = [8000, 8001, 8002]
-# enabled_features = ["logging", "metrics", "cache"]
+servers = ["alpha", "beta", "gamma"]
+ports = [8000, 8001, 8002]
+enabled_features = ["logging", "metrics", "cache"]
 
-# database.replica_backup = { host = "replica2.local", port = 5434 }
+testkey7 = { a.d = 1, b = [ 2, 3 ], c = 3 }
+testkey = "value"
+testkey2 = true
+testkey3 = false
+testkey4 = 1
+testkey5 = 1.5
+testkey6 = [
+    1, 2, 3, 4, 5,
+]
+
+database.replica_backup = { host = "replica2.local", port = 5434 }
 
 # Dates and times
 # release_date = 2025-08-24T12:00:00Z
 # last_backup = 2025-08-23T23:45:12-07:00
 
-# Nested table for database settings
-# [database]
-# type = "postgres"
-# host = "localhost"
-# port = 5432
-# username = "dbuser"
-# password = "secret"
-# pool_size = 10
+# TODO: hex and other bases
+# testhexnumber = 0xDEADBEEF
 
-# Nested tables with subtables
-# [database.replica]
-# host = "replica1.local"
-# port = 5433
+[[test]]
+names.hello = "h\u1234i"
+key = "value"
+[[test]]
+key = "value"
+"names"."boo" = "hi"
+names."boo2" = "hi2"
+"tk2-dsadas.com" = "value"
+[test2]
+key = "value"
+[test2]
+"tk1-assass.com" = "value"
+[[test2.key2]]
+das1 = "dasda"
+das2 = 'dasda'
+'das3' = '''da
+sda'''
+das4 = """da
+sda"""
 
-# Table for application modules
-# [modules]
+# trailing comma in table and multiline not allowed
+# testkey10 = { a.d = 1, b = [ 2, 3 ], c = 3, }
+# testkey8 = {
+#    a.d = 1,
+#    b = [ 2, 3 ],
+#    c = 3
+# }
+# more invalid syntax
+# dasdsadsa = aaa2121dasssss22
+# dasdsadsa = 22aaa2121dasssss22
 
-# [modules.logging]
-# level = "info"
-# file = "/var/log/app.log"
+[database]
+type = "postgres"
+host = "localhost"
+port = 5432
+username = "dbuser"
+password = "secret"
+pool_size = 10
 
-# [modules.metrics]
-# enabled = true
-# interval_seconds = 30
+[database.replica]
+host = "replica1.local"
+port = 5433
 
-# [modules.cache]
-# enabled = true
-# type = "redis"
-# host = "127.0.0.1"
-# port = 6379
-# ttl_seconds = 600
+[modules]
 
-# Table array for users
-# [[users]]
-# name = "Alice"
-# email = "alice@example.com"
-# roles = ["admin", "developer"]
+[modules.logging]
+level = "info"
+file = "/var/log/app.log"
 
-# [[users]]
-# name = "Bob"
-# email = "bob@example.com"
-# roles = ["developer"]
+[modules.metrics]
+enabled = true
+interval_seconds = 30
 
-# [[users]]
-# name = "Carol"
-# email = "carol@example.com"
-# roles = ["tester"]
+[modules.cache]
+enabled = true
+type = "redis"
+host = "127.0.0.1"
+port = 6379
+ttl_seconds = 600
 
-# Inline tables
-# [app]
-# name = "SuperApp"
-# authors = ["Alice", "Bob"]
-# license = "MIT"
+[[users]]
+name = "Alice"
+email = "alice@example.com"
+roles = ["admin", "developer"]
 
-# [notifications]
-# enabled = true
-# channel = "🌐-general"
-# welcome_message = "Hello, new user! 🎉👋"
-# reminder_message = "Don't forget to check updates! 🕒🔔"
-# priority_levels = ["low", "medium", "high 🚨"]
+[[users]]
+name = "Bob"
+email = "bob@example.com"
+roles = ["developer"]
+
+[[users]]
+name = "Carol"
+email = "carol@example.com"
+roles = ["tester"]
+
+[app]
+name = "SuperApp"
+authors = ["Alice", "Bob"]
+license = "MIT"
+
+[notifications]
+enabled = true
+channel = "🌐-general"
+welcome_message = "Hello, new user! 🎉👋"
+reminder_message = "Don't forget to check updates! 🕒🔔"
+priority_levels = ["low", "medium", "high 🚨"]
