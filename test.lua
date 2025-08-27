@@ -31,8 +31,11 @@ local toml_data = [=[
     "tk1-assass.com" = "value"
     [[test2.key2]]
     das1 = "dasda"
-    das3 = 'dasda'
-    'das2' = '''dasda'''
+    das2 = 'dasda'
+    'das3' = '''da
+    sda'''
+    das4 = """da
+    sda"""
 
     # todo: ??
     # release_date = 2025-08-24T12:00:00Z

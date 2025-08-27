@@ -5,7 +5,7 @@
 #include "./str_buf.h"
 
 char *parse_basic_string(struct str_buf *dst, struct str_iter *src);
-// char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src);
+char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src);
 char *parse_literal_string(struct str_buf *dst, struct str_iter *src);
 char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src);
 

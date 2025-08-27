@@ -208,8 +208,21 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         lua_pushboolean(L, 0);
         return NULL;
     }
-    // --- string --- TODO: add the last type of string
-    if (curr.v == '"') {
+    // --- strings ---
+    if (iter_starts_with(src, "\"\"\"", 3)) {
+        struct str_buf buf = new_str_buf();
+        iter_next(src);
+        iter_next(src);
+        iter_next(src);
+        char *err = parse_multi_basic_string(&buf, src);
+        if (err != NULL) {
+            free_str_buf(&buf);
+            return err;
+        }
+        push_buf_to_lua_string(L, &buf);
+        free_str_buf(&buf);
+        return NULL;
+    } else if (curr.v == '"') {
         struct str_buf buf = new_str_buf();
         iter_next(src);
         char *err = parse_basic_string(&buf, src);
@@ -220,8 +233,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         push_buf_to_lua_string(L, &buf);
         free_str_buf(&buf);
         return NULL;
-    }
-    if (iter_starts_with(src, "'''", 3)) {
+    } else if (iter_starts_with(src, "'''", 3)) {
         struct str_buf buf = new_str_buf();
         iter_next(src);
         iter_next(src);
@@ -234,8 +246,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         push_buf_to_lua_string(L, &buf);
         free_str_buf(&buf);
         return NULL;
-    }
-    if (curr.v == '\'') {
+    } else if (curr.v == '\'') {
         struct str_buf buf = new_str_buf();
         iter_next(src);
         char *err = parse_literal_string(&buf, src);

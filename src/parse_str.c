@@ -117,6 +117,51 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
     return "end of content reached before end of string";
 }
 
+char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
+    while (iter_peek(src).ok) {
+        struct iter_result current = iter_next(src);
+        char c = current.v;
+        struct iter_result nextres = iter_peek(src);
+        if (c == '\\' && nextres.ok) {
+            char next = iter_next(src).v;
+            switch (next) {
+                case 'b': if (!buf_push(dst, '\b')) return "OOM"; break;
+                case 't': if (!buf_push(dst, '\t')) return "OOM"; break;
+                case 'n': if (!buf_push(dst, '\n')) return "OOM"; break;
+                case 'f': if (!buf_push(dst, '\f')) return "OOM"; break;
+                case 'r': if (!buf_push(dst, '\r')) return "OOM"; break;
+                case '"': if (!buf_push(dst, '\"')) return "OOM"; break;
+                case '\\': if (!buf_push(dst, '\\')) return "OOM"; break;
+                // \uXXXX \UXXXXXXXX
+                case 'u':
+                case 'U': {
+                    struct str_buf escaped = new_str_buf();
+                    bool is_long = next == 'U';
+                    int hex_len = is_long ? 8 : 4;
+                    for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
+                        if (!buf_push(&escaped, iter_next(src).v)) {
+                            free_str_buf(&escaped);
+                            return "OOM";
+                        }
+                    }
+                    char *err = push_unicode(dst, &escaped, is_long);
+                    free_str_buf(&escaped);
+                    if (err != NULL) return err;
+                } break;
+                default:
+                    if (!buf_push(dst, next)) return "OOM";
+            }
+        } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
+            iter_next(src);
+            iter_next(src);
+            return NULL;
+        } else {
+            if (!buf_push(dst, c)) return "OOM";
+        }
+    }
+    return "end of content reached before end of string";
+}
+
 char *parse_literal_string(struct str_buf *dst, struct str_iter *src) {
     while (iter_peek(src).ok) {
         struct iter_result current = iter_next(src);
