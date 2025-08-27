@@ -1,6 +1,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include "parse.h"
+
 int luaopen_tomlua(lua_State *L) {
     // --- 64-bit integer check ---
     if (sizeof(lua_Integer) < 8) {
