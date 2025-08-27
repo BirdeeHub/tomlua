@@ -154,7 +154,10 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
         last_was_comma = false;
         struct keys_result keys = parse_keys(src);
         if (keys.err != NULL) {
-            return keys.err;
+            char *err = keys.err;
+            keys.err = NULL;
+            clear_keys_result(&keys);
+            return err;
         }
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
             clear_keys_result(&keys);
@@ -167,10 +170,13 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
         }
         char *err = parse_value(L, src);
         if (err != NULL) {
-            return keys.err;
+            return err;
         }
         if (!set_kv(L, &keys)) {
-            return keys.err;
+            char *err = keys.err;
+            keys.err = NULL;
+            clear_keys_result(&keys);
+            return err;
         }
         clear_keys_result(&keys);
         if (consume_whitespace_to_line(src)) {
