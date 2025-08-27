@@ -123,6 +123,7 @@ struct keys_result parse_keys(struct str_iter *src) {
         struct key_result key = parse_key(src);
         if (key.err != NULL) {
             dst.err = key.err;
+            key.err = NULL;
             break;
         }
         keys_push_move(&dst, &key.v);
