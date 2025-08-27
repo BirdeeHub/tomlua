@@ -18,10 +18,6 @@ dependencies = {
    "lua >= 5.1"
 }
 
-test_dependencies = {
-   "lua >= 5.1"
-}
-
 build = {
    type = "make",
    build_pass = false,
