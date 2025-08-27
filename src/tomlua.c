@@ -197,7 +197,7 @@ static char *parse_table(lua_State *L, struct str_iter *src) {
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 static char *parse_value(lua_State *L, struct str_iter *src) {
     struct iter_result curr = iter_peek(src);
-    if (!curr.ok) return "expected value, got end of file";
+    if (!curr.ok) return "expected value, got end of content";
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
         for (int i = 0; i < 4; i++) iter_next(src);
@@ -213,6 +213,32 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         struct str_buf buf = new_str_buf();
         iter_next(src);
         char *err = parse_basic_string(&buf, src);
+        if (err != NULL) {
+            free_str_buf(&buf);
+            return err;
+        }
+        push_buf_to_lua_string(L, &buf);
+        free_str_buf(&buf);
+        return NULL;
+    }
+    if (iter_starts_with(src, "'''", 3)) {
+        struct str_buf buf = new_str_buf();
+        iter_next(src);
+        iter_next(src);
+        iter_next(src);
+        char *err = parse_multi_literal_string(&buf, src);
+        if (err != NULL) {
+            free_str_buf(&buf);
+            return err;
+        }
+        push_buf_to_lua_string(L, &buf);
+        free_str_buf(&buf);
+        return NULL;
+    }
+    if (curr.v == '\'') {
+        struct str_buf buf = new_str_buf();
+        iter_next(src);
+        char *err = parse_literal_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
             return err;
@@ -400,7 +426,7 @@ static int tomlua_parse(lua_State *L) {
             if (!consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "key value pairs must be followed by a new line (or end of file)");
+                lua_pushfstring(L, "key value pairs must be followed by a new line (or end of content)");
                 clear_keys_result(&keys);
                 return 2;
             }

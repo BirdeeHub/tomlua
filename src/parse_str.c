@@ -114,6 +114,36 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
             if (!buf_push(dst, c)) return "OOM";
         }
     }
-    return "OOM";
+    return "end of content reached before end of string";
 }
 
+char *parse_literal_string(struct str_buf *dst, struct str_iter *src) {
+    while (iter_peek(src).ok) {
+        struct iter_result current = iter_next(src);
+        char c = current.v;
+        struct iter_result nextres = iter_peek(src);
+        if (c == '\n' || c == '\r' && nextres.v == '\n') {
+            return "literal strings are single-line only";
+        } else if (c == '\'') {
+            return NULL;
+        } else {
+            if (!buf_push(dst, c)) return "OOM";
+        }
+    }
+    return "end of content reached before end of string";
+}
+
+char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src) {
+    while (iter_peek(src).ok) {
+        struct iter_result current = iter_next(src);
+        char c = current.v;
+        if (c == '\'' && iter_starts_with(src, "''", 2)) {
+            iter_next(src);
+            iter_next(src);
+            return NULL;
+        } else {
+            if (!buf_push(dst, c)) return "OOM";
+        }
+    }
+    return "end of content reached before end of string";
+}

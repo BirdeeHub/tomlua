@@ -55,13 +55,16 @@ struct key_result parse_key(struct str_iter *src) {
     };
     struct iter_result current = iter_peek(src);
     if (!current.ok) {
-        dst.err = "expected key, got end of file";
+        dst.err = "expected key, got end of content";
         return dst;
     }
     char c = current.v;
     if (c == '"') {
         iter_next(src);
         dst.err = parse_basic_string(&dst.v, src);
+    }else if (c == '\'') {
+        iter_next(src);
+        dst.err = parse_literal_string(&dst.v, src);
     } else if (is_identifier_char(c)) {
         current = iter_peek(src);
         while (is_identifier_char(current.v)) {

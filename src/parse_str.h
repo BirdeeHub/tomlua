@@ -4,7 +4,9 @@
 
 #include "./str_buf.h"
 
-//TODO: add the other types of strings
 char *parse_basic_string(struct str_buf *dst, struct str_iter *src);
+// char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src);
+char *parse_literal_string(struct str_buf *dst, struct str_iter *src);
+char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src);
 
 #endif  // SRC_PARSE_STR_H_
