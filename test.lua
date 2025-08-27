@@ -9,6 +9,7 @@ end
 local inspect = require('inspect')
 local cjson = require('cjson.safe')
 local tomlua = require("tomlua")
+
 -- Number of iterations for the benchmark
 local iterations = 100000
 
