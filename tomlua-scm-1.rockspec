@@ -24,9 +24,10 @@ test_dependencies = {
 
 build = {
    type = "make",
+   build_pass = false,
    install = {
        lib = {
-           ['tomlua.so'] = 'lib/tomlua.so';
-       }
-   }
+           ['tomlua.so'] = 'lib/tomlua.so',
+       },
+   },
 }
