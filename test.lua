@@ -9,7 +9,7 @@ end
 local inspect = require('inspect')
 local tomlua = require("tomlua")
 -- Number of iterations for the benchmark
-local iterations = 100000
+local iterations = 1
 
 -- Benchmark
 local start_time = os.clock()
