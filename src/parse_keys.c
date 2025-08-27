@@ -80,7 +80,7 @@ struct key_result parse_key(struct str_iter *src) {
     return dst;
 }
 
-bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
+static bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
     if (dst->len >= dst->cap) {
         dst->cap *= 2;
         dst->v = realloc(dst->v, dst->cap * sizeof(struct str_buf));

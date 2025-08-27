@@ -18,7 +18,6 @@ struct keys_result {
 bool is_identifier_char(char c);
 bool consume_whitespace_to_line(struct str_iter *src);
 struct key_result parse_key(struct str_iter *src);
-bool keys_push(struct keys_result *dst, struct str_buf buf);
 void clear_keys_result(struct keys_result *dst);
 struct keys_result parse_keys(struct str_iter *src);
 
