@@ -47,7 +47,6 @@ bool consume_whitespace_to_line(struct str_iter *src) {
     return true;
 }
 
-// TODO: add 'literal strings'
 struct key_result parse_key(struct str_iter *src) {
     struct key_result dst = {
         .err = NULL,
