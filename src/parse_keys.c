@@ -102,9 +102,12 @@ void clear_keys_result(struct keys_result *dst) {
         for (size_t i = 0; i < dst->len; i++) {
             free_str_buf(&dst->v[i]);
         }
+        free(dst->v);
     }
-    free(dst->err);
-    free(dst->v);
+    if (dst->err) {
+        free(dst->err);
+    }
+    dst->err = NULL;
     dst->v = NULL;
     dst->len = 0;
     dst->cap = 0;
