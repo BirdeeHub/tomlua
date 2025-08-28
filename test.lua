@@ -87,5 +87,5 @@ print(inspect(data))
 print(inspect(err))
 
 print()
-print("ENCODE TEST")
+print("TODO: ENCODE")
 print(tomlua.encode(testdata))
