@@ -81,7 +81,7 @@ int tomlua_encode(lua_State *L) {
 
     if (!push_buf_to_lua_string(L, &output)) {
         free_str_buf(&output);
-        return luaL_error(L, "tomlua.encode failed to result string to lua stack");
+        return luaL_error(L, "tomlua.encode failed to push result string to lua stack");
     }
     free_str_buf(&output);
     return 1;
