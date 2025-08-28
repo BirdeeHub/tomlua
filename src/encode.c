@@ -30,11 +30,9 @@ int tomlua_encode(lua_State *L) {
         return luaL_error(L, "tomlua.encode expects a table as its only argument! tomlua.encode(target)");
     }
     struct str_buf output = new_str_buf();
-    // int top = luaL_ref(L, LUA_REGISTRYINDEX); // Do I need this?
 
     // TODO: iterate through tables collecting values to string as you go.
 
-    // luaL_unref(L, LUA_REGISTRYINDEX, top); // Do I need this?
     if (!push_buf_to_lua_string(L, &output)) {
         free_str_buf(&output);
         return luaL_error(L, "tomlua.encode failed to push string to lua stack");
