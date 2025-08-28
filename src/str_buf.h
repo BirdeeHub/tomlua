@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <lua.h>
 
 #ifndef __cplusplus
 typedef int bool;
@@ -85,6 +86,12 @@ static inline bool buf_push_str(struct str_buf *buf, const char *str, size_t len
     }
     buf->len += len;
 
+    return true;
+}
+
+static bool push_buf_to_lua_string(lua_State *L, const struct str_buf *buf) {
+    if (!buf || !buf->data) return false;
+    lua_pushlstring(L, buf->data, buf->len);
     return true;
 }
 

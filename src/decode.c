@@ -34,23 +34,23 @@ static bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
-static bool push_buf_to_lua_string(lua_State *L, const struct str_buf *buf) {
-    if (!buf || !buf->data) return false;
-    lua_pushlstring(L, buf->data, buf->len);
-    return true;
-}
-
 static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type, int top) {
     if (keys->err != NULL) { return false; }
     if (keys->len <= 0) { return false; }
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     for (size_t i = 0; i < keys->len; i++) {
-        push_buf_to_lua_string(L, &keys->v[i]); // push key
+        if (!push_buf_to_lua_string(L, &keys->v[i])) {
+            keys->err = strdup("tomlua.decode failed to push string to lua stack");
+            return false;
+        }
         lua_gettable(L, -2); // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1); // remove non-table
             lua_newtable(L); // create table
-            push_buf_to_lua_string(L, &keys->v[i]);
+            if (!push_buf_to_lua_string(L, &keys->v[i])) {
+                keys->err = strdup("tomlua.decode failed to push string to lua stack");
+                return false;
+            }
             lua_pushvalue(L, -2); // push new table
             lua_settable(L, -4); // t[key] = new table
         } else if (!lua_istable(L, -1)) {
@@ -62,6 +62,7 @@ static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type,
     if (array_type) {
         // We’re at the table that should act as an array
         if (!lua_istable(L, -1)) {
+            keys->err = strdup("target of array heading isn't a table");
             return false;
         }
 #if LUA_VERSION_NUM == 501
@@ -94,12 +95,18 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
 
     // Navigate through all keys except the last
     for (size_t i = 0; i < keys->len - 1; i++) {
-        push_buf_to_lua_string(L, &keys->v[i]); // push key
+        if (!push_buf_to_lua_string(L, &keys->v[i])) {
+            keys->err = strdup("tomlua.decode failed to push string to lua stack");
+            return false;
+        }
         lua_gettable(L, -2);                        // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);      // remove nil
             lua_newtable(L);    // create new table
-            push_buf_to_lua_string(L, &keys->v[i]);
+            if (!push_buf_to_lua_string(L, &keys->v[i])) {
+                keys->err = strdup("tomlua.decode failed to push string to lua stack");
+                return false;
+            }
             lua_pushvalue(L, -2); // push new table
             lua_settable(L, -4);  // t[key] = new table
         } else if (!lua_istable(L, -1)) {
@@ -112,7 +119,10 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
     }
 
     // Now top table is where we want to set the value
-    push_buf_to_lua_string(L, &keys->v[keys->len - 1]); // push last key
+    if (!push_buf_to_lua_string(L, &keys->v[keys->len - 1])) {
+        keys->err = strdup("tomlua.decode failed to push string to lua stack");
+        return false;
+    }
     lua_pushvalue(L, value_idx); // push value
     lua_settable(L, -3);         // t[last_key] = value
 
@@ -220,7 +230,10 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             free_str_buf(&buf);
             return err;
         }
-        push_buf_to_lua_string(L, &buf);
+        if (!push_buf_to_lua_string(L, &buf)) {
+            free_str_buf(&buf);
+            return strdup("tomlua.decode failed to push string to lua stack");
+        }
         free_str_buf(&buf);
         return NULL;
     } else if (curr.v == '"') {
@@ -231,7 +244,10 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             free_str_buf(&buf);
             return err;
         }
-        push_buf_to_lua_string(L, &buf);
+        if (!push_buf_to_lua_string(L, &buf)) {
+            free_str_buf(&buf);
+            return strdup("tomlua.decode failed to push string to lua stack");
+        }
         free_str_buf(&buf);
         return NULL;
     } else if (iter_starts_with(src, "'''", 3)) {
@@ -244,7 +260,10 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             free_str_buf(&buf);
             return err;
         }
-        push_buf_to_lua_string(L, &buf);
+        if (!push_buf_to_lua_string(L, &buf)) {
+            free_str_buf(&buf);
+            return strdup("tomlua.decode failed to push string to lua stack");
+        }
         free_str_buf(&buf);
         return NULL;
     } else if (curr.v == '\'') {
@@ -255,7 +274,10 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             free_str_buf(&buf);
             return err;
         }
-        push_buf_to_lua_string(L, &buf);
+        if (!push_buf_to_lua_string(L, &buf)) {
+            free_str_buf(&buf);
+            return strdup("tomlua.decode failed to push string to lua stack");
+        }
         free_str_buf(&buf);
         return NULL;
     // --- numbers (and dates?) ---
@@ -457,7 +479,10 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
                 if (is_float) {
                     lua_pushnumber(L, strtod(buf.data, NULL));
                 } else if (is_date) {
-                    push_buf_to_lua_string(L, &buf);
+                    if (!push_buf_to_lua_string(L, &buf)) {
+                        free_str_buf(&buf);
+                        return strdup("tomlua.decode failed to push date string to lua stack");
+                    }
                 } else {
                     lua_pushinteger(L, strtoll(buf.data, NULL, 10));
                 }
@@ -497,12 +522,12 @@ int tomlua_decode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
     if (argno < 1) {
-        return luaL_error(L, "tomlua requires at least 1 argument! tomlua.decode(str, defaults?)");
+        return luaL_error(L, "tomlua.decode requires at least 1 argument! tomlua.decode(str, defaults?)");
     } else if (argno == 1 || (argno == 2 && !lua_istable(L, -1))) {
         // add a new table to use as top if none was provided
         lua_newtable(L);
     } else if (argno > 2) {
-        return luaL_error(L, "tomlua takes only 1 or 2 arguments! tomlua.decode(str, defaults?)");
+        return luaL_error(L, "tomlua.decode takes only 1 or 2 arguments! tomlua.decode(str, defaults?)");
     }
     // pops and saves the table
     int top = luaL_ref(L, LUA_REGISTRYINDEX);
