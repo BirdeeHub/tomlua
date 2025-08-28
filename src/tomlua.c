@@ -12,5 +12,7 @@ int luaopen_tomlua(lua_State *L) {
     lua_newtable(L); // module table
     lua_pushcfunction(L, tomlua_decode);
     lua_setfield(L, -2, "decode");
+    lua_pushcfunction(L, tomlua_encode);
+    lua_setfield(L, -2, "encode");
     return 1;
 }
