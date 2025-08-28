@@ -9,6 +9,25 @@
 #include "parse_str.h"
 #include "parse_keys.h"
 
+// TODO: delete this, just for debugging
+static void print_lua_stack(lua_State *L, const char *label) {
+    int top = lua_gettop(L);
+    printf("=== Stack: %s ===\n", label);
+    for (int i = top; i >= 1; i--) {
+        int t = lua_type(L, i);
+        const char *type_name = lua_typename(L, t);
+        int neg_index = i - top - 1; // e.g. i=top => -1, i=top-1 => -2
+        printf("%d (%d): %s", i, neg_index, type_name);
+        if (t == LUA_TSTRING || t == LUA_TNUMBER) {
+            size_t len;
+            const char *s = lua_tolstring(L, i, &len);
+            printf(" -> '%.*s'", (int)len, s);
+        }
+        printf("\n");
+    }
+    printf("===================\n");
+}
+
 static bool is_hex_char(char c) {
     return (c >= '0' && c <= '9') ||
            (c >= 'A' && c <= 'F') ||
@@ -503,17 +522,29 @@ int tomlua_decode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
     if (argno < 1) {
-        return luaL_error(L, "tomlua.decode requires at least 1 argument! tomlua.decode(str, defaults?)");
-    } else if (argno == 1 || (argno == 2 && !lua_istable(L, -1))) {
-        // add a new table to use as top if none was provided
-        lua_newtable(L);
+        lua_pushnil(L);
+        lua_pushstring(L, "tomlua.decode requires at least 1 argument! tomlua.decode(str, defaults?) -> table?, err?");
+        return 2;
     } else if (argno > 2) {
-        return luaL_error(L, "tomlua.decode takes only 1 or 2 arguments! tomlua.decode(str, defaults?)");
+        lua_pop(L, argno - 2);
+    }
+    // add a new table to use as top if arg 2 != table
+    if (argno == 1){
+        lua_newtable(L);
+    } else if (argno == 2 && !lua_istable(L, -1)) {
+        lua_pop(L, 1);
+        lua_newtable(L);
     }
     // pops and saves the table
     int top = luaL_ref(L, LUA_REGISTRYINDEX);
 
     // get the toml string
+    if (!lua_isstring(L, -1)) {
+        luaL_unref(L, LUA_REGISTRYINDEX, top);
+        lua_pushnil(L);
+        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(str, defaults?) -> table?, err?");
+        return 2;
+    }
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string
@@ -538,6 +569,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             if (iter_peek(&src).ok && !iter_starts_with(&src, "]]", 2)) {
@@ -545,6 +577,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushstring(L, "table heading must end with ]]");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             iter_next(&src);
@@ -554,6 +587,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushstring(L, "array [[headers]] must have a new line before new values");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             lua_pop(L, 1);
@@ -562,6 +596,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             clear_keys_result(&keys);
@@ -573,6 +608,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             if (iter_peek(&src).ok && iter_peek(&src).v != ']') {
@@ -580,6 +616,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushstring(L, "table heading must end with ]");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             iter_next(&src);
@@ -588,6 +625,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushstring(L, "table [headers] must have a new line before new values");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             lua_pop(L, 1);
@@ -596,6 +634,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             clear_keys_result(&keys);
@@ -606,6 +645,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "%s", keys.err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             if (iter_peek(&src).ok && iter_peek(&src).v != '=') {
@@ -613,6 +653,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushstring(L, "keys for assignment must end with =");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             iter_next(&src);
@@ -621,6 +662,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushstring(L, "the value in key = value expressions must begin on the same line as the key!");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             char *err = parse_value(L, &src);
@@ -630,6 +672,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushfstring(L, "failed to parse value for key due to error: %s", err);
                 free(err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             if (!consume_whitespace_to_line(&src)) {
@@ -637,6 +680,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "key value pairs must be followed by a new line (or end of content)");
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             // [1] value
@@ -646,6 +690,7 @@ int tomlua_decode(lua_State *L) {
                 lua_pushnil(L);
                 lua_pushfstring(L, "cannot set key due to: %s", keys.err);
                 clear_keys_result(&keys);
+                luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
             // [1] current root table

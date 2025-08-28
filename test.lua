@@ -11,7 +11,7 @@ end
 -- print(contents)
 
 -- Number of iterations for the benchmark
-local iterations = 1
+local iterations = 100000
 
 local last_result
 local last_error
@@ -47,6 +47,17 @@ print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations 
 print(string.format("tomlua/cjson: %.2f%%", (elapsed / elapsed2) * 100))
 
 print()
+print("will this error")
+local data, err = tomlua.decode({ bleh = "haha", })
+print(inspect(data), "  :  ", inspect(err))
+print("will this error")
+data, err = tomlua.decode("hehe = 'haha'", "Im the wrong type and will be ignored!")
+print(inspect(data), "  :  ", inspect(err))
+print("will this error")
+data, err = tomlua.decode()
+print(inspect(data), "  :  ", inspect(err))
+
+print()
 print("OVERLAY DEFAULTS TEST")
 
 local testdata = {
@@ -68,7 +79,7 @@ testtable.value = true
 newval = "nope"
 ]=]
 
-local data, err = tomlua.decode(testtoml, testdata)
+data, err = tomlua.decode(testtoml, testdata)
 print(inspect(data))
 print(inspect(err))
 
