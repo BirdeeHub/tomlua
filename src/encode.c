@@ -21,7 +21,7 @@ static void print_lua_stack(lua_State *L, const char *label) {
     printf("===================\n");
 }
 
-static char *encode_table(lua_State *L, struct str_buf *output) {
+static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline) {
     // TODO: iterate recursively through tables collecting values to string as you go.
     // This iterates through 1 table, but its not gonna work because of detecting array vs table from lua
     // This first loop probably needs to leave the values on the stack and just check if the keys are all integers with no holes
@@ -79,7 +79,7 @@ int tomlua_encode(lua_State *L) {
     }
     struct str_buf output = new_str_buf();
 
-    char *err = encode_table(L, &output);
+    char *err = encode_table(L, &output, false);
     if (err != NULL) {
         lua_pushstring(L, err);
         free(err);
