@@ -1,8 +1,8 @@
+#include <stdlib.h>
+#include <string.h>
 #include "parse_keys.h"
 #include "parse_str.h"
 #include "str_buf.h"
-#include <stdlib.h>
-#include <string.h>
 
 static struct key_result parse_key(struct str_iter *src) {
     struct key_result dst = {
