@@ -21,6 +21,45 @@ static void print_lua_stack(lua_State *L, const char *label) {
     printf("===================\n");
 }
 
+static char *encode_table(lua_State *L, struct str_buf *output) {
+    // TODO: iterate recursively through tables collecting values to string as you go.
+    lua_pushnil(L); // next(nil) // get first kv pair on stack
+    while (lua_next(L, -2) != 0) {
+        // now at stack: ... table key value
+        int key_type = lua_type(L, -2);
+        int table_type = lua_type(L, -1);
+
+        if (key_type == LUA_TSTRING) {
+            size_t klen;
+            const char *k = lua_tolstring(L, -2, &klen);
+            buf_push_str(output, k, klen);
+        } else if (key_type == LUA_TNUMBER) {
+            lua_Number n = lua_tonumber(L, -2);
+            char tmp[64];
+            int len = snprintf(tmp, sizeof tmp, "%g", n);
+            buf_push_str(output, tmp, len);
+        }
+        buf_push(output, ' ');
+        buf_push(output, '=');
+        buf_push(output, ' ');
+
+        if (table_type == LUA_TSTRING) {
+            size_t vlen;
+            const char *v = lua_tolstring(L, -1, &vlen);
+            buf_push_str(output, v, vlen);
+        } else if (table_type == LUA_TNUMBER) {
+            lua_Number n = lua_tonumber(L, -1);
+            char tmp[64];
+            int len = snprintf(tmp, sizeof tmp, "%g", n);
+            buf_push_str(output, tmp, len);
+        }
+        buf_push(output, '\n');
+
+        lua_pop(L, 1); // pop value, keep key for next lua_next
+    }
+    return NULL;
+}
+
 int tomlua_encode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
@@ -31,11 +70,18 @@ int tomlua_encode(lua_State *L) {
     }
     struct str_buf output = new_str_buf();
 
-    // TODO: iterate through tables collecting values to string as you go.
+    char *err = encode_table(L, &output);
+    if (err != NULL) {
+        lua_pushstring(L, err);
+        free(err);
+        free_str_buf(&output);
+        return lua_error(L);
+    };
+    lua_pop(L, 1); // pop input table
 
     if (!push_buf_to_lua_string(L, &output)) {
         free_str_buf(&output);
-        return luaL_error(L, "tomlua.encode failed to push string to lua stack");
+        return luaL_error(L, "tomlua.encode failed to result string to lua stack");
     }
     free_str_buf(&output);
     return 1;

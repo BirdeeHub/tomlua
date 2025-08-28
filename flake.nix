@@ -12,7 +12,7 @@
     }: runCommandCC APPNAME {
       LUA_INCDIR = "${lua}/include";
       DESTDIR = "${placeholder "out"}/lib";
-    } "cd ${builtins.path { path = ./.; }} && make install";
+    } "cd ${builtins.path { path = ./.; }} && make build";
   in {
     overlays.default = final: prev: {
       ${APPNAME} = prev.callPackage app { lua = prev.luajit; };

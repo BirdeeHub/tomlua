@@ -11,7 +11,7 @@ end
 -- print(contents)
 
 -- Number of iterations for the benchmark
-local iterations = 100000
+local iterations = 1
 
 local last_result
 local last_error
@@ -46,6 +46,9 @@ local elapsed2 = os.clock() - start_time
 print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed2, iterations / elapsed2))
 print(string.format("tomlua/cjson: %.2f%%", (elapsed / elapsed2) * 100))
 
+print()
+print("OVERLAY DEFAULTS TEST")
+
 local testdata = {
     a = {
         b = { "1b", "2b" },
@@ -68,3 +71,7 @@ newval = "nope"
 local data, err = tomlua.decode(testtoml, testdata)
 print(inspect(data))
 print(inspect(err))
+
+print()
+print("ENCODE TEST")
+print(tomlua.encode(testdata))
