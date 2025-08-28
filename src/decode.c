@@ -110,8 +110,7 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
             lua_pushvalue(L, -2); // push new table
             lua_settable(L, -4);  // t[key] = new table
         } else if (!lua_istable(L, -1)) {
-            lua_pop(L, 1); // pop the table
-            lua_pop(L, 1); // pop the value
+            lua_pop(L, 2);
             keys->err = strdup("key is not a table");
             return false;
         }
@@ -126,8 +125,7 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
     lua_pushvalue(L, value_idx); // push value
     lua_settable(L, -3);         // t[last_key] = value
 
-    lua_pop(L, 1); // pop the table
-    lua_pop(L, 1); // pop the value
+    lua_pop(L, 2);
     return true;
 }
 
