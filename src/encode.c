@@ -27,6 +27,7 @@ static char *encode_table(lua_State *L, struct str_buf *output) {
     // This first loop probably needs to leave the values on the stack and just check if the keys are all integers with no holes
     // Then a second loop can go ahead and push all those to the output once it knows how to do so.
     // Although maybe a big enough table would then overflow the stack? IDK.
+    // Honestly, I probably have to just iterate twice because of that...
     // This is because I want to detect if table without actually iterating through the whole table twice.
     // I also need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
     // this is because in toml, once you do [[array]] you cant make arrays within the tables in that array in that manner
