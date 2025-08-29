@@ -259,7 +259,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         }
         free_str_buf(&buf);
         return NULL;
-    // --- numbers (and dates?) ---
+    // --- numbers (and dates) ---
     } else if (iter_starts_with(src, "inf", 3)) {
         for (int i = 0; i < 3; i++) iter_next(src);
         lua_pushnumber(L, INFINITY);
