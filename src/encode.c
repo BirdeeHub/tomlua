@@ -56,7 +56,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     // I need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
     // this is because in toml, once you do [[array]] you cant make arrays within the tables in that array in that manner
     // so once you are within [[oneofthese]] you now have to do arrays and tables as inline...
-    // you should use the lua to_string functions to get the string representation of the non-table values for safety and to respect metamethods
+    // you should use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
     // any errors should be returned as heap allocated strings so that free gets set up to handle dynamic error messages later
     // pass errors along to the caller wherever possible.
     return NULL;
