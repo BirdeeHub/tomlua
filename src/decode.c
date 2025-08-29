@@ -113,7 +113,7 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
 static char *parse_value(lua_State *L, struct str_iter *src);
 
 // adds a table to the lua stack and return NULL or error
-static inline char *parse_table(lua_State *L, struct str_iter *src) {
+static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
     lua_newtable(L);
     bool last_was_comma = false;
     while (iter_peek(src).ok) {
@@ -492,7 +492,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
     // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
     } else if (curr.v == '{') {
         iter_next(src);
-        return parse_table(L, src);
+        return parse_inline_table(L, src);
     }
     return strdup("invalid value");
 }
