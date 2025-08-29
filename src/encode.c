@@ -113,7 +113,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     }
     printf("%d\n", headingno);
     print_lua_stack(L, "TEST");
-    // TODO: go through table and arrays left on stack, number of them given by headingno, and output them
+    // TODO: go through table and arrays left on stack, number of pairs given by headingno, and output them
     // output them using a heading, if it is an [[array.heading]] you will then pass in is_inline to the recursive call, which will cause the internal lists and tables to be inline instead
     // then finally, pop 1 more to pop off current table
     return NULL;
