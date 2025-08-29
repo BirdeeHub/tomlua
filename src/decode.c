@@ -620,7 +620,7 @@ int tomlua_decode(lua_State *L) {
                 return 2;
             }
             clear_keys_result(&keys);
-        } else if (is_identifier_char(c) || c == '\'' || c == '"') {
+        } else {
             struct keys_result keys = parse_keys(&src);
             if (keys.err != NULL) {
                 lua_pop(L, 1);
