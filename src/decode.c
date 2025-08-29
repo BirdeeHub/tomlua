@@ -538,9 +538,9 @@ int tomlua_decode(lua_State *L) {
             while (end_line == 1) {
                 end_line = consume_whitespace_to_line(&src);
             }
+            if (end_line == 2) break;
         }
         struct iter_result curr = iter_peek(&src);
-        if (!curr.ok) break;
         char c = curr.v;
         if (iter_starts_with(&src, "[[", 2)) {
             iter_next(&src);
