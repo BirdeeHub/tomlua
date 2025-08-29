@@ -51,7 +51,8 @@ static bool top_is_lua_array(lua_State *L) {
 
 static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, bool force_table) {
     bool is_array = !force_table && top_is_lua_array(L);
-    // TODO: iterate recursively through tables collecting values to string as you go.
+    // TODO: iterate recursively through tables pushing to output as you go
+    // using `bool buf_push(struct str_buf *buf, char c)` and `bool buf_push_str(struct str_buf *buf, const char *str, size_t len)`
     // I need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
     // this is because in toml, once you do [[array]] you cant make arrays within the tables in that array in that manner
     // so once you are within [[oneofthese]] you now have to do arrays and tables as inline...
