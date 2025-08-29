@@ -10,6 +10,9 @@ If it does will also get a real README.
 
 Basic benchmarking shows decode compares at about 1.50x cjson in runtime duration for 100000 iterations of processing the example.toml file.
 
+However the cjson in the benchmark does not need to deal with comments or empty lines as it is parsing the result of cjson.encode in the benchmark.
+So I feel this is pretty good for something that doesn't use simd or parallelism or other such fancy tricks.
+
 ```c
 enum ValueType {
     VALUE_STRING, // lua string
