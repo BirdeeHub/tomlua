@@ -92,6 +92,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
         // values
         if (!lua_istable(L, -1)) {
             // TODO: use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
+            // print properly escaped key = value line
         } else if (top_is_lua_array(L)) {
             if (is_inline) {
                 // TODO: inline array
