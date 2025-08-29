@@ -65,7 +65,7 @@ int tomlua_encode(lua_State *L) {
         return luaL_error(L, "tomlua.encode expects 1 argument! tomlua.encode(table)");
     }
     if (!lua_istable(L, -1)) {
-        return luaL_error(L, "tomlua.encode expects a non-array-type table as its only argument! tomlua.encode(table)");
+        return luaL_error(L, "tomlua.encode expects a table as its only argument! tomlua.encode(table)");
     }
     struct str_buf output = new_str_buf();
 
