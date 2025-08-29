@@ -532,9 +532,12 @@ int tomlua_decode(lua_State *L) {
     // set top as the starting location
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     while (iter_peek(&src).ok) {
-        // consume until non-blank line, consume initial whitespace, then end loop
-        while (consume_whitespace_to_line(&src)) {
-            if (iter_peek(&src).ok == false) break;
+        {
+            // consume until non-blank line, consume initial whitespace, then end loop
+            int end_line = consume_whitespace_to_line(&src);
+            while (end_line == 1) {
+                end_line = consume_whitespace_to_line(&src);
+            }
         }
         struct iter_result curr = iter_peek(&src);
         if (!curr.ok) break;
