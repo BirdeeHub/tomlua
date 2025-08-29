@@ -69,7 +69,7 @@ static bool is_lua_array(lua_State *L, int idx) {
 }
 
 // writes a non-table value to output, escaping properly to be placed in a toml file
-// static char *encode_single(lua_State *L, struct str_buf *output) {
+// static char *encode_string(lua_State *L, struct str_buf *output) {
 // }
 
 // writes a non-table value to output, escaping properly to be placed in a toml file
