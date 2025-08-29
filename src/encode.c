@@ -75,6 +75,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     // you should use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
     // any errors should be returned as heap allocated strings so that free gets set up to handle dynamic error messages later
     // pass errors along to the caller wherever possible.
+    // for clarity of output, when !is_inline delay outputting headings of array and table type until after the others have been added to the current heading.
     return NULL;
 }
 
