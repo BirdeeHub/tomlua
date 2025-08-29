@@ -68,7 +68,7 @@ static bool is_lua_array(lua_State *L, int idx) {
     return is_array;
 }
 
-// static char *encode_value(lua_State *L, struct str_buf *output) {
+// static char *encode_single(lua_State *L, struct str_buf *output) {
 // }
 
 // static char *encode_key(lua_State *L, struct str_buf *output) {
