@@ -113,7 +113,7 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
 static char *parse_value(lua_State *L, struct str_iter *src);
 
 // adds a table to the lua stack and return NULL or error
-static char *parse_table(lua_State *L, struct str_iter *src) {
+static inline char *parse_table(lua_State *L, struct str_iter *src) {
     lua_newtable(L);
     bool last_was_comma = false;
     while (iter_peek(src).ok) {
