@@ -64,6 +64,12 @@ static bool top_is_lua_array(lua_State *L) {
     return is_array;
 }
 
+// static char *encode_value(lua_State *L, struct str_buf *output) {
+// }
+
+// static char *encode_key(lua_State *L, struct str_buf *output) {
+// }
+
 static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, bool is_array) {
     // TODO: iterate recursively through tables pushing to output as you go
     // using `bool buf_push(struct str_buf *buf, char c)` and `bool buf_push_str(struct str_buf *buf, const char *str, size_t len)`
@@ -97,8 +103,10 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
 int tomlua_encode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
-    if (argno < 1 || argno > 1) {
+    if (argno < 1) {
         return luaL_error(L, "tomlua.encode expects 1 argument! tomlua.encode(table)");
+    } else if (argno > 1) {
+        lua_pop(L, argno - 1);
     }
     if (!lua_istable(L, -1)) {
         return luaL_error(L, "tomlua.encode expects a table as its only argument! tomlua.encode(table)");
