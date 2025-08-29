@@ -60,7 +60,6 @@ static bool top_is_lua_array(lua_State *L) {
             break;
         }
     }
-    lua_pop(L, 1);
     if (highest_int_key != count || count == 0) is_array = false;
     return is_array;
 }
@@ -72,10 +71,35 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     // I need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
     // this is because in toml, once you do [[array]] you cant make arrays within the tables in that array in that manner
     // so once you are within [[oneofthese]] you now have to do arrays and tables as inline...
-    // you should use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
     // any errors should be returned as heap allocated strings so that free gets set up to handle dynamic error messages later
     // pass errors along to the caller wherever possible.
     // for clarity of output, when !is_inline delay outputting headings of [[array]] and [table] types until after the others have been added to the current heading.
+    lua_pushnil(L);
+    while (lua_next(L, -2) != 0) {
+        // now at stack: ... table key value
+        if (!lua_istable(L, -2)) {
+            int keytype = lua_type(L, -2);
+            if (keytype == LUA_TSTRING || keytype == LUA_TNUMBER) {
+                // escape and push key (they can be bare or " and ' strings)
+            } else {
+                return strdup("tomlua.encode only supports strings and numbers as table keys");
+            }
+        } else if (is_array) {
+            // TODO: implement array output
+        } else {
+            // TODO: implement table output
+        }
+
+        // values
+        if (!lua_istable(L, -1)) {
+            // TODO: use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
+        } else if (is_array) {
+            // TODO: implement array output
+        } else {
+            // TODO: implement table output
+        }
+        lua_pop(L, 1);
+    }
     return NULL;
 }
 
@@ -97,7 +121,7 @@ int tomlua_encode(lua_State *L) {
         free_str_buf(&output);
         return lua_error(L);
     };
-    lua_pop(L, 1); // pop input table
+    lua_pop(L, 1);
 
     if (!push_buf_to_lua_string(L, &output)) {
         free_str_buf(&output);
