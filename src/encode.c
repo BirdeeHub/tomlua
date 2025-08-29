@@ -77,17 +77,9 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     lua_pushnil(L);
     while (lua_next(L, -2) != 0) {
         // now at stack: ... table key value
-        if (!lua_istable(L, -2)) {
-            int keytype = lua_type(L, -2);
-            if (keytype == LUA_TSTRING || keytype == LUA_TNUMBER) {
-                // escape and push key (they can be bare or " and ' strings)
-            } else {
-                return strdup("tomlua.encode only supports strings and numbers as table keys");
-            }
-        } else if (is_array) {
-            // TODO: implement array output
-        } else {
-            // TODO: implement table output
+        int keytype = lua_type(L, -2);
+        if (keytype != LUA_TSTRING && keytype != LUA_TNUMBER) {
+            return strdup("tomlua.encode only supports strings and numbers as table keys");
         }
 
         // values
