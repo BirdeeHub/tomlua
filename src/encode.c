@@ -23,12 +23,12 @@ static void print_lua_stack(lua_State *L, const char *label) {
     printf("===================\n");
 }
 
-static bool top_is_lua_array(lua_State *L) {
+static bool is_lua_array(lua_State *L, int idx) {
     // probably dont need this check:
     // if (!lua_istable(L, -1)) return false;
 
     // getmetatable(stack_top).array to allow overriding of representation
-    if (lua_getmetatable(L, -1)) {
+    if (lua_getmetatable(L, idx)) {
         // stack: ... table mt
         lua_getfield(L, -1, "array");
         if (!lua_isnil(L, -1)) {
@@ -46,18 +46,20 @@ static bool top_is_lua_array(lua_State *L) {
     int count = 0;
     lua_Number highest_int_key = 0;
     lua_pushnil(L); // next(nil) // get first kv pair on stack
-    while (lua_next(L, -2) != 0) {
-        // now at stack: ... table key value
+    while (lua_next(L, idx - 1) != 0) {
+        // now at stack: key value
         lua_pop(L, 1); // pop value, keep key to check and for next lua_next
         if (lua_isnumber(L, -1)) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != floor(key)) {
+                lua_pop(L, 1);
                 is_array = false;
                 break;
             }
             count++;
             if (key > highest_int_key) highest_int_key = key;
         } else {
+            lua_pop(L, 1);
             is_array = false;
             break;
         }
@@ -93,7 +95,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
         if (!lua_istable(L, -1)) {
             // TODO: use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
             // print properly escaped key = value line
-        } else if (top_is_lua_array(L)) {
+        } else if (is_lua_array(L, -1)) {
             if (is_inline) {
                 // TODO: inline array
             } else {
