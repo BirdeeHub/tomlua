@@ -52,7 +52,7 @@ static bool is_lua_array(lua_State *L, int idx) {
         if (lua_isnumber(L, -1)) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != floor(key)) {
-                lua_pop(L, 1);
+                lua_pop(L, 1);  // normally lua_next leaves no values when done, so if we break early, pop
                 is_array = false;
                 break;
             }
@@ -85,8 +85,9 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     // any errors should be returned as heap allocated strings so that free gets set up to handle dynamic error messages later
     // pass errors along to the caller wherever possible.
     // for clarity of output, when !is_inline delay outputting headings of [[array]] and [table] types until after the others have been added to the current heading.
+    int headingno = 0;
     lua_pushnil(L);
-    while (lua_next(L, -2) != 0) {
+    while (lua_next(L, -2 - headingno * 2) != 0) {
         // now at stack: ... table key value
         int keytype = lua_type(L, -2);
         if (keytype != LUA_TSTRING && keytype != LUA_TNUMBER) {
@@ -97,21 +98,24 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
         if (!lua_istable(L, -1)) {
             // TODO: use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
             // print properly escaped key = value line
-        } else if (is_lua_array(L, -1)) {
-            if (is_inline) {
-                // TODO: inline array
+            lua_pop(L, 1); // pop value, leave key for next
+        } else if (is_inline) {
+            if (is_lua_array(L, -1)) {
+                // TODO: inline array, encode_table(L, output, is_inline, true) to the recursive call
             } else {
-                // TODO: array heading (delay until end of loop so the heading starts after the current def)
+                // TODO: inline table, encode_table(L, output, is_inline, false) to the recursive call
             }
+            lua_pop(L, 1); // pop value, leave key for next
         } else {
-            if (is_inline) {
-                // TODO: inline table
-            } else {
-                // TODO: table heading (delay until end of loop so the heading starts after the current def)
-            }
+            headingno++;
+            lua_pushvalue(L, -2); // copy key to top for lua_next, saving k-v on the stack for making headings out of
         }
-        lua_pop(L, 1);
     }
+    printf("%d\n", headingno);
+    print_lua_stack(L, "TEST");
+    // TODO: go through table and arrays left on stack, number of them given by headingno, and output them
+    // output them using a heading, if it is an [[array.heading]] you will then pass in is_inline to the recursive call, which will cause the internal lists and tables to be inline instead
+    // then finally, pop 1 more to pop off current table
     return NULL;
 }
 
