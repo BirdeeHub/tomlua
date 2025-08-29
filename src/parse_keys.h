@@ -26,7 +26,9 @@ static inline bool is_identifier_char(char c) {
 
 // consumes whitespace until end of whitespace, line, or file.
 // returns true if the end of the line or file was found
+// 0 for whitespace ending before end of line
 // 1 for end of line, 2 for end of file
+// (both 1 and 2 will be read as true in if statements)
 static inline int consume_whitespace_to_line(struct str_iter *src) {
     // skips through the end of the line on trailing comments and failed parses
     while (iter_peek(src).ok) {
@@ -60,7 +62,7 @@ static inline int consume_whitespace_to_line(struct str_iter *src) {
         }
     }
     // read whitespace until EOF
-    return 2;  // 2 will also be read as true in if statements
+    return 2;
 }
 
 static inline void clear_keys_result(struct keys_result *dst) {
