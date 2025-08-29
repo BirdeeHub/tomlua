@@ -24,7 +24,9 @@ static void print_lua_stack(lua_State *L, const char *label) {
 }
 
 static bool top_is_lua_array(lua_State *L) {
-    if (!lua_istable(L, -1)) return false;
+    // probably dont need this check:
+    // if (!lua_istable(L, -1)) return false;
+
     // getmetatable(stack_top).array to allow overriding of representation
     if (lua_getmetatable(L, -1)) {
         // stack: ... table mt
