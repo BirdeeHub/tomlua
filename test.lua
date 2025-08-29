@@ -29,7 +29,7 @@ local elapsed = os.clock() - start_time
 
 print("Last result:", inspect(last_result))
 print("Last error:", last_error)
-print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed, iterations / elapsed))
+print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed, iterations / elapsed, (elapsed / iterations) * 1e6))
 
 local jsonstr = cjson.encode(last_result)
 
@@ -43,7 +43,7 @@ for _ = 1, iterations do
 end
 
 local elapsed2 = os.clock() - start_time
-print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second", iterations, elapsed2, iterations / elapsed2))
+print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed2, iterations / elapsed2, (elapsed2 / iterations) * 1e6))
 print(string.format("tomlua/cjson: %.2f%%", (elapsed / elapsed2) * 100))
 
 print()
