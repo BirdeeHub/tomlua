@@ -64,8 +64,7 @@ static bool top_is_lua_array(lua_State *L) {
     return is_array;
 }
 
-static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, bool force_table) {
-    bool is_array = !force_table && top_is_lua_array(L);
+static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, bool is_array) {
     // TODO: iterate recursively through tables pushing to output as you go
     // using `bool buf_push(struct str_buf *buf, char c)` and `bool buf_push_str(struct str_buf *buf, const char *str, size_t len)`
     // I need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
@@ -106,7 +105,7 @@ int tomlua_encode(lua_State *L) {
     }
     struct str_buf output = new_str_buf();
 
-    char *err = encode_table(L, &output, false, true);
+    char *err = encode_table(L, &output, false, false);
     if (err != NULL) {
         lua_pushstring(L, err);
         free(err);
