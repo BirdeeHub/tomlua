@@ -24,6 +24,22 @@ static void print_lua_stack(lua_State *L, const char *label) {
 }
 
 static bool top_is_lua_array(lua_State *L) {
+    if (!lua_istable(L, -1)) return false;
+    // getmetatable(stack_top).array to allow overriding of representation
+    if (lua_getmetatable(L, -1)) {
+        // stack: ... table mt
+        lua_getfield(L, -1, "array");
+        if (!lua_isnil(L, -1)) {
+            if (lua_toboolean(L, -1)) {
+                lua_pop(L, 2); // pop value + mt
+                return true;
+            } else {
+                lua_pop(L, 2); // pop value + mt
+                return false;
+            }
+        }
+        lua_pop(L, 2); // pop value + mt
+    }
     bool is_array = true;
     int count = 0;
     lua_Number highest_int_key = 0;
@@ -45,7 +61,7 @@ static bool top_is_lua_array(lua_State *L) {
         }
     }
     lua_pop(L, 1);
-    if (highest_int_key != count) is_array = false;
+    if (highest_int_key != count || count == 0) is_array = false;
     return is_array;
 }
 
