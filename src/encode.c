@@ -76,7 +76,15 @@ static bool is_lua_array(lua_State *L, int idx) {
 // static char *encode_key(lua_State *L, struct str_buf *output) {
 // }
 
-static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, bool is_array) {
+struct EncodeOpts {
+    struct str_buf prefix;
+    size_t prefix_len;
+    size_t capacity;
+    bool is_inline;
+    bool is_array;
+};
+
+static char *encode_table(lua_State *L, struct str_buf *output, struct EncodeOpts opts) {
     // TODO: iterate recursively through tables pushing to output as you go
     // using `bool buf_push(struct str_buf *buf, char c)` and `bool buf_push_str(struct str_buf *buf, const char *str, size_t len)`
     // I need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
@@ -86,6 +94,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
     // pass errors along to the caller wherever possible.
     // for clarity of output, when !is_inline delay outputting headings of [[array]] and [table] types until after the others have been added to the current heading.
     int headingno = 0;
+    // TODO: change iteration strategy if opts.is_array to iterate sequential integer keys instead of unordered
     lua_pushnil(L);
     while (lua_next(L, -2 - headingno * 2) != 0) {
         // now at stack: ... table key value
@@ -99,7 +108,7 @@ static char *encode_table(lua_State *L, struct str_buf *output, bool is_inline, 
             // TODO: use the lua tostring function to get the string representation of the non-table values for safety and to respect metamethods
             // print properly escaped key = value line
             lua_pop(L, 1); // pop value, leave key for next
-        } else if (is_inline) {
+        } else if (opts.is_inline) {
             if (is_lua_array(L, -1)) {
                 // TODO: inline array, encode_table(L, output, is_inline, true) to the recursive call
             } else {
@@ -132,7 +141,13 @@ int tomlua_encode(lua_State *L) {
     }
     struct str_buf output = new_str_buf();
 
-    char *err = encode_table(L, &output, false, false);
+    char *err = encode_table(L, &output, (struct EncodeOpts) {
+            .is_inline = false,
+            .is_array = false,
+            .prefix = NULL,
+            .prefix_len = 0,
+            .capacity = 0
+    });
     if (err != NULL) {
         lua_pushstring(L, err);
         free(err);

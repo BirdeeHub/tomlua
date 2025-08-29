@@ -9,6 +9,8 @@ INCLUDES = -I"$(LUA_INCDIR)"
 
 all: build
 
+install: build
+
 build: $(SRCS)
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
