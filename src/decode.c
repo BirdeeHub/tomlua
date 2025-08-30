@@ -9,7 +9,7 @@
 #include "parse_str.h"
 #include "parse_keys.h"
 
-static bool is_hex_char(char c) {
+static inline bool is_hex_char(char c) {
     return (c >= '0' && c <= '9') ||
            (c >= 'A' && c <= 'F') ||
            (c >= 'a' && c <= 'f');
