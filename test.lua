@@ -14,17 +14,13 @@ end
 local iterations = 100000
 
 local function stats(target, elapsed, n)
-    return string.format(
-        "Parsed %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration",
-        target,
-        n or iterations,
-        elapsed,
-        (n or iterations) / elapsed,
-        elapsed * 1e6 / (n or iterations)
-    )
+    n = n or iterations
+    return ("Parsed %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration")
+        :format(target, n, elapsed, n / elapsed, elapsed * 1e6 / n)
 end
 local function rate_compare(prefix, a, b, n)
-    return string.format("speed comparison %s: %.2f%%", prefix, (((n or iterations) / a) / ((n or iterations) / b)) * 100)
+    n = n or iterations
+    return ("speed comparison %s: %.2f%%"):format(prefix, ((n / a) / (n / b)) * 100)
 end
 
 local last_result
