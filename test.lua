@@ -1,7 +1,6 @@
 local inspect = require('inspect')
 local tomlua = require("tomlua")
 local cjson = require("cjson.safe")
-local toml_edit = require("toml_edit")
 
 local f = io.open("./example.toml", "r")
 local contents
@@ -62,6 +61,7 @@ print(stats("JSON", elapsed2))
 print(rate_compare("tomlua/cjson", elapsed, elapsed2))
 
 -- Benchmark existing toml lua implementation
+-- local toml_edit = require("toml_edit")
 -- start_time = os.clock()
 --
 -- for _ = 1, iterations do
