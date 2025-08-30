@@ -170,7 +170,7 @@ static inline bool set_err_upval(lua_State *L, bool heap, size_t len, char *msg)
     err->heap = heap;
     err->msg = msg;
     err->len = len;
-    return false;  // returns `ok == true` as a convenience
+    return false;  // returns `not ok` as a convenience
 }
 
 #endif  // SRC_TYPES_H_
