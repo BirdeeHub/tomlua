@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include "parse_keys.h"
 #include "parse_str.h"
 #include "types.h"

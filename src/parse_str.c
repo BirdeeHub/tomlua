@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <string.h>
 #include "types.h"
 
 static uint32_t hex_to_codepoint(const str_buf *src) {
