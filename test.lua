@@ -20,7 +20,7 @@ local function stats(target, elapsed, n)
 end
 local function rate_compare(prefix, a, b, n)
     n = n or iterations
-    return ("speed %s: %.2f%%, duration %s: %.4f"):format(prefix, ((n / a) / (n / b)) * 100, prefix, a / b)
+    return ("speed %s: %.2f%%, duration %s: %.2f%%"):format(prefix, ((n / a) / (n / b)) * 100, prefix, (a / b) * 100)
 end
 
 local last_result
