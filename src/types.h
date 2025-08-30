@@ -160,20 +160,6 @@ typedef struct {
     bool heap;
 } TMLErr;
 
-static int tomlua_gc(lua_State *L) {
-    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
-    if (errorval->heap) {
-        free(errorval->msg);
-    }
-    return 0;
-}
-
-static int tomlua_tostring(lua_State *L) {
-    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
-    lua_pushlstring(L, errorval->msg, errorval->len);
-    return 1;
-}
-
 static inline void get_err_upval(lua_State *L) {
     lua_pushvalue(L, lua_upvalueindex(1));
 }

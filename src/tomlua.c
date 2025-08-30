@@ -5,6 +5,19 @@
 #include "decode.h"
 #include "encode.h"
 
+static int tomlua_gc(lua_State *L) {
+    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    if (errorval->heap) {
+        free(errorval->msg);
+    }
+    return 0;
+}
+static int tomlua_tostring(lua_State *L) {
+    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    lua_pushlstring(L, errorval->msg, errorval->len);
+    return 1;
+}
+
 int luaopen_tomlua(lua_State *L) {
     if (sizeof(lua_Integer) < 8) return luaL_error(L, "tomlua requires Lua integers to be 64-bit");
     lua_newtable(L); // module table
