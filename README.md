@@ -25,7 +25,7 @@ It only has a decode function and that is it.
 
 It will likely get an encode function at some point.
 
-If it does will also get a real README.
+If it does it will also get a real README.
 
 Basic benchmarking shows decode compares at about 1.5x cjson in runtime duration for 100000 iterations of processing the example.toml file.
 
