@@ -7,13 +7,13 @@ Implemented in C
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
 
 ```lua
-require("tomlua").decode(some_string)
+local data, err = require("tomlua").decode(some_string)
 
 -- or read into an existing table
-require("tomlua").decode(some_string, { some = "defaults" })
+data, err = require("tomlua").decode(some_string, { some = "defaults" })
 
 -- TODO
-require("tomlua").encode(some_string)
+local str = require("tomlua").encode(some_table)
 ```
 
 ```c
