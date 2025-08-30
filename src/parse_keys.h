@@ -4,18 +4,18 @@
 
 #include "./str_buf.h"
 
-struct key_result {
-    struct str_buf v;
+typedef struct {
+    str_buf v;
     char *err;
-};
-struct keys_result {
+} key_result;
+typedef struct {
     size_t cap;
     size_t len;
     char *err;
-    struct str_buf *v;
-};
+    str_buf *v;
+} keys_result;
 
-struct keys_result parse_keys(struct str_iter *src);
+keys_result parse_keys(str_iter *src);
 
 static inline bool is_identifier_char(char c) {
     return (c >= 'A' && c <= 'Z') ||
@@ -29,13 +29,13 @@ static inline bool is_identifier_char(char c) {
 // 0 for whitespace ending before end of line
 // 1 for end of line, 2 for end of file
 // (both 1 and 2 will be read as true in if statements)
-static inline int consume_whitespace_to_line(struct str_iter *src) {
+static inline int consume_whitespace_to_line(str_iter *src) {
     // skips through the end of the line on trailing comments and failed parses
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '#') {
             iter_skip(src);
-            struct iter_result curr = iter_next(src);
+            iter_result curr = iter_next(src);
             while (curr.ok) {
                 if (curr.v == '\n') {
                     return true;
@@ -65,7 +65,7 @@ static inline int consume_whitespace_to_line(struct str_iter *src) {
     return 2;
 }
 
-static inline void clear_keys_result(struct keys_result *dst) {
+static inline void clear_keys_result(keys_result *dst) {
     if (dst) {
         if (dst->v) {
             for (size_t i = 0; i < dst->len; i++) {

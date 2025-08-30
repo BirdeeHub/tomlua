@@ -4,12 +4,12 @@
 #include "parse_str.h"
 #include "str_buf.h"
 
-static struct key_result parse_key(struct str_iter *src) {
-    struct key_result dst = {
+static key_result parse_key(str_iter *src) {
+    key_result dst = {
         .err = NULL,
         .v = new_str_buf(),
     };
-    struct iter_result current = iter_peek(src);
+    iter_result current = iter_peek(src);
     if (!current.ok) {
         dst.err = strdup("expected key, got end of content");
         return dst;
@@ -37,14 +37,14 @@ static struct key_result parse_key(struct str_iter *src) {
     return dst;
 }
 
-static bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
+static bool keys_push_move(keys_result *dst, str_buf buf) {
     if (dst->len >= dst->cap) {
         dst-> cap = dst->cap > 0 ? dst->cap * 2 : 1;
-        struct str_buf *tmp = realloc(dst->v, dst->cap * sizeof(struct str_buf));
+        str_buf *tmp = realloc(dst->v, dst->cap * sizeof(str_buf));
         if (!tmp) return false;
         dst->v = tmp;
     }
-    dst->v[dst->len++] = (struct str_buf) {
+    dst->v[dst->len++] = (str_buf) {
         .data = buf.data,
         .len = buf.len,
         .capacity = buf.capacity
@@ -54,19 +54,19 @@ static bool keys_push_move(struct keys_result *dst, struct str_buf buf) {
     return true;
 }
 
-struct keys_result parse_keys(struct str_iter *src) {
-    struct keys_result dst = {
+keys_result parse_keys(str_iter *src) {
+    keys_result dst = {
         .cap = 2,
         .len = 0,
         .err = NULL,
-        .v = malloc(dst.cap * sizeof(struct str_buf)),
+        .v = malloc(dst.cap * sizeof(str_buf)),
     };
     while (iter_peek(src).ok) {
         if (consume_whitespace_to_line(src)) {
             dst.err = strdup("newlines not allowed between keys");
             break;
         }
-        struct key_result key = parse_key(src);
+        key_result key = parse_key(src);
         if (key.err != NULL) {
             dst.err = key.err;
             key.err = NULL;
@@ -77,7 +77,7 @@ struct keys_result parse_keys(struct str_iter *src) {
             dst.err = strdup("newlines not allowed between keys and their terminators: =, ], or ]]");
             break;
         }
-        struct iter_result next = iter_peek(src);
+        iter_result next = iter_peek(src);
         if (next.ok) {
             if (next.v == '=' || next.v == ']') {
                 break;

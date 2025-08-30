@@ -2,7 +2,7 @@
 #include <string.h>
 #include "str_buf.h"
 
-static uint32_t hex_to_codepoint(const struct str_buf *src) {
+static uint32_t hex_to_codepoint(const str_buf *src) {
     uint32_t cp = 0;
     for (size_t i = 0; i < src->len; i++) {
         char c = src->data[i];
@@ -21,7 +21,7 @@ static uint32_t hex_to_codepoint(const struct str_buf *src) {
     return cp;
 }
 
-static bool utf8_encode(uint32_t cp, struct str_buf *dst) {
+static bool utf8_encode(uint32_t cp, str_buf *dst) {
     char buf[4];
     size_t len = 0;
 
@@ -60,7 +60,7 @@ static bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
-static char *push_unicode(struct str_buf *dst, struct str_buf *src, bool is_long) {
+static char *push_unicode(str_buf *dst, str_buf *src, bool is_long) {
     size_t expected_len = is_long ? 8 : 4;
     if (src->len != expected_len) return strdup("invalid unicode specifier length");
     for (size_t i = 0; i < src->len; i++) {
@@ -73,11 +73,11 @@ static char *push_unicode(struct str_buf *dst, struct str_buf *src, bool is_long
 }
 
 // pushes string to dst, advances pos
-char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
+char *parse_basic_string(str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
-        struct iter_result current = iter_next(src);
+        iter_result current = iter_next(src);
         char c = current.v;
-        struct iter_result nextres = iter_peek(src);
+        iter_result nextres = iter_peek(src);
         if (c == '\\' && nextres.ok) {
             char next = iter_next(src).v;
             switch (next) {
@@ -93,7 +93,7 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
-                    struct str_buf escaped = new_str_buf();
+                    str_buf escaped = new_str_buf();
                     bool is_long = next == 'U';
                     int hex_len = is_long ? 8 : 4;
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
@@ -120,11 +120,11 @@ char *parse_basic_string(struct str_buf *dst, struct str_iter *src) {
     return strdup("end of content reached before end of string");
 }
 
-char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
+char *parse_multi_basic_string(str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
-        struct iter_result current = iter_next(src);
+        iter_result current = iter_next(src);
         char c = current.v;
-        struct iter_result nextres = iter_peek(src);
+        iter_result nextres = iter_peek(src);
         if (c == '\\' && nextres.ok) {
             char next = iter_next(src).v;
             switch (next) {
@@ -140,7 +140,7 @@ char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
-                    struct str_buf escaped = new_str_buf();
+                    str_buf escaped = new_str_buf();
                     bool is_long = next == 'U';
                     int hex_len = is_long ? 8 : 4;
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
@@ -167,11 +167,11 @@ char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
     return strdup("end of content reached before end of string");
 }
 
-char *parse_literal_string(struct str_buf *dst, struct str_iter *src) {
+char *parse_literal_string(str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
-        struct iter_result current = iter_next(src);
+        iter_result current = iter_next(src);
         char c = current.v;
-        struct iter_result nextres = iter_peek(src);
+        iter_result nextres = iter_peek(src);
         if (c == '\n' || c == '\r' && nextres.v == '\n') {
             return strdup("literal strings are single-line only");
         } else if (c == '\'') {
@@ -183,9 +183,9 @@ char *parse_literal_string(struct str_buf *dst, struct str_iter *src) {
     return strdup("end of content reached before end of string");
 }
 
-char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src) {
+char *parse_multi_literal_string(str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
-        struct iter_result current = iter_next(src);
+        iter_result current = iter_next(src);
         char c = current.v;
         if (c == '\'' && iter_starts_with(src, "''", 2)) {
             iter_skip(src);

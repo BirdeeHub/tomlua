@@ -15,7 +15,7 @@ static inline bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
-static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type, int top) {
+static bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (keys->err != NULL) { return false; }
     if (keys->len <= 0) { return false; }
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
@@ -64,7 +64,7 @@ static bool heading_nav(lua_State *L, struct keys_result *keys, bool array_type,
 }
 
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
-static bool set_kv(lua_State *L, struct keys_result *keys) {
+static bool set_kv(lua_State *L, keys_result *keys) {
     if (keys->err != NULL) { return false; }
     if (keys->len <= 0) {
         keys->err = strdup("no key provided to set");
@@ -110,10 +110,10 @@ static bool set_kv(lua_State *L, struct keys_result *keys) {
     return true;
 }
 
-static char *parse_value(lua_State *L, struct str_iter *src);
+static char *parse_value(lua_State *L, str_iter *src);
 
 // adds a table to the lua stack and return NULL or error
-static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
+static inline char *parse_inline_table(lua_State *L, str_iter *src) {
     lua_newtable(L);
     bool last_was_comma = false;
     while (iter_peek(src).ok) {
@@ -145,7 +145,7 @@ static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
             continue;
         }
         last_was_comma = false;
-        struct keys_result keys = parse_keys(src);
+        keys_result keys = parse_keys(src);
         if (keys.err != NULL) {
             char *err = keys.err;
             keys.err = NULL;
@@ -176,7 +176,7 @@ static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
         if (consume_whitespace_to_line(src)) {
             return strdup("toml inline tables cannot be multi-line");
         }
-        struct iter_result next = iter_peek(src);
+        iter_result next = iter_peek(src);
         if (next.ok && (next.v != ',' && next.v != '}')) {
             return strdup("toml inline table values must be separated with , or ended with }");
         }
@@ -186,8 +186,8 @@ static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
-static char *parse_value(lua_State *L, struct str_iter *src) {
-    struct iter_result curr = iter_peek(src);
+static char *parse_value(lua_State *L, str_iter *src) {
+    iter_result curr = iter_peek(src);
     if (!curr.ok) return strdup("expected value, got end of content");
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
@@ -200,7 +200,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         return NULL;
     // --- strings ---
     } else if (iter_starts_with(src, "\"\"\"", 3)) {
-        struct str_buf buf = new_str_buf();
+        str_buf buf = new_str_buf();
         iter_skip_n(src, 3);
         char *err = parse_multi_basic_string(&buf, src);
         if (err != NULL) {
@@ -214,7 +214,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         free_str_buf(&buf);
         return NULL;
     } else if (curr.v == '"') {
-        struct str_buf buf = new_str_buf();
+        str_buf buf = new_str_buf();
         iter_skip(src);
         char *err = parse_basic_string(&buf, src);
         if (err != NULL) {
@@ -228,7 +228,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         free_str_buf(&buf);
         return NULL;
     } else if (iter_starts_with(src, "'''", 3)) {
-        struct str_buf buf = new_str_buf();
+        str_buf buf = new_str_buf();
         iter_skip_n(src, 3);
         char *err = parse_multi_literal_string(&buf, src);
         if (err != NULL) {
@@ -242,7 +242,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         free_str_buf(&buf);
         return NULL;
     } else if (curr.v == '\'') {
-        struct str_buf buf = new_str_buf();
+        str_buf buf = new_str_buf();
         iter_skip(src);
         char *err = parse_literal_string(&buf, src);
         if (err != NULL) {
@@ -287,7 +287,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             }
         } else if (iter_starts_with(src, "0x", 2)) {
             // Hex integer
-            struct str_buf buf = new_str_buf();
+            str_buf buf = new_str_buf();
             iter_skip(src);
             iter_skip(src);
             bool was_underscore = false;
@@ -321,7 +321,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             return NULL;
         } else if (iter_starts_with(src, "0o", 2)) {
             // Octal integer
-            struct str_buf buf = new_str_buf();
+            str_buf buf = new_str_buf();
             iter_skip(src);
             iter_skip(src);
             bool was_underscore = false;
@@ -354,7 +354,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             return NULL;
         } else if (iter_starts_with(src, "0b", 2)) {
             // binary integer
-            struct str_buf buf = new_str_buf();
+            str_buf buf = new_str_buf();
             iter_skip(src);
             iter_skip(src);
             bool was_underscore = false;
@@ -389,7 +389,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             // detect dates and pass on as strings, and numbers are allowed to have underscores in them (only 1 consecutive underscore at a time)
             // is date if it has a - in it not immediately preceded by e or E
             // is date if it has a : in it
-            struct str_buf buf = new_str_buf();
+            str_buf buf = new_str_buf();
             bool is_float = false;
             bool is_date = false;
             bool t_used = false;
@@ -409,7 +409,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
                     is_float = true;
                     buf_push(&buf, ch);
                     iter_skip(src);
-                    struct iter_result next = iter_peek(src);
+                    iter_result next = iter_peek(src);
                     if (next.ok && (next.v == '+' || next.v == '-')) {
                         buf_push(&buf, ch);
                         iter_skip(src);
@@ -526,7 +526,7 @@ int tomlua_decode(lua_State *L) {
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string
-    struct str_iter src = str_to_iter(s, len);
+    str_iter src = str_to_iter(s, len);
 
     // set top as the starting location
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
@@ -539,12 +539,12 @@ int tomlua_decode(lua_State *L) {
             }
             if (end_line == 2) break;
         }
-        struct iter_result curr = iter_peek(&src);
+        iter_result curr = iter_peek(&src);
         char c = curr.v;
         if (iter_starts_with(&src, "[[", 2)) {
             iter_skip(&src);
             iter_skip(&src);
-            struct keys_result keys = parse_keys(&src);
+            keys_result keys = parse_keys(&src);
             if (keys.err != NULL) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
@@ -583,7 +583,7 @@ int tomlua_decode(lua_State *L) {
             clear_keys_result(&keys);
         } else if (c == '[') {
             iter_skip(&src);
-            struct keys_result keys = parse_keys(&src);
+            keys_result keys = parse_keys(&src);
             if (keys.err != NULL) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
@@ -620,7 +620,7 @@ int tomlua_decode(lua_State *L) {
             }
             clear_keys_result(&keys);
         } else {
-            struct keys_result keys = parse_keys(&src);
+            keys_result keys = parse_keys(&src);
             if (keys.err != NULL) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
