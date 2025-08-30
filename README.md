@@ -1,3 +1,22 @@
+# TOMLUA
+
+Parses .toml files into lua tables, and hopefully eventually back again.
+
+Implemented in C
+
+build with make and add the .so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
+
+```lua
+require("tomlua").decode(some_string)
+
+require("tomlua").decode(some_string, { some = "defaults" })
+
+-- TODO
+require("tomlua").encode(some_string)
+```
+
+---
+
 Just me practicing some C
 
 Error reporting is bad currently.
