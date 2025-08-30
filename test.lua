@@ -62,16 +62,16 @@ print(stats("JSON", elapsed2))
 print(rate_compare("tomlua/cjson", elapsed, elapsed2))
 
 -- Benchmark existing toml lua implementation
-start_time = os.clock()
-
-for _ = 1, iterations do
-    local data = toml_edit.parse_as_tbl(contents)
-    last_result = data
-end
-
-local elapsed3 = os.clock() - start_time
-print(stats("TOML", elapsed3))
-print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
+-- start_time = os.clock()
+--
+-- for _ = 1, iterations do
+--     local data = toml_edit.parse_as_tbl(contents)
+--     last_result = data
+-- end
+--
+-- local elapsed3 = os.clock() - start_time
+-- print(stats("TOML", elapsed3))
+-- print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
 
 print()
 print("will this error (sorta)")
