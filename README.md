@@ -44,7 +44,7 @@ package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 local data, err = require("tomlua").decode(some_string)
 
 -- or read into an existing table
-data, err = require("tomlua").decode(some_string, { some = "defaults" })-- , true) for strict mode eventually, or maybe a separate function
+data, err = require("tomlua").decode(some_string, { some = "defaults" }) -- , true) for strict mode eventually, or maybe a separate function
 
 -- TODO
 local str, err = require("tomlua").encode(some_table) -- with options to control some emit options via metatables on values
