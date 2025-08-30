@@ -25,7 +25,7 @@
     });
     devShells = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
-      lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson]);
+      lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson lp.toml-edit]);
     in {
       default = pkgs.mkShell {
         name = "tomlua-dev";

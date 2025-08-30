@@ -26,8 +26,6 @@ testkey6 = [
     1, 2, 3, 4, 5,
 ]
 
-database.replica_backup = { host = "replica2.local", port = 5434 }
-
 [[test]]
 names.hello = "h\u1234i"
 key = "value"
@@ -38,7 +36,6 @@ names."boo2" = "hi2"
 "tk2-dsadas.com" = "value"
 [test2]
 key = "value"
-[test2]
 "tk1-assass.com" = "value"
 [[test2.key2]]
 das1 = "dasda"
@@ -55,6 +52,7 @@ port = 5432
 username = "dbuser"
 password = "secret"
 pool_size = 10
+database.replica_backup = { host = "replica2.local", port = 5434 }
 
 [database.replica]
 host = "replica1.local"

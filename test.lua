@@ -1,6 +1,7 @@
 local inspect = require('inspect')
 local tomlua = require("tomlua")
-local cjson = require('cjson.safe')
+local cjson = require("cjson.safe")
+local toml_edit = require("toml_edit")
 
 local f = io.open("./example.toml", "r")
 local contents
@@ -12,6 +13,10 @@ end
 
 -- Number of iterations for the benchmark
 local iterations = 100000
+
+local function rate_compare(prefix, a, b, n)
+    return string.format("%s: %.2f%%", prefix, (((n or iterations) / a) / ((n or iterations) / b)) * 100)
+end
 
 local last_result
 local last_error
@@ -33,7 +38,7 @@ print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations 
 
 local jsonstr = cjson.encode(last_result)
 
--- Benchmark
+-- Benchmark against cjson
 start_time = os.clock()
 
 for _ = 1, iterations do
@@ -44,7 +49,19 @@ end
 
 local elapsed2 = os.clock() - start_time
 print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed2, iterations / elapsed2, elapsed2 * 1e6 / iterations))
-print(string.format("tomlua/cjson: %.2f%%", (elapsed / elapsed2) * 100))
+print(rate_compare("tomlua/cjson", elapsed, elapsed2))
+
+-- Benchmark existing toml lua implementation
+start_time = os.clock()
+
+for _ = 1, iterations do
+    local data = toml_edit.parse_as_tbl(contents)
+    last_result = data
+end
+
+local elapsed3 = os.clock() - start_time
+print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed3, iterations / elapsed3, elapsed3 * 1e6 / iterations))
+print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
 
 print()
 print("will this error (sorta)")
