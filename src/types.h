@@ -166,7 +166,7 @@ static inline void get_err_upval(lua_State *L) {
 
 static inline bool set_err_upval(lua_State *L, bool heap, size_t len, char *msg) {
     TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
-    if (err->heap) free(err->msg); // clears previous message if heap allocated
+    if (err->heap) free(err->msg);  // clears previous message if heap allocated
     err->heap = heap;
     err->msg = msg;
     err->len = len;
