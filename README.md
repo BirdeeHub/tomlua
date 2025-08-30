@@ -1,8 +1,37 @@
 # TOMLUA
 
+> [!WARNING] This is not finished software yet!
+
 Parses .toml files into lua tables quickly, and hopefully eventually back again.
 
 Implemented in C
+
+This is not intended to replace packages like [toml_edit](https://github.com/nvim-neorocks/toml-edit.lua)
+
+It will not be handling comments, and it will not re-output in the same format as the ingested file.
+
+If you wish to edit existing toml, you should do that using a package more suited for that.
+
+This is instead intended for hot-path parsing of toml files.
+
+On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
+
+This is a tiny c library designed to chew through those as if you were using cjson for parsing json.
+
+It will be able to emit toml eventually as well, but this is mostly for completeness. It will not be taking into account the format or comments of the original ingested file.
+
+Usually, toml is used as a config format, and not a serialization format.
+
+This is because there is a lot of ambiguity in how you can define values when emitting it,
+which makes it hard to emit sensibly and quickly.
+
+As a result of that, editing existing toml files, or emitting them at all, only really happens outside of the hot path.
+
+This means that it makes a lot of sense to use a simple but fast parser to parse config files on startup.
+
+And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
+
+---
 
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
 
@@ -30,33 +59,6 @@ enum ValueType {
     OFFSET_DATETIME, // string for now
 };
 ```
-
-# Why?
-
-This is not intended to replace packages like [toml_edit](https://github.com/nvim-neorocks/toml-edit.lua)
-
-It will not be handling comments, and it will not re-output in the same format as the ingested file.
-
-If you wish to edit existing toml, you should do that using a package more suited for that.
-
-This is instead intended for hot-path parsing of toml files.
-
-On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
-
-This is a tiny c library designed to chew through those as if you were using cjson for parsing json.
-
-It will be able to emit toml eventually as well, but this is mostly for completeness. It will not be taking into account the format or comments of the original ingested file.
-
-Usually, toml is used as a config format, and not a serialization format.
-
-This is because there is a lot of ambiguity in how you can define values when emitting it,
-which makes it hard to emit sensibly and quickly.
-
-As a result of that, editing existing toml files, or emitting them at all, only really happens outside of the hot path.
-
-This means that it makes a lot of sense to use a simple but fast parser to parse config files on startup.
-
-And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
 
 ---
 
