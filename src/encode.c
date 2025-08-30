@@ -2,7 +2,7 @@
 #include <string.h>
 #include <lua.h>
 #include <lauxlib.h>
-#include "str_buf.h"
+#include "types.h"
 
 // TODO: delete this, just for debugging
 static void print_lua_stack(lua_State *L, const char *label) {

@@ -2,11 +2,11 @@
 #ifndef SRC_PARSE_STR_H_
 #define SRC_PARSE_STR_H_
 
-#include "./str_buf.h"
+#include "./types.h"
 
-char *parse_basic_string(str_buf *dst, str_iter *src);
-char *parse_multi_basic_string(str_buf *dst, str_iter *src);
-char *parse_literal_string(str_buf *dst, str_iter *src);
-char *parse_multi_literal_string(str_buf *dst, str_iter *src);
+bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src);
+bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src);
+bool parse_literal_string(lua_State *L, str_buf *dst, str_iter *src);
+bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src);
 
 #endif  // SRC_PARSE_STR_H_

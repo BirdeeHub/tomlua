@@ -2,38 +2,41 @@
 #include <string.h>
 #include "parse_keys.h"
 #include "parse_str.h"
-#include "str_buf.h"
+#include "types.h"
 
-static key_result parse_key(str_iter *src) {
+static key_result parse_key(lua_State *L, str_iter *src) {
     key_result dst = {
-        .err = NULL,
+        .ok = true,
         .v = new_str_buf(),
     };
     iter_result current = iter_peek(src);
     if (!current.ok) {
-        dst.err = strdup("expected key, got end of content");
+        dst.ok = false;
+        set_err_upval(L, false, 32, "expected key, got end of content");
         return dst;
     }
     char c = current.v;
     if (c == '"') {
         iter_skip(src);
-        dst.err = parse_basic_string(&dst.v, src);
+        dst.ok = parse_basic_string(L, &dst.v, src);
     }else if (c == '\'') {
         iter_skip(src);
-        dst.err = parse_literal_string(&dst.v, src);
+        dst.ok = parse_literal_string(L, &dst.v, src);
     } else if (is_identifier_char(c)) {
         current = iter_peek(src);
         while (is_identifier_char(current.v)) {
             if (!buf_push(&dst.v, current.v)) {
-                dst.err = strdup("OOM");
+                dst.ok = false;
+                set_err_upval(L, false, 3, "OOM");
             }
             iter_skip(src);
             current = iter_peek(src);
         }
     } else {
-        dst.err = strdup("called parse_key with invalid first char");
+        dst.ok = false;
+        set_err_upval(L, false, 40, "called parse_key with invalid first char");
     }
-    if (dst.err != NULL) free_str_buf(&dst.v);
+    if (!dst.ok) free_str_buf(&dst.v);
     return dst;
 }
 
@@ -54,27 +57,28 @@ static bool keys_push_move(keys_result *dst, str_buf buf) {
     return true;
 }
 
-keys_result parse_keys(str_iter *src) {
+keys_result parse_keys(lua_State *L, str_iter *src) {
     keys_result dst = {
         .cap = 2,
         .len = 0,
-        .err = NULL,
+        .ok = true,
         .v = malloc(dst.cap * sizeof(str_buf)),
     };
     while (iter_peek(src).ok) {
         if (consume_whitespace_to_line(src)) {
-            dst.err = strdup("newlines not allowed between keys");
+            dst.ok = false;
+            set_err_upval(L, false, 33, "newlines not allowed between keys");
             break;
         }
-        key_result key = parse_key(src);
-        if (key.err != NULL) {
-            dst.err = key.err;
-            key.err = NULL;
+        key_result key = parse_key(L, src);
+        if (!key.ok) {
+            dst.ok = false;
             break;
         }
         keys_push_move(&dst, key.v);
         if (consume_whitespace_to_line(src)) {
-            dst.err = strdup("newlines not allowed between keys and their terminators: =, ], or ]]");
+            dst.ok = false;
+            set_err_upval(L, false, 68, "newlines not allowed between keys and their terminators: =, ], or ]]");
             break;
         }
         iter_result next = iter_peek(src);
@@ -85,7 +89,8 @@ keys_result parse_keys(str_iter *src) {
                 iter_skip(src);
             }
         } else {
-            dst.err = strdup("trailing key!");
+            dst.ok = false;
+            set_err_upval(L, false, 13, "trailing key!");
             break;
         }
     }

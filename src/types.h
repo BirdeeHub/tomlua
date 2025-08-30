@@ -1,10 +1,11 @@
 // Copyright 2025 Birdee
-#ifndef SRC_STR_BUF_H_
-#define SRC_STR_BUF_H_
+#ifndef SRC_TYPES_H_
+#define SRC_TYPES_H_
 
 #include <stddef.h>
 #include <stdlib.h>
 #include <lua.h>
+#include <lauxlib.h>
 
 #ifndef __cplusplus
 typedef int bool;
@@ -153,4 +154,33 @@ static inline iter_result iter_peek(str_iter *iter) {
     return res;
 }
 
-#endif  // SRC_STR_BUF_H_
+typedef struct {
+    char *msg;
+    size_t len;
+    bool heap;
+} TMLErr;
+
+static int tomlua_gc(lua_State *L) {
+    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    if (errorval->heap) {
+        free(errorval->msg);
+    }
+    return 0;
+}
+
+static int tomlua_tostring(lua_State *L) {
+    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    lua_pushlstring(L, errorval->msg, errorval->len);
+    return 1;
+}
+
+
+static bool set_err_upval(lua_State *L, bool heap, size_t len, char *msg) {
+    TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
+    err->heap = heap;
+    err->msg = msg;
+    err->len = len;
+    return false;  // returns `ok == true` as a convenience
+}
+
+#endif  // SRC_TYPES_H_

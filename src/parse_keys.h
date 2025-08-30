@@ -2,20 +2,20 @@
 #ifndef SRC_PARSE_KEYS_H_
 #define SRC_PARSE_KEYS_H_
 
-#include "./str_buf.h"
+#include "./types.h"
 
 typedef struct {
     str_buf v;
-    char *err;
+    bool ok;
 } key_result;
 typedef struct {
     size_t cap;
     size_t len;
-    char *err;
+    bool ok;
     str_buf *v;
 } keys_result;
 
-keys_result parse_keys(str_iter *src);
+keys_result parse_keys(lua_State *L, str_iter *src);
 
 static inline bool is_identifier_char(char c) {
     return (c >= 'A' && c <= 'Z') ||
@@ -73,10 +73,6 @@ static inline void clear_keys_result(keys_result *dst) {
             }
             free(dst->v);
         }
-        if (dst->err) {
-            free(dst->err);
-        }
-        dst->err = NULL;
         dst->v = NULL;
         dst->len = 0;
         dst->cap = 0;

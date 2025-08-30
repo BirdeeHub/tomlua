@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <string.h>
-#include "str_buf.h"
+#include "types.h"
 
 static uint32_t hex_to_codepoint(const str_buf *src) {
     uint32_t cp = 0;
@@ -60,20 +60,20 @@ static bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
-static char *push_unicode(str_buf *dst, str_buf *src, bool is_long) {
+static bool push_unicode(lua_State *L, str_buf *dst, str_buf *src, bool is_long) {
     size_t expected_len = is_long ? 8 : 4;
-    if (src->len != expected_len) return strdup("invalid unicode specifier length");
+    if (src->len != expected_len) return set_err_upval(L, false, 32, "invalid unicode specifier length");
     for (size_t i = 0; i < src->len; i++) {
-        if (!is_hex_char(src->data[i])) return strdup("unexpected unicode specifier char");
+        if (!is_hex_char(src->data[i])) return set_err_upval(L, false, 33, "unexpected unicode specifier char");
     }
 
     uint32_t cp = hex_to_codepoint(src);
-    if (!utf8_encode(cp, dst)) return strdup("OOM");
-    return NULL;
+    if (!utf8_encode(cp, dst)) return set_err_upval(L, false, 3, "OOM");
+    return true;
 }
 
 // pushes string to dst, advances pos
-char *parse_basic_string(str_buf *dst, str_iter *src) {
+bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
@@ -83,13 +83,13 @@ char *parse_basic_string(str_buf *dst, str_iter *src) {
             switch (next) {
                 // Yes, using strdup on OOM error is stupid.
                 // No, I do not want to find a way to track which of my errors are heap allocated for when I free them.
-                case 'b': if (!buf_push(dst, '\b')) return strdup("OOM"); break;
-                case 't': if (!buf_push(dst, '\t')) return strdup("OOM"); break;
-                case 'n': if (!buf_push(dst, '\n')) return strdup("OOM"); break;
-                case 'f': if (!buf_push(dst, '\f')) return strdup("OOM"); break;
-                case 'r': if (!buf_push(dst, '\r')) return strdup("OOM"); break;
-                case '"': if (!buf_push(dst, '\"')) return strdup("OOM"); break;
-                case '\\': if (!buf_push(dst, '\\')) return strdup("OOM"); break;
+                case 'b': if (!buf_push(dst, '\b')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 'f': if (!buf_push(dst, '\f')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 'r': if (!buf_push(dst, '\r')) return set_err_upval(L, false, 3, "OOM"); break;
+                case '"': if (!buf_push(dst, '\"')) return set_err_upval(L, false, 3, "OOM"); break;
+                case '\\': if (!buf_push(dst, '\\')) return set_err_upval(L, false, 3, "OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
@@ -99,28 +99,28 @@ char *parse_basic_string(str_buf *dst, str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         if (!buf_push(&escaped, iter_next(src).v)) {
                             free_str_buf(&escaped);
-                            return strdup("OOM");
+                            return set_err_upval(L, false, 3, "OOM");
                         }
                     }
-                    char *err = push_unicode(dst, &escaped, is_long);
+                    bool ok = push_unicode(L, dst, &escaped, is_long);
                     free_str_buf(&escaped);
-                    if (err != NULL) return err;
+                    if (!ok) return false;
                 } break;
                 default:
-                    if (!buf_push(dst, next)) return strdup("OOM");
+                    if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
             }
         } else if (c == '\n' || c == '\r' && nextres.v == '\n') {
-            return strdup("basic strings are single-line only");
+            return set_err_upval(L, false, 34, "basic strings are single-line only");
         } else if (c == '"') {
-            return NULL;
+            return true;
         } else {
-            if (!buf_push(dst, c)) return strdup("OOM");
+            if (!buf_push(dst, c)) return set_err_upval(L, false, 3, "OOM");
         }
     }
-    return strdup("end of content reached before end of string");
+    return set_err_upval(L, false, 43, "end of content reached before end of string");
 }
 
-char *parse_multi_basic_string(str_buf *dst, str_iter *src) {
+bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
@@ -130,13 +130,13 @@ char *parse_multi_basic_string(str_buf *dst, str_iter *src) {
             switch (next) {
                 // Yes, using strdup on OOM error is stupid.
                 // No, I do not want to find a way to track which of my errors are heap allocated for when I free them.
-                case 'b': if (!buf_push(dst, '\b')) return strdup("OOM"); break;
-                case 't': if (!buf_push(dst, '\t')) return strdup("OOM"); break;
-                case 'n': if (!buf_push(dst, '\n')) return strdup("OOM"); break;
-                case 'f': if (!buf_push(dst, '\f')) return strdup("OOM"); break;
-                case 'r': if (!buf_push(dst, '\r')) return strdup("OOM"); break;
-                case '"': if (!buf_push(dst, '\"')) return strdup("OOM"); break;
-                case '\\': if (!buf_push(dst, '\\')) return strdup("OOM"); break;
+                case 'b': if (!buf_push(dst, '\b')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 'f': if (!buf_push(dst, '\f')) return set_err_upval(L, false, 3, "OOM"); break;
+                case 'r': if (!buf_push(dst, '\r')) return set_err_upval(L, false, 3, "OOM"); break;
+                case '"': if (!buf_push(dst, '\"')) return set_err_upval(L, false, 3, "OOM"); break;
+                case '\\': if (!buf_push(dst, '\\')) return set_err_upval(L, false, 3, "OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
@@ -146,54 +146,54 @@ char *parse_multi_basic_string(str_buf *dst, str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         if (!buf_push(&escaped, iter_next(src).v)) {
                             free_str_buf(&escaped);
-                            return strdup("OOM");
+                            return set_err_upval(L, false, 3, "OOM");
                         }
                     }
-                    char *err = push_unicode(dst, &escaped, is_long);
+                    bool ok = push_unicode(L, dst, &escaped, is_long);
                     free_str_buf(&escaped);
-                    if (err != NULL) return err;
+                    if (!ok) return false;
                 } break;
                 default:
-                    if (!buf_push(dst, next)) return strdup("OOM");
+                    if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
             }
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
             iter_skip(src);
             iter_skip(src);
-            return NULL;
+            return true;
         } else {
-            if (!buf_push(dst, c)) return strdup("OOM");
+            if (!buf_push(dst, c)) return set_err_upval(L, false, 3, "OOM");
         }
     }
-    return strdup("end of content reached before end of string");
+    return set_err_upval(L, false, 43, "end of content reached before end of string");
 }
 
-char *parse_literal_string(str_buf *dst, str_iter *src) {
+bool parse_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
         iter_result nextres = iter_peek(src);
         if (c == '\n' || c == '\r' && nextres.v == '\n') {
-            return strdup("literal strings are single-line only");
+            return set_err_upval(L, false, 36, "literal strings are single-line only");
         } else if (c == '\'') {
-            return NULL;
+            return true;
         } else {
-            if (!buf_push(dst, c)) return strdup("OOM");
+            if (!buf_push(dst, c)) return set_err_upval(L, false, 3, "OOM");
         }
     }
-    return strdup("end of content reached before end of string");
+    return set_err_upval(L, false, 43, "end of content reached before end of string");
 }
 
-char *parse_multi_literal_string(str_buf *dst, str_iter *src) {
+bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
         if (c == '\'' && iter_starts_with(src, "''", 2)) {
             iter_skip(src);
             iter_skip(src);
-            return NULL;
+            return true;
         } else {
-            if (!buf_push(dst, c)) return strdup("OOM");
+            if (!buf_push(dst, c)) return set_err_upval(L, false, 3, "OOM");
         }
     }
-    return strdup("end of content reached before end of string");
+    return set_err_upval(L, false, 43, "end of content reached before end of string");
 }
