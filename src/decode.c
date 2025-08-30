@@ -648,7 +648,7 @@ int tomlua_decode(lua_State *L) {
             if (!consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushfstring(L, "key value pairs must be followed by a new line (or end of content)");
+                lua_pushstring(L, "key value pairs must be followed by a new line (or end of content)");
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
