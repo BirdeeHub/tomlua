@@ -84,7 +84,7 @@ typedef struct {
     bool is_array;
 } EncodeOpts;
 
-static char *encode_table(lua_State *L, str_buf *output, EncodeOpts opts) {
+static bool encode_table(lua_State *L, str_buf *output, EncodeOpts opts) {
     // TODO: iterate recursively through tables pushing to output as you go
     // using `bool buf_push(struct str_buf *buf, char c)` and `bool buf_push_str(struct str_buf *buf, const char *str, size_t len)`
     // I need to figure out how to output [table] and [[array]] vs doing it inline within nested lists
@@ -100,7 +100,7 @@ static char *encode_table(lua_State *L, str_buf *output, EncodeOpts opts) {
         // now at stack: ... table key value
         int keytype = lua_type(L, -2);
         if (keytype != LUA_TSTRING && keytype != LUA_TNUMBER) {
-            return strdup("tomlua.encode only supports strings and numbers as table keys");
+            return set_err_upval(L, false, 61, "tomlua.encode only supports strings and numbers as table keys");
         }
 
         // values
@@ -129,7 +129,7 @@ static char *encode_table(lua_State *L, str_buf *output, EncodeOpts opts) {
     // TODO: go through table and arrays left on stack, number of pairs given by headingno, and output them
     // output them using a heading, if it is an [[array.heading]] you will then pass in is_inline to the recursive call, which will cause the internal lists and tables to be inline instead
     // then finally, pop 1 more to pop off current table
-    return NULL;
+    return true;
 }
 
 int tomlua_encode(lua_State *L) {
@@ -145,17 +145,15 @@ int tomlua_encode(lua_State *L) {
     }
     str_buf output = new_str_buf();
 
-    char *err = encode_table(L, &output, (EncodeOpts) {
+    if(!encode_table(L, &output, (EncodeOpts) {
             .is_inline = false,
             .is_array = false,
             .prefix = NULL,
             .prefix_len = 0,
             .capacity = 0
-    });
-    if (err != NULL) {
-        lua_pushstring(L, err);
-        free(err);
+    })) {
         free_str_buf(&output);
+        lua_pushvalue(L, lua_upvalueindex(1));
         return lua_error(L);
     };
     lua_pop(L, 1);
