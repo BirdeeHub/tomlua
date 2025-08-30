@@ -14,8 +14,18 @@ end
 -- Number of iterations for the benchmark
 local iterations = 100000
 
+local function stats(target, elapsed, n)
+    return string.format(
+        "Parsed %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration",
+        target,
+        n or iterations,
+        elapsed,
+        (n or iterations) / elapsed,
+        elapsed * 1e6 / (n or iterations)
+    )
+end
 local function rate_compare(prefix, a, b, n)
-    return string.format("%s: %.2f%%", prefix, (((n or iterations) / a) / ((n or iterations) / b)) * 100)
+    return string.format("speed comparison %s: %.2f%%", prefix, (((n or iterations) / a) / ((n or iterations) / b)) * 100)
 end
 
 local last_result
@@ -34,7 +44,7 @@ local elapsed = os.clock() - start_time
 
 print("Last result:", inspect(last_result))
 print("Last error:", last_error)
-print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed, iterations / elapsed, elapsed * 1e6 / iterations))
+print(stats("TOML", elapsed))
 
 local jsonstr = cjson.encode(last_result)
 
@@ -48,7 +58,7 @@ for _ = 1, iterations do
 end
 
 local elapsed2 = os.clock() - start_time
-print(string.format("Parsed JSON %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed2, iterations / elapsed2, elapsed2 * 1e6 / iterations))
+print(stats("JSON", elapsed2))
 print(rate_compare("tomlua/cjson", elapsed, elapsed2))
 
 -- Benchmark existing toml lua implementation
@@ -60,7 +70,7 @@ for _ = 1, iterations do
 end
 
 local elapsed3 = os.clock() - start_time
-print(string.format("Parsed TOML %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration", iterations, elapsed3, iterations / elapsed3, elapsed3 * 1e6 / iterations))
+print(stats("TOML", elapsed3))
 print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
 
 print()
