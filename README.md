@@ -10,7 +10,7 @@ build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at run
 local data, err = require("tomlua").decode(some_string)
 
 -- or read into an existing table
-data, err = require("tomlua").decode(some_string, { some = "defaults" })-- , false) for strict mode eventually
+data, err = require("tomlua").decode(some_string, { some = "defaults" })-- , true) for strict mode eventually
 
 -- TODO
 local str = require("tomlua").encode(some_table)
