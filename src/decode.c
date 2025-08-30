@@ -539,7 +539,7 @@ int tomlua_decode(lua_State *L) {
             if (!keys.ok) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
@@ -566,7 +566,7 @@ int tomlua_decode(lua_State *L) {
             if (!heading_nav(L, &keys, true, top)) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
@@ -578,7 +578,7 @@ int tomlua_decode(lua_State *L) {
             if (!keys.ok) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
@@ -604,7 +604,7 @@ int tomlua_decode(lua_State *L) {
             if (!heading_nav(L, &keys, false, top)) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
@@ -615,7 +615,7 @@ int tomlua_decode(lua_State *L) {
             if (!keys.ok) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
@@ -640,7 +640,7 @@ int tomlua_decode(lua_State *L) {
             if (!parse_value(L, &src)) {  // parse_value should push value on top of stack
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
@@ -658,7 +658,7 @@ int tomlua_decode(lua_State *L) {
             if (!set_kv(L, &keys)) {
                 lua_pop(L, 1); // pop the table
                 lua_pushnil(L);
-                lua_pushvalue(L, lua_upvalueindex(1));
+                get_err_upval(L);
                 clear_keys_result(&keys);
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;

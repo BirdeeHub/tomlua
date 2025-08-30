@@ -174,9 +174,13 @@ static int tomlua_tostring(lua_State *L) {
     return 1;
 }
 
+static inline void get_err_upval(lua_State *L) {
+    lua_pushvalue(L, lua_upvalueindex(1));
+}
 
-static bool set_err_upval(lua_State *L, bool heap, size_t len, char *msg) {
+static inline bool set_err_upval(lua_State *L, bool heap, size_t len, char *msg) {
     TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
+    if (err->heap) free(err->msg);
     err->heap = heap;
     err->msg = msg;
     err->len = len;
