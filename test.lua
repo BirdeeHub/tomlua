@@ -32,7 +32,10 @@ local start_time = os.clock()
 for _ = 1, iterations do
     local data, err = tomlua.decode(contents)
     last_result = data
-    last_error = err
+    if err then
+        print("ERROR:", err)
+        break
+    end
 end
 
 local elapsed = os.clock() - start_time
@@ -49,7 +52,10 @@ start_time = os.clock()
 for _ = 1, iterations do
     local data, err = cjson.decode(jsonstr)
     last_result = data
-    last_error = err
+    if err then
+        print("ERROR:", err)
+        break
+    end
 end
 
 local elapsed2 = os.clock() - start_time
@@ -61,8 +67,12 @@ print(rate_compare("tomlua/cjson", elapsed, elapsed2))
 -- start_time = os.clock()
 --
 -- for _ = 1, iterations do
---     local data = toml_edit.parse_as_tbl(contents)
+--     local ok, data = pcall(toml_edit.parse_as_tbl, contents)
 --     last_result = data
+--     if not ok then
+--         print("ERROR:", data)
+--         break
+--     end
 -- end
 --
 -- local elapsed3 = os.clock() - start_time
