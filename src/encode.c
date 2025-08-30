@@ -117,6 +117,10 @@ static char *encode_table(lua_State *L, struct str_buf *output, struct EncodeOpt
             lua_pop(L, 1); // pop value, leave key for next
         } else {
             headingno++;
+            // TODO: maybe instead of saving kv here, we can do is_lua_array and then
+            // parse it and push a string onto the stack or store a reference to the string in a c array
+            // because currently we are pushing them on, and theyre gonna come off in reverse order
+            // so at the very least something is off here
             lua_pushvalue(L, -2); // copy key to top for lua_next, saving k-v on the stack for making headings out of
         }
     }
