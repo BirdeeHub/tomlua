@@ -133,6 +133,14 @@ static inline struct iter_result iter_next(struct str_iter *iter) {
     return res;
 }
 
+static inline void iter_skip(struct str_iter *iter) {
+    iter->pos++;
+}
+
+static inline void iter_skip_n(struct str_iter *iter, unsigned int n) {
+    iter->pos += n;
+}
+
 static inline struct iter_result iter_peek(struct str_iter *iter) {
     struct iter_result res;
     if (!iter || !iter->buf || iter->pos >= iter->len) {

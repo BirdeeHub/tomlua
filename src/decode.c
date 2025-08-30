@@ -119,21 +119,21 @@ static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '}') {
-            iter_next(src);
+            iter_skip(src);
             if (last_was_comma) {
                 lua_pop(L, 1);
                 return strdup("trailing comma in inline table not allowed");
             }
             return NULL;
         } else if (iter_peek(src).v == '\n') {
-            iter_next(src);
+            iter_skip(src);
             return strdup("inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_next(src);
-            iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             return strdup("inline tables can not be multi-line");
         } else if (d == ',') {
-            iter_next(src);
+            iter_skip(src);
             if (last_was_comma) {
                 lua_pop(L, 1);
                 return strdup("2 commas in a row!");
@@ -141,7 +141,7 @@ static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
             last_was_comma = true;
             continue;
         } else if (d == ' ' || d == '\t') {
-            iter_next(src);
+            iter_skip(src);
             continue;
         }
         last_was_comma = false;
@@ -156,7 +156,7 @@ static inline char *parse_inline_table(lua_State *L, struct str_iter *src) {
             clear_keys_result(&keys);
             return strdup("keys for assignment must end with =");
         }
-        iter_next(src);
+        iter_skip(src);
         if (consume_whitespace_to_line(src)) {
             clear_keys_result(&keys);
             return strdup("the value in key = value expressions must begin on the same line as the key!");
@@ -191,19 +191,17 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
     if (!curr.ok) return strdup("expected value, got end of content");
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
-        for (int i = 0; i < 4; i++) iter_next(src);
+        iter_skip_n(src, 4);
         lua_pushboolean(L, 1);
         return NULL;
     } else if (iter_starts_with(src, "false", 5)) {
-        for (int i = 0; i < 5; i++) iter_next(src);
+        iter_skip_n(src, 5);
         lua_pushboolean(L, 0);
         return NULL;
     // --- strings ---
     } else if (iter_starts_with(src, "\"\"\"", 3)) {
         struct str_buf buf = new_str_buf();
-        iter_next(src);
-        iter_next(src);
-        iter_next(src);
+        iter_skip_n(src, 3);
         char *err = parse_multi_basic_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
@@ -217,7 +215,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         return NULL;
     } else if (curr.v == '"') {
         struct str_buf buf = new_str_buf();
-        iter_next(src);
+        iter_skip(src);
         char *err = parse_basic_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
@@ -231,9 +229,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         return NULL;
     } else if (iter_starts_with(src, "'''", 3)) {
         struct str_buf buf = new_str_buf();
-        iter_next(src);
-        iter_next(src);
-        iter_next(src);
+        iter_skip_n(src, 3);
         char *err = parse_multi_literal_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
@@ -247,7 +243,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         return NULL;
     } else if (curr.v == '\'') {
         struct str_buf buf = new_str_buf();
-        iter_next(src);
+        iter_skip(src);
         char *err = parse_literal_string(&buf, src);
         if (err != NULL) {
             free_str_buf(&buf);
@@ -261,52 +257,53 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         return NULL;
     // --- numbers (and dates) ---
     } else if (iter_starts_with(src, "inf", 3)) {
-        for (int i = 0; i < 3; i++) iter_next(src);
+        iter_skip_n(src, 3);
         lua_pushnumber(L, INFINITY);
         return NULL;
     } else if (iter_starts_with(src, "nan", 3)) {
-        for (int i = 0; i < 3; i++) iter_next(src);
+        iter_skip_n(src, 3);
         lua_pushnumber(L, NAN);
         return NULL;
     } else if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
         if (curr.v == '+') {
             if (iter_starts_with(src, "+inf", 4)) {
-                for (int i = 0; i < 4; i++) iter_next(src);
+                iter_skip_n(src, 4);
                 lua_pushnumber(L, INFINITY);
                 return NULL;
             } else if (iter_starts_with(src, "+nan", 4)) {
-                for (int i = 0; i < 4; i++) iter_next(src);
+                iter_skip_n(src, 4);
                 lua_pushnumber(L, NAN);
                 return NULL;
             }
         } else if (curr.v == '-') {
             if (iter_starts_with(src, "-inf", 4)) {
-                for (int i = 0; i < 4; i++) iter_next(src);
+                iter_skip_n(src, 4);
                 lua_pushnumber(L, -INFINITY);
                 return NULL;
             } else if (iter_starts_with(src, "-nan", 4)) {
-                for (int i = 0; i < 4; i++) iter_next(src);
+                iter_skip_n(src, 4);
                 lua_pushnumber(L, -NAN);
                 return NULL;
             }
         } else if (iter_starts_with(src, "0x", 2)) {
             // Hex integer
             struct str_buf buf = new_str_buf();
-            iter_next(src); iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             bool was_underscore = false;
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
                 if (is_hex_char(ch)) {
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
                         free_str_buf(&buf);
                         return strdup("consecutive underscores not allowed in hex literals");
                     }
                     was_underscore = true;
-                    iter_next(src);
+                    iter_skip(src);
                 } else break;
             }
             if (was_underscore) {
@@ -325,21 +322,22 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         } else if (iter_starts_with(src, "0o", 2)) {
             // Octal integer
             struct str_buf buf = new_str_buf();
-            iter_next(src); iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             bool was_underscore = false;
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
                 if ((ch >= '0' && ch <= '7')) {
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
                         free_str_buf(&buf);
                         return strdup("consecutive underscores not allowed in octal literals");
                     }
                     was_underscore = true;
-                    iter_next(src);
+                    iter_skip(src);
                 } else break;
             }
             if (was_underscore) {
@@ -357,21 +355,22 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         } else if (iter_starts_with(src, "0b", 2)) {
             // binary integer
             struct str_buf buf = new_str_buf();
-            iter_next(src); iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             bool was_underscore = false;
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
                 if ((ch == '0' || ch == '1')) {
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
                         free_str_buf(&buf);
                         return strdup("consecutive underscores not allowed in binary literals");
                     }
                     was_underscore = true;
-                    iter_next(src);
+                    iter_skip(src);
                 } else break;
             }
             if (was_underscore) {
@@ -400,7 +399,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
                 if (ch == '_') {
-                    iter_next(src);
+                    iter_skip(src);
                     if (was_underscore) {
                         free_str_buf(&buf);
                         return strdup("consecutive underscores not allowed in numbers");
@@ -409,42 +408,42 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
                 } else if (ch == 'e' || ch == 'E') {
                     is_float = true;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                     struct iter_result next = iter_peek(src);
                     if (next.ok && (next.v == '+' || next.v == '-')) {
                         buf_push(&buf, ch);
-                        iter_next(src);
+                        iter_skip(src);
                     }
                     was_underscore = false;
                 } else if (ch == ':') {
                     is_date = true;
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (ch == '-') {
                     is_date = true;
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (is_date && !t_used && (ch == 'T' || ch == ' ')) {
                     t_used = true;
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (is_date && !z_used && ch == 'Z') {
                     z_used = true;
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (ch == '.') {
                     is_float = true;
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else if (ch >= '0' && ch <= '9') {
                     was_underscore = false;
                     buf_push(&buf, ch);
-                    iter_next(src);
+                    iter_skip(src);
                 } else {
                     was_underscore = false;
                     break;
@@ -472,16 +471,16 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         }
     // --- array --- allows trailing comma and multiline
     } else if (curr.v == '[') {
-        iter_next(src);
+        iter_skip(src);
         lua_newtable(L);
         int idx = 1;
         while (iter_peek(src).ok) {
             char d = iter_peek(src).v;
             if (d == ']') {
-                iter_next(src);
+                iter_skip(src);
                 return NULL;
             } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
-                iter_next(src);
+                iter_skip(src);
                 continue;
             }
             char *err = parse_value(L, src);
@@ -491,7 +490,7 @@ static char *parse_value(lua_State *L, struct str_iter *src) {
         return strdup("missing closing ]");
     // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
     } else if (curr.v == '{') {
-        iter_next(src);
+        iter_skip(src);
         return parse_inline_table(L, src);
     }
     return strdup("invalid value");
@@ -543,8 +542,8 @@ int tomlua_decode(lua_State *L) {
         struct iter_result curr = iter_peek(&src);
         char c = curr.v;
         if (iter_starts_with(&src, "[[", 2)) {
-            iter_next(&src);
-            iter_next(&src);
+            iter_skip(&src);
+            iter_skip(&src);
             struct keys_result keys = parse_keys(&src);
             if (keys.err != NULL) {
                 lua_pop(L, 1);
@@ -562,8 +561,8 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            iter_next(&src);
-            iter_next(&src);
+            iter_skip(&src);
+            iter_skip(&src);
             if (!consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
@@ -583,7 +582,7 @@ int tomlua_decode(lua_State *L) {
             }
             clear_keys_result(&keys);
         } else if (c == '[') {
-            iter_next(&src);
+            iter_skip(&src);
             struct keys_result keys = parse_keys(&src);
             if (keys.err != NULL) {
                 lua_pop(L, 1);
@@ -601,7 +600,7 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            iter_next(&src);
+            iter_skip(&src);
             if (!consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
@@ -638,7 +637,7 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            iter_next(&src);
+            iter_skip(&src);
             if (consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1);
                 lua_pushnil(L);

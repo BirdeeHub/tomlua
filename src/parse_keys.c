@@ -16,10 +16,10 @@ static struct key_result parse_key(struct str_iter *src) {
     }
     char c = current.v;
     if (c == '"') {
-        iter_next(src);
+        iter_skip(src);
         dst.err = parse_basic_string(&dst.v, src);
     }else if (c == '\'') {
-        iter_next(src);
+        iter_skip(src);
         dst.err = parse_literal_string(&dst.v, src);
     } else if (is_identifier_char(c)) {
         current = iter_peek(src);
@@ -27,7 +27,7 @@ static struct key_result parse_key(struct str_iter *src) {
             if (!buf_push(&dst.v, current.v)) {
                 dst.err = strdup("OOM");
             }
-            iter_next(src);
+            iter_skip(src);
             current = iter_peek(src);
         }
     } else {
@@ -82,7 +82,7 @@ struct keys_result parse_keys(struct str_iter *src) {
             if (next.v == '=' || next.v == ']') {
                 break;
             } else if (next.v == '.') {
-                iter_next(src);
+                iter_skip(src);
             }
         } else {
             dst.err = strdup("trailing key!");

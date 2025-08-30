@@ -157,8 +157,8 @@ char *parse_multi_basic_string(struct str_buf *dst, struct str_iter *src) {
                     if (!buf_push(dst, next)) return strdup("OOM");
             }
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
-            iter_next(src);
-            iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             return NULL;
         } else {
             if (!buf_push(dst, c)) return strdup("OOM");
@@ -188,8 +188,8 @@ char *parse_multi_literal_string(struct str_buf *dst, struct str_iter *src) {
         struct iter_result current = iter_next(src);
         char c = current.v;
         if (c == '\'' && iter_starts_with(src, "''", 2)) {
-            iter_next(src);
-            iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             return NULL;
         } else {
             if (!buf_push(dst, c)) return strdup("OOM");

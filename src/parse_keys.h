@@ -34,13 +34,13 @@ static inline int consume_whitespace_to_line(struct str_iter *src) {
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '#') {
-            iter_next(src);
+            iter_skip(src);
             struct iter_result curr = iter_next(src);
             while (curr.ok) {
                 if (curr.v == '\n') {
                     return true;
                 } else if (curr.v == '\r' && iter_peek(src).v == '\n') {
-                    iter_next(src);
+                    iter_skip(src);
                     return true;
                 }
                 curr = iter_next(src);
@@ -48,14 +48,14 @@ static inline int consume_whitespace_to_line(struct str_iter *src) {
             // reached EOF in a comment
             return true;
         } else if (d == '\n') {
-            iter_next(src);
+            iter_skip(src);
             return true;
         } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_next(src);
-            iter_next(src);
+            iter_skip(src);
+            iter_skip(src);
             return true;
         } else if (d == ' ' || d == '\t') {
-            iter_next(src);
+            iter_skip(src);
         } else {
             // read non-whitespace
             return false;
