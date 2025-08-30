@@ -36,6 +36,8 @@ And then later you can use one which is better for editing but is slower when ma
 
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
 
+Yes there will eventually be better build instructions.
+
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
