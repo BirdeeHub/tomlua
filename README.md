@@ -9,6 +9,7 @@ build with make and add the .so to your LUA_CPATH (or package.cpath at runtime) 
 ```lua
 require("tomlua").decode(some_string)
 
+-- or read into an existing table
 require("tomlua").decode(some_string, { some = "defaults" })
 
 -- TODO
