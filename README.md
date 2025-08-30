@@ -47,3 +47,5 @@ Basic benchmarking shows decode compares at about 1.5x cjson in runtime duration
 
 However the cjson in the benchmark does not need to deal with comments or empty lines as it is parsing the result of cjson.encode in the benchmark, which is a single line.
 So I feel this is pretty good for something that doesn't use simd or parallelism or other such fancy tricks.
+
+Unfortunately, I am also slightly cheating, I have yet to add strict mode for decode which checks for table uniqueness following the toml spec precisely. This will be something you can toggle on or off.
