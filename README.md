@@ -16,6 +16,21 @@ require("tomlua").decode(some_string, { some = "defaults" })
 require("tomlua").encode(some_string)
 ```
 
+```c
+enum ValueType {
+    VALUE_STRING, // lua string
+    VALUE_INTEGER, // lua number
+    VALUE_FLOAT, // lua number
+    VALUE_BOOL, // lua bool
+    VALUE_ARRAY, // lua table
+    VALUE_TABLE, // lua table
+    LOCAL_DATE, // string for now
+    LOCAL_TIME, // string for now
+    LOCAL_DATETIME, // string for now
+    OFFSET_DATETIME, // string for now
+};
+```
+
 ---
 
 Just me practicing some C
@@ -32,18 +47,3 @@ Basic benchmarking shows decode compares at about 1.5x cjson in runtime duration
 
 However the cjson in the benchmark does not need to deal with comments or empty lines as it is parsing the result of cjson.encode in the benchmark, which is a single line.
 So I feel this is pretty good for something that doesn't use simd or parallelism or other such fancy tricks.
-
-```c
-enum ValueType {
-    VALUE_STRING, // lua string
-    VALUE_INTEGER, // lua number
-    VALUE_FLOAT, // lua number
-    VALUE_BOOL, // lua bool
-    VALUE_ARRAY, // lua table
-    VALUE_TABLE, // lua table
-    LOCAL_DATE, // string for now
-    LOCAL_TIME, // string for now
-    LOCAL_DATETIME, // string for now
-    OFFSET_DATETIME, // string for now
-};
-```
