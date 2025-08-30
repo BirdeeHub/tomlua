@@ -47,7 +47,7 @@ local data, err = require("tomlua").decode(some_string)
 data, err = require("tomlua").decode(some_string, { some = "defaults" })-- , true) for strict mode eventually, or maybe a separate function
 
 -- TODO
-local str = require("tomlua").encode(some_table)
+local str, err = require("tomlua").encode(some_table)
 ```
 
 ```c
