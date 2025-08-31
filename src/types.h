@@ -173,6 +173,14 @@ static inline iter_result iter_peek(str_iter *iter) {
 }
 
 typedef struct {
+    bool strict;
+} TomluaUserOpts;
+
+static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
+    return lua_touserdata(L, lua_upvalueindex(2));
+}
+
+typedef struct {
     size_t len;
     size_t heap;
     char *msg;
@@ -304,14 +312,6 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     err->len += len;
 
     return true;
-}
-
-typedef struct {
-    bool strict;
-} TomluaUserOpts;
-
-static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
-    return lua_touserdata(L, lua_upvalueindex(2));
 }
 
 #endif  // SRC_TYPES_H_
