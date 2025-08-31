@@ -487,7 +487,7 @@ int tomlua_decode(lua_State *L) {
 
     // set top as the starting location
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
-    // avoid allocations
+    // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
     while (iter_peek(&src).ok) {
         {
