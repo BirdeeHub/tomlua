@@ -94,7 +94,13 @@ return function(name, f, async)
 			if not msg then
 				msg = debug.getinfo(2, 'S').short_src..":"..debug.getinfo(2, 'l').currentline
 			end
-			if cond then
+			if type(cond) == 'function' then
+				if pcall(cond) then
+					handler('pass', name, msg)
+				else
+					handler('fail', name, msg)
+				end
+			elseif cond then
 				handler('pass', name, msg)
 			else
 				handler('fail', name, msg)
