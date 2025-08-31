@@ -305,11 +305,11 @@ static inline bool push_buf_to_lua_string(lua_State *L, const str_buf *buf) {
 }
 
 static inline str_iter str_to_iter(const char *str, size_t len) {
-    str_iter iter;
-    iter.buf = str;
-    iter.len = len;
-    iter.pos = 0;
-    return iter;
+    return ((str_iter) {
+        .buf = str,
+        .len = len,
+        .pos = 0
+    });
 }
 
 static inline bool iter_starts_with(const str_iter *a, char *b, size_t len) {
