@@ -451,7 +451,7 @@ int tomlua_decode(lua_State *L) {
     bool strict = false;
     if (argno < 1) {
         lua_pushnil(L);
-        lua_pushstring(L, "tomlua.decode requires at least 1 argument! tomlua.decode(string, table?) -> table?, err?");
+        lua_pushstring(L, "tomlua.decode requires at least 1 argument! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     } else if (argno > 2) {
         lua_pop(L, argno - 2);
@@ -477,7 +477,7 @@ int tomlua_decode(lua_State *L) {
     if (!lua_isstring(L, -1)) {
         luaL_unref(L, LUA_REGISTRYINDEX, top);
         lua_pushnil(L);
-        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table?) -> table?, err?");
+        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     }
     size_t len;
