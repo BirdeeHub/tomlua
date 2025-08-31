@@ -41,7 +41,15 @@ Yes there will eventually be better build instructions.
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
-local tomlua = require("tomlua")({ strict = false }) -- TODO: support strict = true
+local tomlua = require("tomlua")({
+    -- enhanced_tables allows multiline inline tables with a trailing comma
+    -- key = value still must be on the same line
+    -- the tables, much like arrays, must still start on the same line as their key as well
+    enhanced_tables = false,
+    -- TODO: support strict = true
+    -- add uniqueness checking fully compliant with the toml spec
+    strict = false,
+})
 
 local data, err = tomlua.decode(some_string)
 
