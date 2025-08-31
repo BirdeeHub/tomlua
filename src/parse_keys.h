@@ -4,17 +4,6 @@
 
 #include "./types.h"
 
-typedef struct {
-    str_buf v;
-    bool ok;
-} key_result;
-typedef struct {
-    size_t cap;
-    size_t len;
-    str_buf *v;
-    bool ok;
-} keys_result;
-
 keys_result parse_keys(lua_State *L, str_iter *src);
 
 static inline bool is_identifier_char(char c) {
@@ -62,20 +51,6 @@ static inline int consume_whitespace_to_line(str_iter *src) {
     }
     // read whitespace until EOF
     return 2;
-}
-
-static inline void clear_keys_result(keys_result *dst) {
-    if (dst) {
-        if (dst->v) {
-            for (size_t i = 0; i < dst->len; i++) {
-                free_str_buf(&dst->v[i]);
-            }
-            free(dst->v);
-        }
-        dst->v = NULL;
-        dst->len = 0;
-        dst->cap = 0;
-    }
 }
 
 #endif  // SRC_PARSE_KEYS_H_

@@ -50,127 +50,16 @@ typedef struct {
     char v;
 } iter_result;
 
-static inline str_buf new_str_buf() {
-    str_buf buf;
-    buf.capacity = 16;
-    buf.len = 0;
-    buf.data = malloc(buf.capacity * sizeof(char));
-    return buf;
-}
-
-static inline str_buf new_buf_from_str(const char *str, size_t len) {
-    str_buf buf;
-    // set capacity to at least len, rounded up to power-of-2
-    size_t cap = 16;
-    while (cap < len) {
-        cap *= 2;
-    }
-    buf.capacity = cap;
-    buf.len = len;
-    buf.data = malloc(buf.capacity * sizeof(char));
-    memcpy(buf.data, str, len);
-    return buf;
-}
-
-static inline bool buf_push(str_buf *buf, char c) {
-    if (!buf) return false;
-    if (buf->len >= buf->capacity) {
-        size_t new_capacity = buf->capacity > 0 ? buf->capacity * 2 : 1;
-        char *tmp = realloc(buf->data, new_capacity * sizeof(char));
-        if (!tmp) return false;
-        buf->data = tmp;
-        buf->capacity = new_capacity;
-    }
-    buf->data[buf->len++] = c;
-    return true;
-}
-
-static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
-    if (!buf || !str) return false;
-    size_t required_len = buf->len + len;
-    if (required_len > buf->capacity) {
-        size_t new_capacity = buf->capacity > 0 ? buf->capacity : 1;
-        while (new_capacity < required_len) {
-            new_capacity *= 2;
-        }
-        char *tmp = realloc(buf->data, new_capacity * sizeof(char));
-        if (!tmp) return false;
-        buf->data = tmp;
-        buf->capacity = new_capacity;
-    }
-
-    memcpy(buf->data + buf->len, str, len);
-    buf->len += len;
-
-    return true;
-}
-
-static inline bool push_buf_to_lua_string(lua_State *L, const str_buf *buf) {
-    if (!buf || !buf->data) return false;
-    lua_pushlstring(L, buf->data, buf->len);
-    return true;
-}
-
-static inline void free_str_buf(str_buf *buf) {
-    if (buf) {
-        if (buf->data) free(buf->data);
-        buf->data = NULL;
-        buf->len = buf->capacity = 0;
-    }
-}
-
-static inline void buf_soft_reset(str_buf *buf) {
-    if (buf) {
-        buf->data[0] = '\0';
-        buf->len = 0;
-    }
-}
-
-static inline str_iter str_to_iter(const char *str, size_t len) {
-    str_iter iter;
-    iter.buf = str;
-    iter.len = len;
-    iter.pos = 0;
-    return iter;
-}
-
-static inline bool iter_starts_with(const str_iter *a, char *b, size_t len) {
-    if (!a || !a->buf || !b) return false;
-    if (a->pos + len > a->len) return false;
-    return memcmp(a->buf + a->pos, b, len) == 0;
-}
-
-static inline iter_result iter_next(str_iter *iter) {
-    iter_result res;
-    if (!iter || !iter->buf || iter->pos >= iter->len) {
-        res.v = '\0';
-        res.ok = false;
-        return res;
-    }
-    res.v = iter->buf[iter->pos++];
-    res.ok = true;
-    return res;
-}
-
-static inline void iter_skip(str_iter *iter) {
-    iter->pos++;
-}
-
-static inline void iter_skip_n(str_iter *iter, unsigned int n) {
-    iter->pos += n;
-}
-
-static inline iter_result iter_peek(str_iter *iter) {
-    iter_result res;
-    if (!iter || !iter->buf || iter->pos >= iter->len) {
-        res.v = '\0';
-        res.ok = false;
-        return res;
-    }
-    res.v = iter->buf[iter->pos];
-    res.ok = true;
-    return res;
-}
+typedef struct {
+    str_buf v;
+    bool ok;
+} key_result;
+typedef struct {
+    size_t cap;
+    size_t len;
+    str_buf *v;
+    bool ok;
+} keys_result;
 
 typedef struct {
     bool strict;
@@ -312,6 +201,144 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     err->len += len;
 
     return true;
+}
+
+// NOTE: misc str buf and iter functions
+
+static inline void free_str_buf(str_buf *buf) {
+    if (buf) {
+        if (buf->data) free(buf->data);
+        buf->data = NULL;
+        buf->len = buf->capacity = 0;
+    }
+}
+
+static inline void buf_soft_reset(str_buf *buf) {
+    if (buf) {
+        buf->data[0] = '\0';
+        buf->len = 0;
+    }
+}
+
+static inline void clear_keys_result(keys_result *dst) {
+    if (dst) {
+        if (dst->v) {
+            for (size_t i = 0; i < dst->len; i++) {
+                free_str_buf(&dst->v[i]);
+            }
+            free(dst->v);
+        }
+        dst->v = NULL;
+        dst->len = 0;
+        dst->cap = 0;
+    }
+}
+
+static inline str_buf new_str_buf() {
+    str_buf buf;
+    buf.capacity = 16;
+    buf.len = 0;
+    buf.data = malloc(buf.capacity * sizeof(char));
+    return buf;
+}
+
+static inline str_buf new_buf_from_str(const char *str, size_t len) {
+    str_buf buf;
+    // set capacity to at least len, rounded up to power-of-2
+    size_t cap = 16;
+    while (cap < len) {
+        cap *= 2;
+    }
+    buf.capacity = cap;
+    buf.len = len;
+    buf.data = malloc(buf.capacity * sizeof(char));
+    memcpy(buf.data, str, len);
+    return buf;
+}
+
+static inline bool buf_push(str_buf *buf, char c) {
+    if (!buf) return false;
+    if (buf->len >= buf->capacity) {
+        size_t new_capacity = buf->capacity > 0 ? buf->capacity * 2 : 1;
+        char *tmp = realloc(buf->data, new_capacity * sizeof(char));
+        if (!tmp) return false;
+        buf->data = tmp;
+        buf->capacity = new_capacity;
+    }
+    buf->data[buf->len++] = c;
+    return true;
+}
+
+static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
+    if (!buf || !str) return false;
+    size_t required_len = buf->len + len;
+    if (required_len > buf->capacity) {
+        size_t new_capacity = buf->capacity > 0 ? buf->capacity : 1;
+        while (new_capacity < required_len) {
+            new_capacity *= 2;
+        }
+        char *tmp = realloc(buf->data, new_capacity * sizeof(char));
+        if (!tmp) return false;
+        buf->data = tmp;
+        buf->capacity = new_capacity;
+    }
+
+    memcpy(buf->data + buf->len, str, len);
+    buf->len += len;
+
+    return true;
+}
+
+static inline bool push_buf_to_lua_string(lua_State *L, const str_buf *buf) {
+    if (!buf || !buf->data) return false;
+    lua_pushlstring(L, buf->data, buf->len);
+    return true;
+}
+
+static inline str_iter str_to_iter(const char *str, size_t len) {
+    str_iter iter;
+    iter.buf = str;
+    iter.len = len;
+    iter.pos = 0;
+    return iter;
+}
+
+static inline bool iter_starts_with(const str_iter *a, char *b, size_t len) {
+    if (!a || !a->buf || !b) return false;
+    if (a->pos + len > a->len) return false;
+    return memcmp(a->buf + a->pos, b, len) == 0;
+}
+
+static inline iter_result iter_next(str_iter *iter) {
+    iter_result res;
+    if (!iter || !iter->buf || iter->pos >= iter->len) {
+        res.v = '\0';
+        res.ok = false;
+        return res;
+    }
+    res.v = iter->buf[iter->pos++];
+    res.ok = true;
+    return res;
+}
+
+static inline void iter_skip(str_iter *iter) {
+    iter->pos++;
+}
+
+static inline void iter_skip_n(str_iter *iter, unsigned int n) {
+    iter->pos += n;
+}
+
+static inline iter_result iter_peek(str_iter *iter) {
+    iter_result res;
+    if (!iter || !iter->buf || iter->pos >= iter->len) {
+        res.v = '\0';
+        res.ok = false;
+        return res;
+    }
+    res.v = iter->buf[iter->pos];
+    res.ok = true;
+    return res;
 }
 
 #endif  // SRC_TYPES_H_
