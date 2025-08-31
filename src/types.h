@@ -159,8 +159,7 @@ static inline void push_err_upval(lua_State *L) {
 }
 
 static inline TMLErr *get_err_upval(lua_State *L) {
-    TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
-    return err;
+    return luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
 }
 
 static inline bool set_err_upval(lua_State *L, size_t capacity, size_t len, char *msg) {
