@@ -59,9 +59,16 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             clear_keys_result(&keys);
             return false;
         }
-        if (!set_kv(L, &keys)) {
-            clear_keys_result(&keys);
-            return false;
+        if (opts->strict) {
+            if (!set_kv_strict(L, &keys, opts)) {
+                clear_keys_result(&keys);
+                return false;
+            }
+        } else {
+            if (!set_kv(L, &keys)) {
+                clear_keys_result(&keys);
+                return false;
+            }
         }
         clear_keys_result(&keys);
         if (opts->enhanced_tables) {

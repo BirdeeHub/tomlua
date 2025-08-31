@@ -69,6 +69,7 @@ int tomlua_decode(lua_State *L) {
     }
     const int top = luaL_ref(L, LUA_REGISTRYINDEX);
     uopts->top = top;
+    const bool strict = uopts->strict;
 
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
@@ -223,14 +224,26 @@ int tomlua_decode(lua_State *L) {
             }
             // [1] value
             // [2] current root table
-            if (!set_kv(L, &keys)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_pop(L, 1); // pop the table
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+            if (strict) {
+                if (!set_kv_strict(L, &keys, uopts)) {
+                    free_str_buf(&scratch);
+                    clear_keys_result(&keys);
+                    lua_pop(L, 1); // pop the table
+                    lua_pushnil(L);
+                    push_err_upval(L);
+                    luaL_unref(L, LUA_REGISTRYINDEX, top);
+                    return 2;
+                }
+            } else {
+                if (!set_kv(L, &keys)) {
+                    free_str_buf(&scratch);
+                    clear_keys_result(&keys);
+                    lua_pop(L, 1); // pop the table
+                    lua_pushnil(L);
+                    push_err_upval(L);
+                    luaL_unref(L, LUA_REGISTRYINDEX, top);
+                    return 2;
+                }
             }
             // [1] current root table
             clear_keys_result(&keys);
