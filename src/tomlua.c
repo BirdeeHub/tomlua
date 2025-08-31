@@ -31,7 +31,7 @@ static int tomlua_new(lua_State *L) {
     // duplicate pointers for both closures
     lua_pushvalue(L, -2);
     lua_pushvalue(L, -2);
-    // stack: module, err, err, opts, opts
+    // stack: module, err, opts, err, opts
 
     lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts, adds function
     lua_setfield(L, -4, "decode");
