@@ -1,18 +1,25 @@
 ifndef LUA_INCDIR
 $(error LUA_INCDIR header files not provided. Please pass or export LUA_INCDIR=/path/to/lua/include)
 endif
+SRC        ?= .
 CC         ?= gcc
 CFLAGS     = -O3 -fPIC -flto -finline-functions -shared -Wl,-s
 DESTDIR    ?= ./lib
-SRCS       = ./src/tomlua.c ./src/parse_str.c ./src/parse_keys.c ./src/parse_val.c ./src/decode.c ./src/encode.c
-TESTDIR    ?= ./tests
-TEST       = "$(TESTDIR)/init.lua"
+SRCS       = $(SRC)/src/tomlua.c \
+             $(SRC)/src/parse_str.c \
+             $(SRC)/src/parse_keys.c \
+             $(SRC)/src/parse_val.c \
+             $(SRC)/src/decode.c \
+             $(SRC)/src/encode.c
+
+TESTDIR    ?= $(SRC)/tests
+TEST       = $(TESTDIR)/init.lua
 INCLUDES   = -I"$(LUA_INCDIR)"
 LUA        ?= lua
 ifndef LUA_BINDIR
-LUA_BIN ?= "$(LUA)"
+LUA_BIN ?= $(LUA)
 else
-LUA_BIN ?= "$(LUA_BINDIR)/$(LUA)"
+LUA_BIN ?= $(LUA_BINDIR)/$(LUA)
 endif
 
 all: build test
@@ -24,7 +31,7 @@ build: $(SRCS)
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
 
-bear: clean
+bear: $(SRCS) clean
 	@mkdir -p $(DESTDIR)
 	bear -- $(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
 
