@@ -445,11 +445,12 @@ static bool parse_value(lua_State *L, str_iter *src, str_buf *buf) {
 }
 
 int tomlua_decode(lua_State *L) {
-    // process arguments
-    int argno = lua_gettop(L);
     // TODO: get strict mode setting from upvalue 2
     // and process strict mode.
     // this likely involves making a heading_nav_strict and a set_kv_strict
+
+    // process arguments
+    int argno = lua_gettop(L);
     if (argno < 1) {
         lua_pushnil(L);
         lua_pushstring(L, "tomlua.decode requires at least 1 argument! tomlua.decode(string, table|bool?) -> table?, err?");
