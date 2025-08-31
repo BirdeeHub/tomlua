@@ -57,9 +57,7 @@ static inline bool buf_push(str_buf *buf, char c) {
     if (buf->len >= buf->capacity) {
         size_t new_capacity = buf->capacity > 0 ? buf->capacity * 2 : 1;
         char *tmp = realloc(buf->data, new_capacity * sizeof(char));
-        if (!tmp) {
-            return false;
-        }
+        if (!tmp) return false;
         buf->data = tmp;
         buf->capacity = new_capacity;
     }
@@ -98,6 +96,13 @@ static inline void free_str_buf(str_buf *buf) {
         if (buf->data) free(buf->data);
         buf->data = NULL;
         buf->len = buf->capacity = 0;
+    }
+}
+
+static inline void buf_soft_reset(str_buf *buf) {
+    if (buf) {
+        buf->data[0] = '\0';
+        buf->len = 0;
     }
 }
 
