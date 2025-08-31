@@ -13,6 +13,7 @@
 static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
     lua_newtable(L);
     bool last_was_comma = false;
+    const bool strict = opts->strict;
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '}') {
@@ -59,7 +60,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             clear_keys_result(&keys);
             return false;
         }
-        if (opts->strict) {
+        if (strict) {
             if (!set_kv_strict(L, &keys, opts)) {
                 clear_keys_result(&keys);
                 return false;
