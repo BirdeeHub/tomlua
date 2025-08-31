@@ -25,7 +25,6 @@
         LUA_BIN = lua.interpreter;
         shellHook = ''
           make bear
-          export LUA_CPATH="./lib/?.so;$LUA_CPATH"
           exec zsh
         '';
       };

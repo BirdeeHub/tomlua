@@ -1,5 +1,7 @@
-local inspect = require('inspect')
+package.cpath = "./lib/?.so;" .. package.cpath
 local tomlua = require("tomlua")({ enhanced_tables = false, strict = true })
+
+local inspect = require('inspect')
 local cjson = require("cjson.safe")
 
 local f = io.open("./tests/example.toml", "r")
