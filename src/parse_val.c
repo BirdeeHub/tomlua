@@ -342,7 +342,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const bool strict, c
             lua_rawseti(L, -2, idx++);
         }
         return set_err_upval(L, false, 17, "missing closing ]");
-    // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
+    // --- inline table --- does NOT support multiline or trailing comma (without enhanced_tables)
     } else if (curr.v == '{') {
         iter_skip(src);
         return parse_inline_table(L, src, buf, strict, enhanced_tables);
