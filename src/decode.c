@@ -445,36 +445,26 @@ static bool parse_value(lua_State *L, str_iter *src, str_buf *buf) {
 }
 
 int tomlua_decode(lua_State *L) {
-    // TODO: get strict mode setting from upvalue 2
-    // and process strict mode.
-    // this likely involves making a heading_nav_strict and a set_kv_strict
+    // TODO: process strict mode.
+    // this likely involves making a heading_nav_strict() and a set_kv_strict()
+    bool strict = get_opts_upval(L)->strict;
 
     // process arguments
-    int argno = lua_gettop(L);
-    if (argno < 1) {
-        lua_pushnil(L);
-        lua_pushstring(L, "tomlua.decode requires at least 1 argument! tomlua.decode(string, table|bool?) -> table?, err?");
-        return 2;
-    } else if (argno > 2) {
-        lua_pop(L, argno - 2);
-    }
-    // add a new table to use as top if arg 2 != table
-    if (argno == 1){
-        lua_newtable(L);
-    } else if (argno == 2 && !lua_istable(L, -1)) {
-        lua_pop(L, 1);
-        lua_newtable(L);
-    }
-    // pops and saves the table
-    int top = luaL_ref(L, LUA_REGISTRYINDEX);
-
-    // get the toml string
-    if (!lua_isstring(L, -1)) {
-        luaL_unref(L, LUA_REGISTRYINDEX, top);
+    if (!lua_isstring(L, 1)) {
         lua_pushnil(L);
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     }
+    if (lua_istable(L, 2)) {
+        lua_settop(L, 2);
+    } else {
+        lua_settop(L, 1);
+        lua_newtable(L);
+    }
+
+    // pops and saves the table
+    int top = luaL_ref(L, LUA_REGISTRYINDEX);
+
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string

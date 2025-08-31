@@ -1,5 +1,5 @@
 local inspect = require('inspect')
-local tomlua = require("tomlua")()
+local tomlua = require("tomlua")({})
 local cjson = require("cjson.safe")
 
 local f = io.open("./example.toml", "r")

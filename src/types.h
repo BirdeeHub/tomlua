@@ -3,13 +3,14 @@
 #define SRC_TYPES_H_
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
 
 #ifndef __cplusplus
-typedef int bool;
+typedef uint8_t bool;
 #define true 1
 #define false 0
 #endif
@@ -219,7 +220,7 @@ static inline void push_err_upval(lua_State *L) {
 }
 
 static inline TMLErr *get_err_upval(lua_State *L) {
-    return luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
+    return lua_touserdata(L, lua_upvalueindex(1));
 }
 
 static inline bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
@@ -303,6 +304,14 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     err->len += len;
 
     return true;
+}
+
+typedef struct {
+    bool strict;
+} TomluaUserOpts;
+
+static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
+    return lua_touserdata(L, lua_upvalueindex(2));
 }
 
 #endif  // SRC_TYPES_H_
