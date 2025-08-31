@@ -41,7 +41,7 @@ Yes there will eventually be better build instructions.
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
-local tomlua = require("tomlua")({ strict = false }) -- TODO: support strict mode == true
+local tomlua = require("tomlua")({ strict = false }) -- TODO: support strict = true
 
 local data, err = tomlua.decode(some_string)
 
