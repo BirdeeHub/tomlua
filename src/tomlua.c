@@ -18,7 +18,7 @@ static int tomlua_new(lua_State *L) {
     } else {
         lua_newtable(L);
     }
-     // duplicate pointers for both closures
+    // duplicate pointers for both closures
     lua_pushvalue(L, -2);
     lua_pushvalue(L, -2);
     // stack: module, err, err, opts, opts
