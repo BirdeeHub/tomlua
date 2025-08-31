@@ -5,14 +5,7 @@
 #include <lua.h>
 #include "./types.h"
 
-struct parse_value_opts {
-    int has_defaults;
-    int top;
-    bool strict;
-    bool enhanced_tables;
-};
-
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const struct parse_value_opts *opts);
+bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
 
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
 static bool set_kv(lua_State *L, keys_result *keys) {

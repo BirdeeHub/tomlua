@@ -10,7 +10,7 @@
 #include "parse_val.h"
 
 // adds a table to the lua stack and return NULL or error
-static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const struct parse_value_opts *opts) {
+static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
     lua_newtable(L);
     bool last_was_comma = false;
     while (iter_peek(src).ok) {
@@ -79,7 +79,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const struct parse_value_opts *opts) {
+bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
     iter_result curr = iter_peek(src);
     if (!curr.ok) return set_err_upval(L, false, 34, "expected value, got end of content");
     // --- boolean ---

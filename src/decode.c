@@ -53,37 +53,23 @@ static bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int to
 }
 
 int tomlua_decode(lua_State *L) {
-    struct parse_value_opts val_opts;
-    int top;
-    {
-        TomluaUserOpts *uopts = get_opts_upval(L);
-
-        // verify arguments
-        if (!lua_isstring(L, 1)) {
-            lua_pushnil(L);
-            lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
-            return 2;
-        }
-        bool has_defaults = lua_istable(L, 2);
-        if (has_defaults) {
-            lua_settop(L, 2);
-        } else {
-            lua_settop(L, 1);
-            lua_newtable(L);
-        }
-
-        top = luaL_ref(L, LUA_REGISTRYINDEX);
-        // pops and saves the table
-        val_opts = (struct parse_value_opts){
-            // allows multi line tables with trailing commas (default false)
-            .enhanced_tables = uopts->enhanced_tables,
-            // TODO: process strict mode. (default false)
-            // this likely involves making a heading_nav_strict() and a set_kv_strict()
-            .strict = uopts->strict,
-            .has_defaults = has_defaults,
-            .top = top
-        };
+    TomluaUserOpts *uopts = get_opts_upval(L);
+    // verify arguments
+    if (!lua_isstring(L, 1)) {
+        lua_pushnil(L);
+        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
+        return 2;
     }
+    uopts->has_defaults = lua_istable(L, 2);
+    if (uopts->has_defaults) {
+        lua_settop(L, 2);
+    } else {
+        lua_settop(L, 1);
+        lua_newtable(L);
+    }
+    const int top = luaL_ref(L, LUA_REGISTRYINDEX);
+    uopts->top = top;
+
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string
@@ -217,7 +203,7 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            if (!parse_value(L, &src, &scratch, &val_opts)) {  // parse_value should push value on top of stack
+            if (!parse_value(L, &src, &scratch, uopts)) {  // parse_value should push value on top of stack
                 free_str_buf(&scratch);
                 clear_keys_result(&keys);
                 lua_pop(L, 1); // pop the table

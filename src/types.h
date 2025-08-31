@@ -68,6 +68,8 @@ typedef struct {
 } keys_result;
 
 typedef struct {
+    int has_defaults;
+    int top;
     bool strict;
     bool enhanced_tables;
 } TomluaUserOpts;
