@@ -449,7 +449,7 @@ int tomlua_decode(lua_State *L) {
     // this likely involves making a heading_nav_strict() and a set_kv_strict()
     bool strict = get_opts_upval(L)->strict;
 
-    // process arguments
+    // verify arguments
     if (!lua_isstring(L, 1)) {
         lua_pushnil(L);
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
