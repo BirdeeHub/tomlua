@@ -8,17 +8,17 @@
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     if (lua_istable(L, 1)) {
-        TomluaUserOpts opts = { .strict = false };
+        bool strict = false;
         lua_getfield(L, 1, "strict");
-        opts.strict = lua_toboolean(L, - 1);
+        strict = lua_toboolean(L, - 1);
 
         lua_settop(L, 0);
         lua_newtable(L); // module table
         // upvalue 1: error object
         new_TMLErr(L);
         // upvalue 2: options
-        TomluaUserOpts *v = lua_newuserdata(L, sizeof(TomluaUserOpts));
-        v = &opts;
+        TomluaUserOpts *opts = lua_newuserdata(L, sizeof(TomluaUserOpts));
+        opts->strict = strict;
     } else {
         lua_settop(L, 0);
         lua_newtable(L); // module table
