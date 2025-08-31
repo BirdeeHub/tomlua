@@ -447,7 +447,7 @@ static bool parse_value(lua_State *L, str_iter *src, str_buf *buf) {
 int tomlua_decode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
-    // TODO: process strict mode
+    // TODO: process strict mode (exclusive with filling a default table)
     bool strict = false;
     if (argno < 1) {
         lua_pushnil(L);
