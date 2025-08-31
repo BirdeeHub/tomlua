@@ -158,6 +158,42 @@ typedef struct {
     char *msg;
 } TMLErr;
 
+static int tomlua_gc(lua_State *L) {
+    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    if (errorval->heap) {
+        free(errorval->msg);
+        errorval->msg = NULL;
+    }
+    errorval->heap = 0;
+    errorval->len = 0;
+    return 0;
+}
+static int tomlua_tostring(lua_State *L) {
+    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    if (!errorval->msg) {
+        lua_pushliteral(L, "Error: (no message)");
+    } else {
+        lua_pushlstring(L, errorval->msg, errorval->len);
+    }
+    return 1;
+}
+
+static void new_TMLErr(lua_State *L) {
+    TMLErr *lasterr = lua_newuserdata(L, sizeof(TMLErr));
+    lasterr->msg = NULL;
+    lasterr->len = 0;
+    lasterr->heap = 0;
+    if (luaL_newmetatable(L, "TomluaError")) {
+        lua_pushcfunction(L, tomlua_tostring);
+        lua_setfield(L, -2, "__tostring");
+        lua_pushcfunction(L, tomlua_gc);
+        lua_setfield(L, -2, "__gc");
+    } else {
+        luaL_getmetatable(L, "TomluaError");
+    }
+    lua_setmetatable(L, -2);
+}
+
 static inline void push_err_upval(lua_State *L) {
     lua_pushvalue(L, lua_upvalueindex(1));
 }
