@@ -53,12 +53,6 @@ static bool utf8_encode(uint32_t cp, str_buf *dst) {
     return buf_push_str(dst, buf, len);
 }
 
-static bool is_hex_char(char c) {
-    return (c >= '0' && c <= '9') ||
-           (c >= 'A' && c <= 'F') ||
-           (c >= 'a' && c <= 'f');
-}
-
 static bool push_unicode(lua_State *L, str_buf *dst, str_buf *src, bool is_long) {
     size_t expected_len = is_long ? 8 : 4;
     if (src->len != expected_len) return set_err_upval(L, false, 32, "invalid unicode specifier length");

@@ -7,12 +7,6 @@
 
 bool parse_value(lua_State *L, str_iter *src, str_buf *buf);
 
-static inline bool is_hex_char(char c) {
-    return (c >= '0' && c <= '9') ||
-           (c >= 'A' && c <= 'F') ||
-           (c >= 'a' && c <= 'f');
-}
-
 static bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return false;

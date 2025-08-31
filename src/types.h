@@ -34,6 +34,12 @@ static void print_lua_stack(lua_State *L, const char *label) {
     printf("===================\n");
 }
 
+static inline bool is_hex_char(char c) {
+    return (c >= '0' && c <= '9') ||
+           (c >= 'A' && c <= 'F') ||
+           (c >= 'a' && c <= 'f');
+}
+
 typedef struct {
     size_t len;
     size_t capacity;
