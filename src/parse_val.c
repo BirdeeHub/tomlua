@@ -10,24 +10,24 @@
 #include "parse_val.h"
 
 // adds a table to the lua stack and return NULL or error
-static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const bool strict, const bool enhanced_tables) {
+static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const struct parse_value_opts *opts) {
     lua_newtable(L);
     bool last_was_comma = false;
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '}') {
             iter_skip(src);
-            if (last_was_comma && !enhanced_tables) {
+            if (last_was_comma && !opts->enhanced_tables) {
                 lua_pop(L, 1);
                 return set_err_upval(L, false, 42, "trailing comma in inline table not allowed");
             }
             return true;
         } else if (iter_peek(src).v == '\n') {
             iter_skip(src);
-            if (!enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
+            if (!opts->enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
             iter_skip_n(src, 2);
-            if (!enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
+            if (!opts->enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (d == ',') {
             iter_skip(src);
             if (last_was_comma) {
@@ -55,7 +55,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             clear_keys_result(&keys);
             return set_err_upval(L, false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
-        if (!parse_value(L, src, buf, strict, enhanced_tables)) {
+        if (!parse_value(L, src, buf, opts)) {
             clear_keys_result(&keys);
             return false;
         }
@@ -64,7 +64,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             return false;
         }
         clear_keys_result(&keys);
-        if (enhanced_tables) {
+        if (opts->enhanced_tables) {
             while (consume_whitespace_to_line(src)) {}
         } else if (consume_whitespace_to_line(src)) {
             return set_err_upval(L, false, 39, "toml inline tables cannot be multi-line");
@@ -79,7 +79,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const bool strict, const bool enhanced_tables) {
+bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const struct parse_value_opts *opts) {
     iter_result curr = iter_peek(src);
     if (!curr.ok) return set_err_upval(L, false, 34, "expected value, got end of content");
     // --- boolean ---
@@ -340,14 +340,14 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const bool strict, c
                 iter_skip(src);
                 continue;
             }
-            if (!parse_value(L, src, buf, strict, enhanced_tables)) return false;
+            if (!parse_value(L, src, buf, opts)) return false;
             lua_rawseti(L, -2, idx++);
         }
         return set_err_upval(L, false, 17, "missing closing ]");
     // --- inline table --- does NOT support multiline or trailing comma (without enhanced_tables)
     } else if (curr.v == '{') {
         iter_skip(src);
-        return parse_inline_table(L, src, buf, strict, enhanced_tables);
+        return parse_inline_table(L, src, buf, opts);
     }
     return set_err_upval(L, false, 13, "invalid value");
 }

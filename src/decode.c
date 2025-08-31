@@ -7,29 +7,83 @@
 #include "parse_keys.h"
 #include "parse_val.h"
 
+static bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
+    if (!keys->ok) return false;
+    if (keys->len <= 0) return false;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
+    for (size_t i = 0; i < keys->len; i++) {
+        if (!push_buf_to_lua_string(L, &keys->v[i])) {
+            return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
+        }
+        lua_gettable(L, -2);  // get t[key]
+        if (lua_isnil(L, -1)) {
+            lua_pop(L, 1);  // remove non-table
+            lua_newtable(L);  // create table
+            if (!push_buf_to_lua_string(L, &keys->v[i])) {
+                return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
+            }
+            lua_pushvalue(L, -2);  // push new table
+            lua_settable(L, -4);   // t[key] = new table
+        } else if (!lua_istable(L, -1)) {
+            lua_pop(L, 1);  // remove non-table
+            return set_err_upval(L, false, 33, "cannot navigate through non-table");
+        }
+        lua_remove(L, -2);  // remove parent table, keep child on top
+    }
+    if (array_type) {
+        // We’re at the table that should act as an array
+        if (!lua_istable(L, -1)) {
+            return set_err_upval(L, false, 37, "target of array heading isn't a table");
+        }
+#if LUA_VERSION_NUM == 501
+        size_t len = lua_objlen(L, -1);
+#else
+        size_t len = lua_rawlen(L, -1);
+#endif
+        // append new table at len+1
+        lua_newtable(L);               // new element
+        lua_pushinteger(L, len + 1);
+        lua_pushvalue(L, -2);          // copy new element
+        lua_settable(L, -4);           // t[len+1] = new element
+
+        // remove parent array table, leave new element on top
+        lua_remove(L, -2);
+    }
+    return true;
+}
+
 int tomlua_decode(lua_State *L) {
-    // TODO: process strict mode. (default false)
-    // this likely involves making a heading_nav_strict() and a set_kv_strict()
-    const bool strict = get_opts_upval(L)->strict;
-    // allows multi line tables with trailing commas (default false)
-    const bool enhanced_tables = get_opts_upval(L)->enhanced_tables;
+    struct parse_value_opts val_opts;
+    int top;
+    {
+        TomluaUserOpts *uopts = get_opts_upval(L);
 
-    // verify arguments
-    if (!lua_isstring(L, 1)) {
-        lua_pushnil(L);
-        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
-        return 2;
+        // verify arguments
+        if (!lua_isstring(L, 1)) {
+            lua_pushnil(L);
+            lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
+            return 2;
+        }
+        bool has_defaults = lua_istable(L, 2);
+        if (has_defaults) {
+            lua_settop(L, 2);
+        } else {
+            lua_settop(L, 1);
+            lua_newtable(L);
+        }
+
+        top = luaL_ref(L, LUA_REGISTRYINDEX);
+        // pops and saves the table
+        val_opts = (struct parse_value_opts){
+            // allows multi line tables with trailing commas (default false)
+            .enhanced_tables = uopts->enhanced_tables,
+            // TODO: process strict mode. (default false)
+            // this likely involves making a heading_nav_strict() and a set_kv_strict()
+            .strict = uopts->strict,
+            .has_defaults = has_defaults,
+            .top = top
+        };
     }
-    if (lua_istable(L, 2)) {
-        lua_settop(L, 2);
-    } else {
-        lua_settop(L, 1);
-        lua_newtable(L);
-    }
-
-    // pops and saves the table
-    int top = luaL_ref(L, LUA_REGISTRYINDEX);
-
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
     lua_pop(L, 1); // pop the string
@@ -163,7 +217,7 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            if (!parse_value(L, &src, &scratch, strict, enhanced_tables)) {  // parse_value should push value on top of stack
+            if (!parse_value(L, &src, &scratch, &val_opts)) {  // parse_value should push value on top of stack
                 free_str_buf(&scratch);
                 clear_keys_result(&keys);
                 lua_pop(L, 1); // pop the table
