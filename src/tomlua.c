@@ -9,7 +9,10 @@ static int tomlua_gc(lua_State *L) {
     TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
     if (errorval->heap) {
         free(errorval->msg);
+        errorval->msg = NULL;
     }
+    errorval->heap = 0;
+    errorval->len = 0;
     return 0;
 }
 static int tomlua_tostring(lua_State *L) {

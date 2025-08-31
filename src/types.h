@@ -3,6 +3,7 @@
 #define SRC_TYPES_H_
 
 #include <stddef.h>
+#include <string.h>
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
@@ -47,9 +48,7 @@ static inline str_buf new_buf_from_str(const char *str, size_t len) {
     buf.capacity = cap;
     buf.len = len;
     buf.data = malloc(buf.capacity * sizeof(char));
-    for (size_t i = 0; i < len; i++) {
-        buf.data[i] = str[i];
-    }
+    memcpy(buf.data, str, len);
     return buf;
 }
 
@@ -82,9 +81,7 @@ static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
         buf->capacity = new_capacity;
     }
 
-    for (size_t i = 0; i < len; i++) {
-        buf->data[buf->len + i] = str[i];
-    }
+    memcpy(buf->data + buf->len, str, len);
     buf->len += len;
 
     return true;
@@ -116,10 +113,7 @@ static inline bool iter_starts_with(const str_iter *a, char *b, size_t len) {
     if (!a || !a->buf || !b) return false;
     if (a->pos + len > a->len) return false;
 
-    for (size_t i = 0; i < len; i++) {
-        if (a->buf[a->pos + i] != b[i]) return false;
-    }
-    return true;
+    return memcmp(a->buf + a->pos, b, len) == 0;
 }
 
 static inline iter_result iter_next(str_iter *iter) {
@@ -155,22 +149,101 @@ static inline iter_result iter_peek(str_iter *iter) {
 }
 
 typedef struct {
-    char *msg;
     size_t len;
-    bool heap;
+    size_t heap;
+    char *msg;
 } TMLErr;
 
-static inline void get_err_upval(lua_State *L) {
+static inline void push_err_upval(lua_State *L) {
     lua_pushvalue(L, lua_upvalueindex(1));
 }
 
-static inline bool set_err_upval(lua_State *L, bool heap, size_t len, char *msg) {
+static inline TMLErr *get_err_upval(lua_State *L) {
+    TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
+    return err;
+}
+
+static inline bool set_err_upval(lua_State *L, size_t capacity, size_t len, char *msg) {
     TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
     if (err->heap) free(err->msg);  // clears previous message if heap allocated
-    err->heap = heap;
+    err->heap = capacity > 0 ? true : false;
     err->msg = msg;
     err->len = len;
     return false;  // returns `not ok` as a convenience
+}
+
+static inline bool err_push(lua_State *L, char c) {
+    TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
+    if (!err) return false;
+    if (!err->heap) {
+        if (err->len == 0) {
+            int cap = 16;
+            char *tmp = malloc(cap * sizeof(char));
+            if (!tmp) return false;
+            err->heap = cap;
+            err->msg = tmp;
+        } else {
+            // was static string, copy into a heap buffer
+            size_t cap = 16;
+            while (cap < err->len + 1) cap *= 2;
+            char *tmp = malloc(cap * sizeof(char));
+            if (!tmp) return false;
+            memcpy(tmp, err->msg, err->len);
+            err->msg = tmp;
+            err->heap = cap;
+        }
+    }
+    if (err->len >= err->heap) {
+        size_t new_capacity = err->heap > 0 ? err->heap * 2 : 1;
+        char *tmp = realloc(err->msg, new_capacity * sizeof(char));
+        if (!tmp) {
+            return false;
+        }
+        err->msg = tmp;
+        err->heap = new_capacity;
+    }
+    err->msg[err->len++] = c;
+    return true;
+}
+
+static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
+    TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
+    if (!err || !str) return false;
+
+    if (!err->heap) {
+        if (err->len == 0) {
+            size_t cap = 16;
+            while (cap < len) cap *= 2;
+            char *tmp = malloc(cap * sizeof(char));
+            if (!tmp) return false;
+            err->msg = tmp;
+            err->heap = cap;
+        } else {
+            // was static string, copy into a new heap buffer
+            size_t cap = 16;
+            while (cap < err->len + len) cap *= 2;
+            char *tmp = malloc(cap * sizeof(char));
+            if (!tmp) return false;
+            memcpy(tmp, err->msg, err->len);
+            err->msg = tmp;
+            err->heap = cap;
+        }
+    }
+
+    // grow if necessary
+    if (err->len + len > err->heap) {
+        size_t new_capacity = err->heap;
+        while (new_capacity < err->len + len) new_capacity *= 2;
+        char *tmp = realloc(err->msg, new_capacity * sizeof(char));
+        if (!tmp) return false;
+        err->msg = tmp;
+        err->heap = new_capacity;
+    }
+
+    memcpy(err->msg + err->len, str, len);
+    err->len += len;
+
+    return true;
 }
 
 #endif  // SRC_TYPES_H_

@@ -152,7 +152,7 @@ int tomlua_encode(lua_State *L) {
             .capacity = 0
     })) {
         free_str_buf(&output);
-        get_err_upval(L);
+        push_err_upval(L);
         return lua_error(L);
     };
     lua_pop(L, 1);
