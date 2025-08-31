@@ -114,15 +114,10 @@ static bool encode_table(lua_State *L, str_buf *output, EncodeOpts opts) {
 
 int tomlua_encode(lua_State *L) {
     // process arguments
-    int argno = lua_gettop(L);
-    if (argno < 1) {
-        return luaL_error(L, "tomlua.encode expects 1 argument! tomlua.encode(table)");
-    } else if (argno > 1) {
-        lua_pop(L, argno - 1);
-    }
-    if (!lua_istable(L, -1)) {
+    if (!lua_istable(L, 1)) {
         return luaL_error(L, "tomlua.encode expects a table as its only argument! tomlua.encode(table)");
     }
+    lua_settop(L, 1);
     str_buf output = new_str_buf();
 
     if(!encode_table(L, &output, (EncodeOpts) {
