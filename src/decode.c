@@ -490,7 +490,6 @@ int tomlua_decode(lua_State *L) {
             if (end_line == 2) break;
         }
         iter_result curr = iter_peek(&src);
-        char c = curr.v;
         if (iter_starts_with(&src, "[[", 2)) {
             iter_skip_n(&src, 2);
             keys_result keys = parse_keys(L, &src);
@@ -533,7 +532,7 @@ int tomlua_decode(lua_State *L) {
                 return 2;
             }
             clear_keys_result(&keys);
-        } else if (c == '[') {
+        } else if (curr.v == '[') {
             iter_skip(&src);
             keys_result keys = parse_keys(L, &src);
             if (!keys.ok) {
