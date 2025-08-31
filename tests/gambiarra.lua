@@ -1,10 +1,11 @@
-local function TERMINAL_HANDLER(e, test, msg)
+local function TERMINAL_HANDLER(e, test, msg, err)
+	local suffix = test .. ': ' .. msg .. (err and "\n(with error: " .. err .. ")" or "")
 	if e == 'pass' then
-		print("[32m✔[0m "..test..': '..msg)
+		print("[32m✔[0m "..suffix)
 	elseif e == 'fail' then
-		print("[31m✘[0m "..test..': '..msg)
+		print("[31m✘[0m "..suffix)
 	elseif e == 'except' then
-		print("[31m✘[0m "..test..': '..msg)
+		print("[31m✘[0m "..suffix)
 	end
 end
 
@@ -95,10 +96,11 @@ return function(name, f, async)
 				msg = debug.getinfo(2, 'S').short_src..":"..debug.getinfo(2, 'l').currentline
 			end
 			if type(cond) == 'function' then
-				if pcall(cond) then
+				local control, value = pcall(cond)
+				if control then
 					handler('pass', name, msg)
 				else
-					handler('fail', name, msg)
+					handler('fail', name, msg, tostring(value))
 				end
 			elseif cond then
 				handler('pass', name, msg)
