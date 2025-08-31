@@ -244,11 +244,11 @@ static inline void clear_keys_result(keys_result *dst) {
 }
 
 static inline str_buf new_str_buf() {
-    str_buf buf;
-    buf.capacity = 16;
-    buf.len = 0;
-    buf.data = malloc(buf.capacity * sizeof(char));
-    return buf;
+    return ((str_buf) {
+        .capacity = 16,
+        .len = 0,
+        .data = malloc(16 * sizeof(char))
+    });
 }
 
 static inline str_buf new_buf_from_str(const char *str, size_t len) {
