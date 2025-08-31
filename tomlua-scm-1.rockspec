@@ -19,13 +19,10 @@ dependencies = {
 
 build = {
    type = "make",
-   install_pass = false,
    build_variables = {
       LUA_INCDIR="$(LUA_INCDIR)",
    },
-   install = {
-       lib = {
-           ['tomlua.so'] = 'lib/tomlua.so',
-       },
+   install_variables = {
+      LIBDIR="$(LIBDIR)",
    },
 }

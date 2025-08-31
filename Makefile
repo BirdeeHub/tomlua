@@ -27,6 +27,23 @@ all: build test
 test: $(SRCS) $(TESTS)
 	$(LUA_BIN) "$(TEST)" -- "$(TESTDIR)" "$(DESTDIR)"
 
+install:
+ifdef LIBDIR
+	@if [ ! -f "$(DESTDIR)/tomlua.so" ]; then \
+		echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
+		false; \
+	fi
+	@if [ -d "$(LIBDIR)" ]; then \
+		cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/"; \
+		echo "Installed to $(LIBDIR)"; \
+	else \
+		echo "LIBDIR set but does not exist: $(LIBDIR)"; \
+		false; \
+	fi
+else
+	@echo "LIBDIR not set, skipping install"
+endif
+
 build: $(SRCS)
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
