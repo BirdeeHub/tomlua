@@ -23,11 +23,9 @@ static int tomlua_new(lua_State *L) {
     lua_pushvalue(L, -2);
     // stack: module, err, err, opts, opts
 
-    // decode
     lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts, adds function
     lua_setfield(L, -4, "decode");
 
-    // encode
     lua_pushcclosure(L, tomlua_encode, 2); // pops err+opts, adds function
     lua_setfield(L, -2, "encode");
 
