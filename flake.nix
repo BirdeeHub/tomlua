@@ -32,7 +32,7 @@
         packages = [ lua pkgs.luarocks pkgs.bear ];
         inputsFrom = [ ];
         LUA_INCDIR = "${lua}/include";
-        DESTDIR = "./lib";
+        LUA_BIN = lua.interpreter;
         shellHook = ''
           make bear
           export LUA_CPATH="./lib/?.so;$LUA_CPATH"
