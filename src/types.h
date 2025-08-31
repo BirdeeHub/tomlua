@@ -178,7 +178,7 @@ static int tomlua_tostring(lua_State *L) {
     return 1;
 }
 
-static void new_TMLErr(lua_State *L) {
+static int new_TMLErr(lua_State *L) {
     TMLErr *lasterr = lua_newuserdata(L, sizeof(TMLErr));
     lasterr->msg = NULL;
     lasterr->len = 0;
@@ -192,6 +192,7 @@ static void new_TMLErr(lua_State *L) {
         luaL_getmetatable(L, "TomluaError");
     }
     lua_setmetatable(L, -2);
+    return 1;
 }
 
 static inline void push_err_upval(lua_State *L) {
