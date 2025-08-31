@@ -5,24 +5,13 @@
   outputs = {self, nixpkgs}: let
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
     APPNAME = "tomlua";
-    app = {
-      lua,
-      runCommandCC
-    , ...
-    }: runCommandCC APPNAME {
-      LUA_INCDIR = "${lua}/include";
-      DESTDIR = "${placeholder "out"}/lib";
-      SRC = builtins.path { path = ./.; };
-    } ''cd "$SRC" && make build'';
   in {
-    overlays.default = final: prev: {
-      ${APPNAME} = prev.callPackage app { lua = prev.luajit; };
-    };
+    overlays.default = import ./. { inherit APPNAME self; };
     packages = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
     in {
-      default = pkgs.${APPNAME};
-      ${APPNAME} = pkgs.${APPNAME};
+      default = pkgs.vimPlugins.${APPNAME};
+      ${APPNAME} = self.outputs.default;
     });
     devShells = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };

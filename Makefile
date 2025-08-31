@@ -1,6 +1,3 @@
-ifndef LUA_INCDIR
-$(error LUA_INCDIR header files not provided. Please pass or export LUA_INCDIR=/path/to/lua/include)
-endif
 SRC        ?= .
 CC         ?= gcc
 CFLAGS     = -O3 -fPIC -flto -finline-functions -shared -Wl,-s
@@ -45,8 +42,12 @@ else
 endif
 
 build: $(SRCS)
+	@if [ -z "$(LUA_INCDIR)" ]; then \
+		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
+		false; \
+	fi
 	@mkdir -p $(DESTDIR)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
+	$(CC) $(CFLAGS) -I"$(LUA_INCDIR)" -o $(DESTDIR)/tomlua.so $(SRCS)
 
 bear: $(SRCS) clean
 	@mkdir -p $(DESTDIR)
