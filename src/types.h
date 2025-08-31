@@ -69,6 +69,7 @@ typedef struct {
 
 typedef struct {
     bool strict;
+    bool enhanced_tables;
 } TomluaUserOpts;
 
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {

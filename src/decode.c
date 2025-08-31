@@ -10,7 +10,8 @@
 int tomlua_decode(lua_State *L) {
     // TODO: process strict mode.
     // this likely involves making a heading_nav_strict() and a set_kv_strict()
-    bool strict = get_opts_upval(L)->strict;
+    const bool strict = get_opts_upval(L)->strict;
+    const bool enhanced_tables = get_opts_upval(L)->enhanced_tables;
 
     // verify arguments
     if (!lua_isstring(L, 1)) {
@@ -161,7 +162,7 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            if (!parse_value(L, &src, &scratch)) {  // parse_value should push value on top of stack
+            if (!parse_value(L, &src, &scratch, strict, enhanced_tables)) {  // parse_value should push value on top of stack
                 free_str_buf(&scratch);
                 clear_keys_result(&keys);
                 lua_pop(L, 1); // pop the table

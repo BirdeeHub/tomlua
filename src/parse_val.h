@@ -5,7 +5,7 @@
 #include <lua.h>
 #include "./types.h"
 
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf);
+bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const bool strict, const bool enhanced_tables);
 
 static bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;

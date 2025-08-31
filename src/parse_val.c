@@ -10,7 +10,7 @@
 #include "parse_val.h"
 
 // adds a table to the lua stack and return NULL or error
-static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf) {
+static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const bool strict, const bool enhanced_tables) {
     lua_newtable(L);
     bool last_was_comma = false;
     while (iter_peek(src).ok) {
@@ -55,7 +55,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf)
             clear_keys_result(&keys);
             return set_err_upval(L, false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
-        if (!parse_value(L, src, buf)) {
+        if (!parse_value(L, src, buf, strict, enhanced_tables)) {
             clear_keys_result(&keys);
             return false;
         }
@@ -77,7 +77,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf)
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf) {
+bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const bool strict, const bool enhanced_tables) {
     iter_result curr = iter_peek(src);
     if (!curr.ok) return set_err_upval(L, false, 34, "expected value, got end of content");
     // --- boolean ---
@@ -338,14 +338,14 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf) {
                 iter_skip(src);
                 continue;
             }
-            if (!parse_value(L, src, buf)) return false;
+            if (!parse_value(L, src, buf, strict, enhanced_tables)) return false;
             lua_rawseti(L, -2, idx++);
         }
         return set_err_upval(L, false, 17, "missing closing ]");
     // --- inline table --- does NOT support multiline or trailing comma (in strict mode)
     } else if (curr.v == '{') {
         iter_skip(src);
-        return parse_inline_table(L, src, buf);
+        return parse_inline_table(L, src, buf, strict, enhanced_tables);
     }
     return set_err_upval(L, false, 13, "invalid value");
 }
