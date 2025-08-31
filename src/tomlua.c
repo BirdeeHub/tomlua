@@ -8,9 +8,10 @@
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     if (lua_istable(L, 1)) {
-        bool strict = false;
         lua_getfield(L, 1, "strict");
-        strict = lua_toboolean(L, - 1);
+        bool strict = lua_toboolean(L, -1);
+        lua_getfield(L, 1, "enhanced_tables");
+        bool enhanced_tables = lua_toboolean(L, -1);
 
         lua_settop(L, 0);
         lua_newtable(L); // module table
@@ -19,6 +20,7 @@ static int tomlua_new(lua_State *L) {
         // upvalue 2: options
         TomluaUserOpts *opts = lua_newuserdata(L, sizeof(TomluaUserOpts));
         opts->strict = strict;
+        opts->enhanced_tables = enhanced_tables;
     } else {
         lua_settop(L, 0);
         lua_newtable(L); // module table
@@ -27,6 +29,7 @@ static int tomlua_new(lua_State *L) {
         // upvalue 2: options
         TomluaUserOpts *opts = lua_newuserdata(L, sizeof(TomluaUserOpts));
         opts->strict = false;
+        opts->enhanced_tables = false;
     }
     // duplicate pointers for both closures
     lua_pushvalue(L, -2);
