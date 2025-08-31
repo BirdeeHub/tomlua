@@ -15,7 +15,7 @@ local test = require('gambiarra')
 local tests_passed = 0
 local tests_failed = 0
 require('gambiarra')(function(e, desc, msg, err)
-	local suffix = desc .. ': ' .. msg .. (err and "\n(with error: " .. err .. ")" or "")
+	local suffix = desc .. ': ' .. tostring(msg) .. (err and "\n(with error: " .. err .. ")" or "")
 	if e == 'pass' then
 		print("[32m✔[0m " .. suffix)
 		tests_passed = tests_passed + 1

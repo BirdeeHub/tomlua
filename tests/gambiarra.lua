@@ -1,5 +1,5 @@
 local function TERMINAL_HANDLER(e, test, msg, err)
-	local suffix = test .. ': ' .. msg .. (err and "\n(with error: " .. err .. ")" or "")
+	local suffix = test .. ': ' .. tostring(msg) .. (err and "\n(with error: " .. err .. ")" or "")
 	if e == 'pass' then
 		print("[32m✔[0m "..suffix)
 	elseif e == 'fail' then
