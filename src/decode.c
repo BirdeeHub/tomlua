@@ -106,6 +106,7 @@ int tomlua_decode(lua_State *L) {
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     }
+    const bool strict = uopts->strict;
     uopts->has_defaults = lua_istable(L, 2);
     if (uopts->has_defaults) {
         lua_settop(L, 2);
@@ -115,7 +116,6 @@ int tomlua_decode(lua_State *L) {
     }
     const int top = luaL_ref(L, LUA_REGISTRYINDEX);
     uopts->top = top;
-    const bool strict = uopts->strict;
 
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
