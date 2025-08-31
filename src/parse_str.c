@@ -156,8 +156,7 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                     if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
             }
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             return true;
         } else {
             if (!buf_push(dst, c)) return set_err_upval(L, false, 3, "OOM");
@@ -187,8 +186,7 @@ bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
         iter_result current = iter_next(src);
         char c = current.v;
         if (c == '\'' && iter_starts_with(src, "''", 2)) {
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             return true;
         } else {
             if (!buf_push(dst, c)) return set_err_upval(L, false, 3, "OOM");

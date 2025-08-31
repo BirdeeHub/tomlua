@@ -51,8 +51,7 @@ static inline int consume_whitespace_to_line(str_iter *src) {
             iter_skip(src);
             return true;
         } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             return true;
         } else if (d == ' ' || d == '\t') {
             iter_skip(src);

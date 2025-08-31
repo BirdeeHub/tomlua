@@ -120,8 +120,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src) {
             iter_skip(src);
             return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (d == ',') {
             iter_skip(src);
@@ -270,8 +269,7 @@ static bool parse_value(lua_State *L, str_iter *src) {
         } else if (iter_starts_with(src, "0x", 2)) {
             // Hex integer
             str_buf buf = new_str_buf();
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             bool was_underscore = false;
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
@@ -304,8 +302,7 @@ static bool parse_value(lua_State *L, str_iter *src) {
         } else if (iter_starts_with(src, "0o", 2)) {
             // Octal integer
             str_buf buf = new_str_buf();
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             bool was_underscore = false;
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
@@ -337,8 +334,7 @@ static bool parse_value(lua_State *L, str_iter *src) {
         } else if (iter_starts_with(src, "0b", 2)) {
             // binary integer
             str_buf buf = new_str_buf();
-            iter_skip(src);
-            iter_skip(src);
+            iter_skip_n(src, 2);
             bool was_underscore = false;
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
@@ -523,8 +519,7 @@ int tomlua_decode(lua_State *L) {
         iter_result curr = iter_peek(&src);
         char c = curr.v;
         if (iter_starts_with(&src, "[[", 2)) {
-            iter_skip(&src);
-            iter_skip(&src);
+            iter_skip_n(&src, 2);
             keys_result keys = parse_keys(L, &src);
             if (!keys.ok) {
                 lua_pop(L, 1);
@@ -542,8 +537,7 @@ int tomlua_decode(lua_State *L) {
                 luaL_unref(L, LUA_REGISTRYINDEX, top);
                 return 2;
             }
-            iter_skip(&src);
-            iter_skip(&src);
+            iter_skip_n(&src, 2);
             if (!consume_whitespace_to_line(&src)) {
                 lua_pop(L, 1);
                 lua_pushnil(L);
