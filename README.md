@@ -81,7 +81,27 @@ If it does I will finish the README.
 
 Basic benchmarking shows decode compares at about 1.5x cjson in runtime duration for 100000+ iterations of processing the example.toml file.
 
-However the cjson in the benchmark does not need to deal with comments or empty lines as it is parsing the result of cjson.encode in the benchmark, which is a single line.
+1 billion iterations
+
+```
+Parsed TOML 1000000 times in 19.632652 seconds, avg. 50935.553689 iterations per second, avg. 19.63 µ/iteration
+Parsed JSON 1000000 times in 14.465032 seconds, avg. 69132.235587 iterations per second, avg. 14.47 µ/iteration
+speed tomlua/cjson: 73.68%, duration tomlua/cjson: 135.72%
+```
+
+1 million iterations with toml_edit as well
+
+```
+Parsed TOML 100000 times in 1.668857 seconds, avg. 59921.251491 iterations per second, avg. 16.69 µ/iteration
+Parsed JSON 100000 times in 1.142505 seconds, avg. 87526.969247 iterations per second, avg. 11.43 µ/iteration
+speed tomlua/cjson: 68.46%, duration tomlua/cjson: 146.07%
+Parsed TOML 100000 times in 14.630555 seconds, avg. 6835.010702 iterations per second, avg. 146.31 µ/iteration
+speed tomlua/toml_edit: 876.68%, duration tomlua/toml_edit: 11.41%
+```
+
+However the cjson in the benchmark does not need to deal with comments or empty lines, or the headings of toml.
+cjson is parsing the result of cjson.encode on the output of tomlua.decode.
+
 So I feel this is pretty good for something that doesn't use SIMD(yet?) or parallelism or other such fancy tricks.
 
 Unfortunately, I am also slightly cheating, I have yet to add strict mode for decode which checks for table uniqueness following the toml spec precisely. This will be something you can toggle on or off.
