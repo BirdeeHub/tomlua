@@ -57,7 +57,7 @@ static bool is_lua_array(lua_State *L, int idx) {
 // }
 
 typedef struct {
-    str_buf prefix;
+    str_buf *prefix;
     size_t prefix_len;
     size_t capacity;
     bool is_inline;

@@ -11,8 +11,8 @@ typedef struct {
 typedef struct {
     size_t cap;
     size_t len;
-    bool ok;
     str_buf *v;
+    bool ok;
 } keys_result;
 
 keys_result parse_keys(lua_State *L, str_iter *src);

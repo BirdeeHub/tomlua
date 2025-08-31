@@ -35,19 +35,19 @@ static void print_lua_stack(lua_State *L, const char *label) {
 }
 
 typedef struct {
-    char *data;
     size_t len;
     size_t capacity;
+    char *data;
 } str_buf;
 
 typedef struct {
-    const char *buf;
     size_t len;
     size_t pos;
+    const char *buf;
 } str_iter;
 typedef struct {
-    char v;
     bool ok;
+    char v;
 } iter_result;
 
 static inline str_buf new_str_buf() {
