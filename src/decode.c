@@ -8,10 +8,10 @@
 #include "parse_val.h"
 
 int tomlua_decode(lua_State *L) {
-    // TODO: process strict mode.
+    // TODO: process strict mode. (default false)
     // this likely involves making a heading_nav_strict() and a set_kv_strict()
     const bool strict = get_opts_upval(L)->strict;
-    // TODO: allows multi line tables with trailing commas
+    // TODO: allows multi line tables with trailing commas (default false)
     const bool enhanced_tables = get_opts_upval(L)->enhanced_tables;
 
     // verify arguments
