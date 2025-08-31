@@ -448,6 +448,7 @@ int tomlua_decode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
     // TODO: process strict mode (exclusive with filling a default table)
+    // this likely involves making a heading_nav_strict and a set_kv_strict
     bool strict = false;
     if (argno < 1) {
         lua_pushnil(L);
