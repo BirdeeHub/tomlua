@@ -41,13 +41,15 @@ Yes there will eventually be better build instructions.
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
-local data, err = require("tomlua").decode(some_string)
+local tomlua = require("tomlua")({}) -- TODO: add some options like strict mode
+
+local data, err = tomlua.decode(some_string)
 
 -- or read into an existing table
-data, err = require("tomlua").decode(some_string, { some = "defaults" }) -- TODO: true instead of table for strict mode, no reading into defaults table allowed for strict mode
+data, err = tomlua.decode(some_string, { some = "defaults" })
 
 -- TODO
-local str, err = require("tomlua").encode(some_table) -- with options to control some emit options via metatables on values
+local str, err = tomlua.encode(some_table) -- with options to control some emit options via metatables on values
 ```
 
 ```c

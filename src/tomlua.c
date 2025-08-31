@@ -5,19 +5,38 @@
 #include "decode.h"
 #include "encode.h"
 
-int luaopen_tomlua(lua_State *L) {
-    if (sizeof(lua_Integer) < 8) return luaL_error(L, "tomlua requires Lua integers to be 64-bit");
+static int tomlua_new(lua_State *L) {
+    // arg 1 = options or nil
     lua_newtable(L); // module table
 
-    // upvalue for returning errors without unnecessary runtime allocation.
+    // upvalue 1: error object
     new_TMLErr(L);
-    // copy it, give to both, each lua_State is single threaded and has a different copy
-    lua_pushvalue(L, -1);
 
-    lua_pushcclosure(L, tomlua_decode, 1);
-    lua_setfield(L, -3, "decode");
+    // upvalue 2: options
+    if (lua_istable(L, 1)) {
+        lua_pushvalue(L, 1);
+    } else {
+        lua_newtable(L);
+    }
+     // duplicate pointers for both closures
+    lua_pushvalue(L, -2);
+    lua_pushvalue(L, -2);
+    // stack: module, err, err, opts, opts
 
-    lua_pushcclosure(L, tomlua_encode, 1);
+    // decode
+    lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts
+    lua_setfield(L, -4, "decode");
+
+    // encode
+    lua_pushcclosure(L, tomlua_encode, 2); // pops err+opts
     lua_setfield(L, -2, "encode");
+
+    // module table is at -1 now
+    return 1;
+}
+
+int luaopen_tomlua(lua_State *L) {
+    if (sizeof(lua_Integer) < 8) return luaL_error(L, "tomlua requires Lua integers to be 64-bit");
+    lua_pushcfunction(L, tomlua_new);
     return 1;
 }
