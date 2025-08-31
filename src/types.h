@@ -162,10 +162,10 @@ static inline TMLErr *get_err_upval(lua_State *L) {
     return luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
 }
 
-static inline bool set_err_upval(lua_State *L, size_t capacity, size_t len, char *msg) {
+static inline bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
     TMLErr *err = luaL_checkudata(L, lua_upvalueindex(1), "TomluaError");
     if (err->heap) free(err->msg);  // clears previous message if heap allocated
-    err->heap = capacity > 0 ? true : false;
+    err->heap = heap_size;
     err->msg = msg;
     err->len = len;
     return false;  // returns `not ok` as a convenience
