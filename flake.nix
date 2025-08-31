@@ -6,7 +6,7 @@
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
     APPNAME = "tomlua";
   in {
-    overlays.default = import ./. { APPNAME = APPNAME; };
+    overlays.default = import ./. { inherit APPNAME self; };
     packages = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
     in {
