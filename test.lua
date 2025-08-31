@@ -11,7 +11,7 @@ end
 -- print(contents)
 
 -- Number of iterations for the benchmark
-local iterations = 100000
+local iterations = tonumber(arg[2]) or 1
 
 local function stats(target, elapsed, n)
     n = n or iterations
