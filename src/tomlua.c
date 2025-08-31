@@ -24,11 +24,11 @@ static int tomlua_new(lua_State *L) {
     // stack: module, err, err, opts, opts
 
     // decode
-    lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts
+    lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts, adds function
     lua_setfield(L, -4, "decode");
 
     // encode
-    lua_pushcclosure(L, tomlua_encode, 2); // pops err+opts
+    lua_pushcclosure(L, tomlua_encode, 2); // pops err+opts, adds function
     lua_setfield(L, -2, "encode");
 
     // module table is at -1 now
