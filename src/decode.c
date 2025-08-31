@@ -122,14 +122,26 @@ int tomlua_decode(lua_State *L) {
                 return 2;
             }
             lua_pop(L, 1);
-            if (!heading_nav(L, &keys, true, top)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_pop(L, 1);
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+            if (strict) {
+                if (!heading_nav(L, &keys, false, top)) {
+                    free_str_buf(&scratch);
+                    clear_keys_result(&keys);
+                    lua_pop(L, 1);
+                    lua_pushnil(L);
+                    push_err_upval(L);
+                    luaL_unref(L, LUA_REGISTRYINDEX, top);
+                    return 2;
+                }
+            } else {
+                if (!heading_nav(L, &keys, false, top)) {
+                    free_str_buf(&scratch);
+                    clear_keys_result(&keys);
+                    lua_pop(L, 1);
+                    lua_pushnil(L);
+                    push_err_upval(L);
+                    luaL_unref(L, LUA_REGISTRYINDEX, top);
+                    return 2;
+                }
             }
             clear_keys_result(&keys);
         } else if (curr.v == '[') {
@@ -164,14 +176,26 @@ int tomlua_decode(lua_State *L) {
                 return 2;
             }
             lua_pop(L, 1);
-            if (!heading_nav(L, &keys, false, top)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_pop(L, 1);
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+            if (strict) {
+                if (!heading_nav(L, &keys, false, top)) {
+                    free_str_buf(&scratch);
+                    clear_keys_result(&keys);
+                    lua_pop(L, 1);
+                    lua_pushnil(L);
+                    push_err_upval(L);
+                    luaL_unref(L, LUA_REGISTRYINDEX, top);
+                    return 2;
+                }
+            } else {
+                if (!heading_nav(L, &keys, false, top)) {
+                    free_str_buf(&scratch);
+                    clear_keys_result(&keys);
+                    lua_pop(L, 1);
+                    lua_pushnil(L);
+                    push_err_upval(L);
+                    luaL_unref(L, LUA_REGISTRYINDEX, top);
+                    return 2;
+                }
             }
             clear_keys_result(&keys);
         } else {
