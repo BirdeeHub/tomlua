@@ -27,6 +27,8 @@ require('gambiarra')(function(e, desc, msg)
 	end
 end)
 
+local tomlua = require("tomlua")({ enhanced_tables = false, strict = true })
+
 -- TODO: write some tests
 test('test name', function()
 	ok(true, 'message')
