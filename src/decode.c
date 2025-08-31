@@ -447,6 +447,8 @@ static bool parse_value(lua_State *L, str_iter *src, str_buf *buf) {
 int tomlua_decode(lua_State *L) {
     // process arguments
     int argno = lua_gettop(L);
+    // TODO: process strict mode
+    bool strict = false;
     if (argno < 1) {
         lua_pushnil(L);
         lua_pushstring(L, "tomlua.decode requires at least 1 argument! tomlua.decode(string, table?) -> table?, err?");
@@ -457,9 +459,16 @@ int tomlua_decode(lua_State *L) {
     // add a new table to use as top if arg 2 != table
     if (argno == 1){
         lua_newtable(L);
-    } else if (argno == 2 && !lua_istable(L, -1)) {
-        lua_pop(L, 1);
-        lua_newtable(L);
+    } else if (argno == 2) {
+        int type = lua_type(L, -1);
+        if (type == LUA_TBOOLEAN) {
+            strict = lua_toboolean(L, -1);
+            lua_pop(L, 1);
+            lua_newtable(L);
+        } else if (type != LUA_TTABLE) {
+            lua_pop(L, 1);
+            lua_newtable(L);
+        }
     }
     // pops and saves the table
     int top = luaL_ref(L, LUA_REGISTRYINDEX);
