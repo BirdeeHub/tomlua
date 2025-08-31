@@ -82,6 +82,14 @@ typedef struct {
     char *msg;
 } TMLErr;
 
+static inline void push_err_upval(lua_State *L) {
+    lua_pushvalue(L, lua_upvalueindex(1));
+}
+
+static inline TMLErr *get_err_upval(lua_State *L) {
+    return lua_touserdata(L, lua_upvalueindex(1));
+}
+
 static int tomlua_gc(lua_State *L) {
     TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
     if (errorval->heap) {
@@ -117,14 +125,6 @@ static int new_TMLErr(lua_State *L) {
     }
     lua_setmetatable(L, -2);
     return 1;
-}
-
-static inline void push_err_upval(lua_State *L) {
-    lua_pushvalue(L, lua_upvalueindex(1));
-}
-
-static inline TMLErr *get_err_upval(lua_State *L) {
-    return lua_touserdata(L, lua_upvalueindex(1));
 }
 
 static inline bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
