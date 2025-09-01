@@ -130,7 +130,7 @@ int tomlua_decode(lua_State *L) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
-    keys_result keys;
+    keys_result keys = {0};
     while (iter_peek(&src).ok) {
         {
             // consume until non-blank line, consume initial whitespace, then end loop
