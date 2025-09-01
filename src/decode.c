@@ -44,7 +44,6 @@ static bool heading_nav_strict(lua_State *L, keys_result *keys, bool array_type,
             lua_pushvalue(L, -2);  // push new table
             lua_settable(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
-            lua_pop(L, 1);  // remove non-table
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
         }
         lua_remove(L, -2);  // remove parent table, keep child on top
@@ -89,7 +88,6 @@ static bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int to
             lua_pushvalue(L, -2);  // push new table
             lua_settable(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
-            lua_pop(L, 1);  // remove non-table
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
         }
         lua_remove(L, -2);  // remove parent table, keep child on top

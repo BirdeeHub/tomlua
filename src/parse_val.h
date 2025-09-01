@@ -49,7 +49,6 @@ static bool set_kv_strict(lua_State *L, keys_result *keys, const TomluaUserOpts 
             lua_pushvalue(L, -2);  // push new table
             lua_settable(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
-            lua_pop(L, 2);
             return set_err_upval(L, false, 18, "key is not a table");
         }
         lua_remove(L, -2); // remove parent table
@@ -90,7 +89,6 @@ static bool set_kv(lua_State *L, keys_result *keys) {
             lua_pushvalue(L, -2);  // push new table
             lua_settable(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
-            lua_pop(L, 2);
             return set_err_upval(L, false, 18, "key is not a table");
         }
         lua_remove(L, -2); // remove parent table
