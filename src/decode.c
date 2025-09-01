@@ -216,9 +216,9 @@ int tomlua_decode(lua_State *L) {
 fail:
     free_str_buf(&scratch);
     clear_keys_result(&keys);
+    luaL_unref(L, LUA_REGISTRYINDEX, top);
     lua_settop(L, 0);
     lua_pushnil(L);
     push_err_upval(L);
-    luaL_unref(L, LUA_REGISTRYINDEX, top);
     return 2;
 }
