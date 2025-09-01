@@ -130,6 +130,7 @@ int tomlua_decode(lua_State *L) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
+    keys_result keys;
     while (iter_peek(&src).ok) {
         {
             // consume until non-blank line, consume initial whitespace, then end loop
@@ -140,181 +141,66 @@ int tomlua_decode(lua_State *L) {
         if (iter_starts_with(&src, "[[", 2)) {
             iter_skip_n(&src, 2);
             lua_pop(L, 1); // pop current location, we are moving
-            keys_result keys = parse_keys(L, &src);
-            if (!keys.ok) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
-            }
+            keys = parse_keys(L, &src);
+            if (!keys.ok) goto fail;
             if (!iter_starts_with(&src, "]]", 2)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "table heading must end with ]]");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 30, "table heading must end with ]]");
+                goto fail;
             }
             iter_skip_n(&src, 2);  // consume ]]
             if (!consume_whitespace_to_line(&src)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "array [[headers]] must have a new line before new values");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 56, "array [[headers]] must have a new line before new values");
+                goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, &keys, false, top)) {
-                    free_str_buf(&scratch);
-                    clear_keys_result(&keys);
-                    lua_settop(L, 0);
-                    lua_pushnil(L);
-                    push_err_upval(L);
-                    luaL_unref(L, LUA_REGISTRYINDEX, top);
-                    return 2;
-                }
+                if (!heading_nav_strict(L, &keys, false, top)) goto fail;
             } else {
-                if (!heading_nav(L, &keys, false, top)) {
-                    free_str_buf(&scratch);
-                    clear_keys_result(&keys);
-                    lua_settop(L, 0);
-                    lua_pushnil(L);
-                    push_err_upval(L);
-                    luaL_unref(L, LUA_REGISTRYINDEX, top);
-                    return 2;
-                }
+                if (!heading_nav(L, &keys, false, top)) goto fail;
             }
             clear_keys_result(&keys);
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);
             lua_pop(L, 1);  // pop current location, we are moving
-            keys_result keys = parse_keys(L, &src);
-            if (!keys.ok) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
-            }
+            keys = parse_keys(L, &src);
+            if (!keys.ok) goto fail;
             if (iter_peek(&src).v != ']') {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "table heading must end with ]");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 29, "table heading must end with ]");
+                goto fail;
             }
             iter_skip(&src);  // consume ]
             if (!consume_whitespace_to_line(&src)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "table [headers] must have a new line before new values");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 54, "table [headers] must have a new line before new values");
+                goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, &keys, false, top)) {
-                    free_str_buf(&scratch);
-                    clear_keys_result(&keys);
-                    lua_settop(L, 0);
-                    lua_pushnil(L);
-                    push_err_upval(L);
-                    luaL_unref(L, LUA_REGISTRYINDEX, top);
-                    return 2;
-                }
+                if (!heading_nav_strict(L, &keys, false, top)) goto fail;
             } else {
-                if (!heading_nav(L, &keys, false, top)) {
-                    free_str_buf(&scratch);
-                    clear_keys_result(&keys);
-                    lua_settop(L, 0);
-                    lua_pushnil(L);
-                    push_err_upval(L);
-                    luaL_unref(L, LUA_REGISTRYINDEX, top);
-                    return 2;
-                }
+                if (!heading_nav(L, &keys, false, top)) goto fail;
             }
             clear_keys_result(&keys);
         } else {
-            keys_result keys = parse_keys(L, &src);
-            if (!keys.ok) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
-            }
+            keys = parse_keys(L, &src);
+            if (!keys.ok) goto fail;
             if (iter_peek(&src).v != '=') {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "keys for assignment must end with =");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 35, "keys for assignment must end with =");
+                goto fail;
             }
             iter_skip(&src);  // consume =
             if (consume_whitespace_to_line(&src)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "the value in key = value expressions must begin on the same line as the key!");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 76, "the value in key = value expressions must begin on the same line as the key!");
+                goto fail;
             }
-            if (!parse_value(L, &src, &scratch, uopts)) {  // parse_value should push value on top of stack
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                push_err_upval(L);
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
-            }
+            if (!parse_value(L, &src, &scratch, uopts)) goto fail;
             if (!consume_whitespace_to_line(&src)) {
-                free_str_buf(&scratch);
-                clear_keys_result(&keys);
-                lua_settop(L, 0);
-                lua_pushnil(L);
-                lua_pushstring(L, "key value pairs must be followed by a new line (or end of content)");
-                luaL_unref(L, LUA_REGISTRYINDEX, top);
-                return 2;
+                set_err_upval(L, false, 66, "key value pairs must be followed by a new line (or end of content)");
+                goto fail;
             }
             // [1] value
             // [2] current root table
             if (strict) {
-                if (!set_kv_strict(L, &keys, uopts)) {
-                    free_str_buf(&scratch);
-                    clear_keys_result(&keys);
-                    lua_settop(L, 0);
-                    lua_pushnil(L);
-                    push_err_upval(L);
-                    luaL_unref(L, LUA_REGISTRYINDEX, top);
-                    return 2;
-                }
+                if (!set_kv_strict(L, &keys, uopts)) goto fail;
             } else {
-                if (!set_kv(L, &keys)) {
-                    free_str_buf(&scratch);
-                    clear_keys_result(&keys);
-                    lua_settop(L, 0);
-                    lua_pushnil(L);
-                    push_err_upval(L);
-                    luaL_unref(L, LUA_REGISTRYINDEX, top);
-                    return 2;
-                }
+                if (!set_kv(L, &keys)) goto fail;
             }
             // [1] current root table
             clear_keys_result(&keys);
@@ -326,4 +212,13 @@ int tomlua_decode(lua_State *L) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     luaL_unref(L, LUA_REGISTRYINDEX, top);
     return 1;  // on fail return 2; lua nil and an error
+
+fail:
+    free_str_buf(&scratch);
+    clear_keys_result(&keys);
+    lua_settop(L, 0);
+    lua_pushnil(L);
+    push_err_upval(L);
+    luaL_unref(L, LUA_REGISTRYINDEX, top);
+    return 2;
 }
