@@ -211,7 +211,7 @@ int tomlua_decode(lua_State *L) {
     lua_settop(L, 0);
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     luaL_unref(L, LUA_REGISTRYINDEX, top);
-    return 1;  // on fail return 2; lua nil and an error
+    return 1;
 
 fail:
     free_str_buf(&scratch);
