@@ -134,9 +134,7 @@ int tomlua_decode(lua_State *L) {
         {
             // consume until non-blank line, consume initial whitespace, then end loop
             int end_line = consume_whitespace_to_line(&src);
-            while (end_line == 1) {
-                end_line = consume_whitespace_to_line(&src);
-            }
+            while (end_line == 1) end_line = consume_whitespace_to_line(&src);
             if (end_line == 2) break;
         }
         if (iter_starts_with(&src, "[[", 2)) {
