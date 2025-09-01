@@ -7,6 +7,24 @@
 
 bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
 
+/*
+    // upvalue 3 is a weak-key table if strict
+    // check if table was defined:
+    // get the table you want to check on the stack
+    lua_rawget(L, lua_upvalueindex(3)); // use table as key for lookup
+    if (!lua_isnil(L, -1)) {
+        lua_pop(L, 2);
+        return set_err_upval(L, false, 38, "table already defined");
+    }
+    lua_pop(L, 1); // remove nil
+
+    // register table as defined:
+    // get the table you want to check on the stack
+    lua_pushvalue(L, -1);  // copy table so we don't remove it from the stack with this
+    lua_pushboolean(L, true);
+    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+*/
+
 // TODO: MAKE THIS STRICT
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
 static bool set_kv_strict(lua_State *L, keys_result *keys, const TomluaUserOpts *opts) {
