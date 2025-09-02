@@ -74,10 +74,7 @@ static inline bool was_defined(lua_State *L, int idx) {
     // upvalue 3 is a weak-key table if strict
     lua_pushvalue(L, idx);
     lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
-    if (!lua_isnil(L, -1)) {
-        set_err_upval(L, false, 38, "table already defined");
-        return true;
-    }
+    if (!lua_isnil(L, -1)) return true;
     lua_pop(L, 1);  // remove nil
     return false;
 }
@@ -87,21 +84,6 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_pushvalue(L, idx);
     lua_pushboolean(L, true);
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
-}
-// NOTE: FOR STRICT MODE ONLY!!
-// does not remove table to check
-// returns true if no conflict, false if conflict
-// should be used when you
-// if (!was_defined(L, idx)) add_defined(L, idx); or similar
-static inline bool register_defined(lua_State *L, int idx) {
-    // upvalue 3 is a weak-key table if strict
-    lua_pushvalue(L, idx);
-    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
-    if (!lua_isnil(L, -1)) return set_err_upval(L, false, 38, "table already defined");
-    lua_pop(L, 1);  // remove nil
-    lua_pushboolean(L, true);
-    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
-    return true;
 }
 
 // TODO: MAKE THIS STRICT
