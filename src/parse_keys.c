@@ -33,7 +33,8 @@ static key_result parse_key(lua_State *L, str_iter *src) {
         }
     } else {
         dst.ok = false;
-        set_err_upval(L, false, 40, "called parse_key with invalid first char");
+        set_err_upval(L, false, 42, "called parse_key with invalid first char: ");
+        err_push(L, c);
     }
     if (!dst.ok) free_str_buf(&dst.v);
     return dst;
