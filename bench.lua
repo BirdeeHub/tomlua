@@ -18,7 +18,7 @@ local iterations = tonumber(arg[3]) or tonumber(arg[2]) or 100
 
 local function stats(target, elapsed, n)
     n = n or iterations
-    return ("Parsed %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µ/iteration")
+    return ("Parsed %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µs/iteration")
         :format(target, n, elapsed, n / elapsed, elapsed * 1e6 / n)
 end
 local function rate_compare(prefix, a, b, n)
