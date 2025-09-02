@@ -84,6 +84,8 @@ static inline void add_defined(lua_State *L, int idx) {
 // NOTE: FOR STRICT MODE ONLY!!
 // does not remove table to check
 // returns true if no conflict, false if conflict
+// should be used when you
+// if (!was_defined(L, idx)) add_defined(L, idx); or similar
 static inline bool register_defined(lua_State *L, int idx) {
     // upvalue 3 is a weak-key table if strict
     lua_pushvalue(L, idx);
