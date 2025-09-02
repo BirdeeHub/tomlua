@@ -84,11 +84,12 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
 
-// TODO: MAKE THIS STRICT
+// TODO: MAKE THIS STRICTER?
 // gets [-1] value and [-2] root table from top of stack but leaves root table on top of stack, and sets value at place indexed to by keys
 static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return set_err_upval(L, false, 22, "no key provided to set");
+    if (lua_istable(L, -1)) add_defined(L, -1);  // if value was an inline table, add it because we are going to add it
     lua_pushvalue(L, -2);     // copy root table to top
 
     // Navigate through all keys except the last
@@ -110,6 +111,7 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
             lua_remove(L, -3);
         }
         lua_remove(L, -2); // remove parent table
+        add_defined(L, -1);
     }
 
     // Now top table is where we want to set the value

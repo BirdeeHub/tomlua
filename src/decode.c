@@ -7,7 +7,7 @@
 #include "parse_keys.h"
 #include "parse_val.h"
 
-// TODO: make this strict!
+// TODO: make this more strict?
 static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return false;

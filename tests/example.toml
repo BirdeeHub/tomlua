@@ -26,6 +26,9 @@ testkey6 = [
     1, 2, 3, 4, 5,
 ]
 
+# should fail on strict mode
+# database.replica_backup = { host = "replica2.local", port = 5434 }
+
 [[test]]
 names.hello = "h\u1234i"
 key = "value"
@@ -52,7 +55,6 @@ port = 5432
 username = "dbuser"
 password = "secret"
 pool_size = 10
-database.replica_backup = { host = "replica2.local", port = 5434 }
 
 [database.replica]
 host = "replica1.local"
