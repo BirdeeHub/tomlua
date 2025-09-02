@@ -47,7 +47,7 @@ static inline bool register_defined(lua_State *L, int idx) {
     lua_pushvalue(L, idx);
     lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
     if (!lua_isnil(L, -1)) {
-        set_err_upval(L, false, 38, "table already defined");
+        return set_err_upval(L, false, 38, "table already defined");
     }
     lua_pop(L, 1);  // remove nil
     lua_pushboolean(L, true);
