@@ -31,7 +31,12 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
         }
         lua_remove(L, -2);  // remove parent table, keep child on top
     }
-    if (array_type) {
+    if (!array_type) {
+        if (was_defined(L, -1)) {
+            return set_err_upval(L, false, 32, "cannot set the same table twice!");
+        }
+        add_defined(L, -1);
+    } else {
         // We’re at the table that should act as an array
         if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 37, "target of array heading isn't a table");
@@ -49,6 +54,7 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
 
         // remove parent array table, leave new element on top
         lua_remove(L, -2);
+        add_defined(L, -1);
     }
     return true;
 }
@@ -149,9 +155,9 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, &keys, false, top)) goto fail;
+                if (!heading_nav_strict(L, &keys, true, top)) goto fail;
             } else {
-                if (!heading_nav(L, &keys, false, top)) goto fail;
+                if (!heading_nav(L, &keys, true, top)) goto fail;
             }
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);

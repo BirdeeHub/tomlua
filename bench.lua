@@ -1,5 +1,5 @@
 package.cpath = "./lib/?.so;" .. package.cpath
-local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
+local tomlua = require("tomlua")({ enhanced_tables = false, strict = true })
 
 local inspect = require('inspect')
 local cjson = require("cjson.safe")
