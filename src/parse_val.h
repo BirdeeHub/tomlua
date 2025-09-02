@@ -84,7 +84,7 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
 
-// TODO: MAKE THIS STRICTER?
+// TODO: MAKE THIS STRICTER (It marks but doesnt ever check)
 // gets [-1] value and [-2] root table from top of stack but leaves root table on top of stack, and sets value at place indexed to by keys
 static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     if (!keys->ok) return false;
