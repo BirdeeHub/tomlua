@@ -29,11 +29,7 @@ static int tomlua_new(lua_State *L) {
         lua_setfield(L, -4, "encode");         // pops function
 
         if (strict) {
-            lua_newtable(L);            // create table for defined tables
-            lua_newtable(L);            // metatable so we use weak keys
-            lua_pushstring(L, "k");
-            lua_setfield(L, -2, "__mode");
-            lua_setmetatable(L, -2);    // set weak-key table metatable
+            lua_pushnil(L);                        // init upvalue 3 for storing defined values
             lua_pushcclosure(L, tomlua_decode, 3); // pops err+opts+defined, adds function
             lua_setfield(L, -2, "decode");         // pops function
         } else {
