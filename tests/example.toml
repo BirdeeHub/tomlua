@@ -26,7 +26,7 @@ testkey6 = [
     1, 2, 3, 4, 5,
 ]
 
-# should fail on strict mode
+# should fail on strict mode later at database heading
 # database.replica_backup = { host = "replica2.local", port = 5434 }
 
 [[test]]
