@@ -40,17 +40,6 @@ static inline bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
-static void create_defined_table(lua_State *L) {
-    lua_newtable(L);
-    if (luaL_newmetatable(L, "TomluaDefined")) {
-        lua_pushstring(L, "k");
-        lua_setfield(L, -2, "__mode");
-    } else {
-        luaL_getmetatable(L, "TomluaDefined");
-    }
-    lua_setmetatable(L, -2);
-}
-
 typedef struct {
     size_t len;
     size_t capacity;

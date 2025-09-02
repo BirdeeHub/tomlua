@@ -5,6 +5,17 @@
 #include <lua.h>
 #include "./types.h"
 
+static inline void create_defined_table(lua_State *L) {
+    lua_newtable(L);
+    if (luaL_newmetatable(L, "TomluaDefined")) {
+        lua_pushstring(L, "k");
+        lua_setfield(L, -2, "__mode");
+    } else {
+        luaL_getmetatable(L, "TomluaDefined");
+    }
+    lua_setmetatable(L, -2);
+}
+
 bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
 
 /*
