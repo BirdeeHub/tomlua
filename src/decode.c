@@ -16,17 +16,18 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
         if (!push_buf_to_lua_string(L, &keys->v[i])) {
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
-        lua_gettable(L, -2);  // get t[key]
+        lua_pushvalue(L, -1);
+        lua_gettable(L, -3);  // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);  // remove non-table
             lua_newtable(L);  // create table
-            if (!push_buf_to_lua_string(L, &keys->v[i])) {
-                return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
-            }
-            lua_pushvalue(L, -2);  // push new table
+            lua_pushvalue(L, -1);
+            lua_insert(L, -3);
             lua_settable(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
+        } else {
+            lua_remove(L, -3);
         }
         lua_remove(L, -2);  // remove parent table, keep child on top
     }
@@ -60,17 +61,18 @@ static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type,
         if (!push_buf_to_lua_string(L, &keys->v[i])) {
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
-        lua_gettable(L, -2);  // get t[key]
+        lua_pushvalue(L, -1);
+        lua_gettable(L, -3);  // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);  // remove non-table
             lua_newtable(L);  // create table
-            if (!push_buf_to_lua_string(L, &keys->v[i])) {
-                return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
-            }
-            lua_pushvalue(L, -2);  // push new table
+            lua_pushvalue(L, -1);
+            lua_insert(L, -3);
             lua_settable(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
+        } else {
+            lua_remove(L, -3);
         }
         lua_remove(L, -2);  // remove parent table, keep child on top
     }
