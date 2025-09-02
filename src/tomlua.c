@@ -33,7 +33,7 @@ static int tomlua_new(lua_State *L) {
             lua_pushcclosure(L, tomlua_decode, 3); // pops err+opts+defined, adds function
             lua_setfield(L, -2, "decode");         // pops function
         } else {
-            lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts+defined, adds function
+            lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts, adds function
             lua_setfield(L, -2, "decode");         // pops function
         }
         return 1;
