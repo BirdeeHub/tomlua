@@ -14,7 +14,7 @@
     lua_rawget(L, lua_upvalueindex(3)); // use table as key for lookup
     if (!lua_isnil(L, -1)) {
         lua_pop(L, 2);
-        return set_err_upval(L, false, 38, "table already defined");
+        return set_err_upval(L, false, 21, "table already defined");
     }
     lua_pop(L, 1); // remove nil
 
