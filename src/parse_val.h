@@ -5,6 +5,8 @@
 #include <lua.h>
 #include "./types.h"
 
+bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
+
 // NOTE: FOR STRICT MODE ONLY!!
 // pushes value onto stack
 static inline void create_defined_table(lua_State *L) {
@@ -17,8 +19,6 @@ static inline void create_defined_table(lua_State *L) {
     }
     lua_setmetatable(L, -2);
 }
-
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
 
 // NOTE: FOR STRICT MODE ONLY!!
 // does not remove table to check
