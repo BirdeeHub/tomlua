@@ -21,7 +21,7 @@ static inline bool set_kv(lua_State *L, keys_result *keys) {
         if (!push_buf_to_lua_string(L, &keys->v[i])) {
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
-        lua_gettable(L, -2);                        // get t[key]
+        lua_gettable(L, -2);    // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);      // remove nil
             lua_newtable(L);    // create new table
