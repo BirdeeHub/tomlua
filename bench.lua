@@ -84,6 +84,7 @@ if run_toml_edit then
     print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
 end
 
+print()
 print("TODO remove junk test output")
 
 print()
