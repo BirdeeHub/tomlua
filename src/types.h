@@ -210,6 +210,12 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     return true;
 }
 
+static inline void move_buf_to_err_upval(lua_State *L, str_buf *buf) {
+    set_err_upval(L, buf->capacity, buf->len, buf->data);
+    buf->data = NULL;
+    buf->len = buf->capacity = 0;
+}
+
 // NOTE: misc str buf and iter functions
 
 static inline void free_str_buf(str_buf *buf) {
