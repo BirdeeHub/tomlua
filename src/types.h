@@ -216,6 +216,11 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     return true;
 }
 
+static inline bool err_push_buf(lua_State *L, const str_buf *buf) {
+    if (!buf || !buf->data) return false;
+    return err_push_str(L, buf->data, buf->len);
+}
+
 // NOTE: misc str buf and iter functions
 
 static inline void free_str_buf(str_buf *buf) {
