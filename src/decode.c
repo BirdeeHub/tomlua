@@ -105,10 +105,7 @@ int tomlua_decode(lua_State *L) {
     }
     TomluaUserOpts *uopts = get_opts_upval(L);
     const bool strict = uopts->strict;
-    if (strict) {
-        create_defined_table(L);
-        lua_replace(L, lua_upvalueindex(3));
-    }
+    if (strict) create_defined_table(L);
     if (lua_istable(L, 2)) {
         lua_settop(L, 2);
     } else {
@@ -204,10 +201,7 @@ int tomlua_decode(lua_State *L) {
         }
     }
 
-    if (strict) {
-        lua_pushnil(L);
-        lua_replace(L, lua_upvalueindex(3));
-    }
+    if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
     lua_settop(L, 0);
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
@@ -215,10 +209,7 @@ int tomlua_decode(lua_State *L) {
     return 1;
 
 fail:
-    if (strict) {
-        lua_pushnil(L);
-        lua_replace(L, lua_upvalueindex(3));
-    }
+    if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
     clear_keys_result(&keys);
     luaL_unref(L, LUA_REGISTRYINDEX, top);

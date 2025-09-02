@@ -58,6 +58,12 @@ static inline void create_defined_table(lua_State *L) {
         luaL_getmetatable(L, "TomluaDefined");
     }
     lua_setmetatable(L, -2);
+    lua_replace(L, lua_upvalueindex(3));
+}
+
+static inline void reset_defined_table(lua_State *L) {
+    lua_pushnil(L);
+    lua_replace(L, lua_upvalueindex(3));
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
