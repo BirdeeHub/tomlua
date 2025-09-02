@@ -201,19 +201,19 @@ int tomlua_decode(lua_State *L) {
         }
     }
 
+    lua_settop(L, 0);
     if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
-    lua_settop(L, 0);
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     luaL_unref(L, LUA_REGISTRYINDEX, top);
     return 1;
 
 fail:
+    lua_settop(L, 0);
+    luaL_unref(L, LUA_REGISTRYINDEX, top);
     if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
     clear_keys_result(&keys);
-    luaL_unref(L, LUA_REGISTRYINDEX, top);
-    lua_settop(L, 0);
     lua_pushnil(L);
     push_err_upval(L);
     return 2;
