@@ -151,7 +151,6 @@ int tomlua_decode(lua_State *L) {
             } else {
                 if (!heading_nav(L, &keys, false, top)) goto fail;
             }
-            clear_keys_result(&keys);
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);
             lua_pop(L, 1);  // pop current location, we are moving
@@ -171,7 +170,6 @@ int tomlua_decode(lua_State *L) {
             } else {
                 if (!heading_nav(L, &keys, false, top)) goto fail;
             }
-            clear_keys_result(&keys);
         } else {
             keys = parse_keys(L, &src);
             if (!keys.ok) goto fail;
@@ -197,8 +195,9 @@ int tomlua_decode(lua_State *L) {
                 if (!set_kv(L, &keys)) goto fail;
             }
             // [1] current root table
-            clear_keys_result(&keys);
         }
+        // all branches get a key from parse_keys so clear it here
+        clear_keys_result(&keys);
     }
 
     lua_settop(L, 0);
