@@ -25,13 +25,12 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
 static inline bool was_defined(lua_State *L, int idx) {
     // upvalue 3 is a weak-key table if strict
     lua_pushvalue(L, idx);
-    lua_rawget(L, lua_upvalueindex(3)); // use table as key for lookup
+    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
     if (!lua_isnil(L, -1)) {
-        lua_pop(L, 2);
         set_err_upval(L, false, 38, "table already defined");
         return true;
     }
-    lua_pop(L, 1); // remove nil
+    lua_pop(L, 1);  // remove nil
     return false;
 }
 // NOTE: FOR STRICT MODE ONLY!!
@@ -41,10 +40,24 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_pushboolean(L, true);
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
+// NOTE: FOR STRICT MODE ONLY!!
+// does not remove table to check
+static inline bool register_defined(lua_State *L, int idx) {
+    // upvalue 3 is a weak-key table if strict
+    lua_pushvalue(L, idx);
+    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
+    if (!lua_isnil(L, -1)) {
+        set_err_upval(L, false, 38, "table already defined");
+    }
+    lua_pop(L, 1);  // remove nil
+    lua_pushboolean(L, true);
+    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+    return true;
+}
 
 // TODO: MAKE THIS STRICT
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
-static inline bool set_kv_strict(lua_State *L, keys_result *keys, const TomluaUserOpts *opts) {
+static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return set_err_upval(L, false, 22, "no key provided to set");
     int value_idx = lua_gettop(L);  // value is on top

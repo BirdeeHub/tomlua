@@ -14,21 +14,22 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
     lua_newtable(L);
     bool last_was_comma = false;
     const bool strict = opts->strict;
+    const bool enhanced_tables = opts->enhanced_tables;
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '}') {
             iter_skip(src);
-            if (last_was_comma && !opts->enhanced_tables) {
+            if (last_was_comma && !enhanced_tables) {
                 lua_pop(L, 1);
                 return set_err_upval(L, false, 42, "trailing comma in inline table not allowed");
             }
             return true;
         } else if (iter_peek(src).v == '\n') {
             iter_skip(src);
-            if (!opts->enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
+            if (!enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
             iter_skip_n(src, 2);
-            if (!opts->enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
+            if (!enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (d == ',') {
             iter_skip(src);
             if (last_was_comma) {
@@ -61,7 +62,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             return false;
         }
         if (strict) {
-            if (!set_kv_strict(L, &keys, opts)) {
+            if (!set_kv_strict(L, &keys)) {
                 clear_keys_result(&keys);
                 return false;
             }
@@ -72,7 +73,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             }
         }
         clear_keys_result(&keys);
-        if (opts->enhanced_tables) {
+        if (enhanced_tables) {
             while (consume_whitespace_to_line(src)) {}
         } else if (consume_whitespace_to_line(src)) {
             return set_err_upval(L, false, 39, "toml inline tables cannot be multi-line");

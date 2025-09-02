@@ -109,19 +109,14 @@ int tomlua_decode(lua_State *L) {
         create_defined_table(L);
         lua_replace(L, lua_upvalueindex(3));
     }
-    {
-        const bool has_defaults = lua_istable(L, 2);
-        uopts->has_defaults = has_defaults;
-        if (has_defaults) {
-            lua_settop(L, 2);
-        } else {
-            lua_settop(L, 1);
-            lua_newtable(L);
-        }
+    if (lua_istable(L, 2)) {
+        lua_settop(L, 2);
+    } else {
+        lua_settop(L, 1);
+        lua_newtable(L);
     }
     // pop and store top, this will be our result at the end
     const int top = luaL_ref(L, LUA_REGISTRYINDEX);
-    uopts->top = top;
 
     size_t len;
     const char *s = lua_tolstring(L, 1, &len);
@@ -200,7 +195,7 @@ int tomlua_decode(lua_State *L) {
             // [1] value
             // [2] current root table
             if (strict) {
-                if (!set_kv_strict(L, &keys, uopts)) goto fail;
+                if (!set_kv_strict(L, &keys)) goto fail;
             } else {
                 if (!set_kv(L, &keys)) goto fail;
             }
