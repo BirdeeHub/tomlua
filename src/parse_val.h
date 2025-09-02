@@ -38,7 +38,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
 
 // TODO: MAKE THIS STRICT
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
-static bool set_kv_strict(lua_State *L, keys_result *keys, const TomluaUserOpts *opts) {
+static inline bool set_kv_strict(lua_State *L, keys_result *keys, const TomluaUserOpts *opts) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return set_err_upval(L, false, 22, "no key provided to set");
     int value_idx = lua_gettop(L);  // value is on top
@@ -77,7 +77,7 @@ static bool set_kv_strict(lua_State *L, keys_result *keys, const TomluaUserOpts 
 }
 
 // gets [-1] value and [-2] root table from top of stack but leaves on top of stack, and sets value at place indexed to by keys
-static bool set_kv(lua_State *L, keys_result *keys) {
+static inline bool set_kv(lua_State *L, keys_result *keys) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return set_err_upval(L, false, 22, "no key provided to set");
 
