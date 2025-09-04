@@ -17,7 +17,7 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
         lua_pushvalue(L, -1);
-        lua_gettable(L, -3);  // get t[key]
+        lua_rawget(L, -3);  // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);  // remove non-table
             lua_newtable(L);  // create table
@@ -68,7 +68,7 @@ static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type,
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
         lua_pushvalue(L, -1);
-        lua_gettable(L, -3);  // get t[key]
+        lua_rawget(L, -3);  // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);  // remove non-table
             lua_newtable(L);  // create table

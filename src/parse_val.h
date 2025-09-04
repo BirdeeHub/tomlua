@@ -19,7 +19,7 @@ static inline bool set_kv(lua_State *L, keys_result *keys) {
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
         lua_pushvalue(L, -1);
-        lua_gettable(L, -3);    // get t[key]
+        lua_rawget(L, -3);    // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);      // remove nil
             lua_newtable(L);    // create new table
@@ -81,7 +81,7 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
 
-static inline void add_key_to_defined(lua_State *L, int idx) {
+static inline bool add_key_to_defined(lua_State *L, int idx) {
     int defidx = absindex(L, idx);
     int key = absindex(L, -1);
     lua_pushvalue(L, defidx);
@@ -92,11 +92,18 @@ static inline void add_key_to_defined(lua_State *L, int idx) {
         lua_pushvalue(L, defidx);
         lua_pushvalue(L, -2);
         lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+        lua_pushvalue(L, key);
+        lua_pushboolean(L, true);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
+        return false;
     }
+    // TODO: check if the key was defined already here.
     lua_pushvalue(L, key);
     lua_pushboolean(L, true);
     lua_rawset(L, -3);
     lua_pop(L, 1);
+    return true;
 }
 
 // TODO: MAKE THIS STRICTER (It marks but doesnt ever check, it needs to throw when it sets an existing value directly, or into an inline table)
@@ -113,7 +120,7 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
             return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
         }
         lua_pushvalue(L, -1);
-        lua_gettable(L, -3);    // get t[key]
+        lua_rawget(L, -3);    // get t[key]
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);      // remove nil
             lua_newtable(L);    // create new table
