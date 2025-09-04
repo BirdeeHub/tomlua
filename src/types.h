@@ -120,8 +120,6 @@ static int new_TMLErr(lua_State *L) {
         lua_setfield(L, -2, "__tostring");
         lua_pushcfunction(L, tomlua_gc);
         lua_setfield(L, -2, "__gc");
-    } else {
-        luaL_getmetatable(L, "TomluaError");
     }
     lua_setmetatable(L, -2);
     return 1;
