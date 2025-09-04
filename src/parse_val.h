@@ -65,13 +65,11 @@ static inline void reset_defined_table(lua_State *L) {
 // NOTE: FOR STRICT MODE ONLY!!
 // does not remove table to check
 // returns true if it was, false if not (reverse of register_defined)
-static inline bool was_defined(lua_State *L, int idx) {
+static inline bool get_defined(lua_State *L, int idx) {
     // upvalue 3 is a weak-key table if strict
     lua_pushvalue(L, idx);
     lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
-    if (!lua_isnil(L, -1)) return true;
-    lua_pop(L, 1);  // remove nil
-    return false;
+    return !lua_isnil(L, -1);
 }
 // NOTE: FOR STRICT MODE ONLY!!
 // does not remove table added

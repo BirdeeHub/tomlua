@@ -32,9 +32,10 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
         lua_remove(L, -2);  // remove parent table, keep child on top
     }
     if (!array_type) {
-        if (was_defined(L, -1)) {
+        if (get_defined(L, -1)) {
             return set_err_upval(L, false, 32, "cannot set the same table twice!");
         }
+        lua_pop(L, 1);
         add_defined(L, -1);
     } else {
         // We’re at the table that should act as an array
