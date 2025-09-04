@@ -81,7 +81,7 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
 
-static inline bool add_key_to_defined(lua_State *L, int idx) {
+static inline void add_key_to_defined(lua_State *L, int idx) {
     int defidx = absindex(L, idx);
     int key = absindex(L, -1);
     lua_pushvalue(L, defidx);
@@ -97,7 +97,6 @@ static inline bool add_key_to_defined(lua_State *L, int idx) {
     lua_pushboolean(L, true);
     lua_rawset(L, -3);
     lua_pop(L, 1);
-    return true;
 }
 
 // TODO: MAKE THIS STRICTER (It marks but doesnt ever check, it needs to throw when it sets an existing value directly, or into an inline table)
