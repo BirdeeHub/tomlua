@@ -46,7 +46,6 @@ static inline bool set_kv(lua_State *L, keys_result *keys) {
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
-// pushes value onto stack
 static inline void create_defined_table(lua_State *L) {
     lua_newtable(L);
     if (luaL_newmetatable(L, "TomluaDefined")) {
