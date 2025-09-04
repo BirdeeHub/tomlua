@@ -25,7 +25,7 @@ static inline bool set_kv(lua_State *L, keys_result *keys) {
             lua_newtable(L);    // create new table
             lua_pushvalue(L, -1);
             lua_insert(L, -3);
-            lua_settable(L, -4);   // t[key] = new table
+            lua_rawset(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 18, "key is not a table");
         } else {
@@ -39,7 +39,7 @@ static inline bool set_kv(lua_State *L, keys_result *keys) {
         return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
     }
     lua_pushvalue(L, -3);  // push value
-    lua_settable(L, -3);          // t[last_key] = value
+    lua_rawset(L, -3);          // t[last_key] = value
 
     lua_pop(L, 2);
     return true;
@@ -81,6 +81,25 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
 
+static inline bool add_key_to_defined(lua_State *L, int idx) {
+    int defidx = absindex(L, idx);
+    int key = absindex(L, -1);
+    lua_pushvalue(L, defidx);
+    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
+    if (!lua_istable(L, -1)) {
+        lua_pop(L, 1);
+        lua_newtable(L);
+        lua_pushvalue(L, defidx);
+        lua_pushvalue(L, -2);
+        lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+    }
+    lua_pushvalue(L, key);
+    lua_pushboolean(L, true);
+    lua_rawset(L, -3);
+    lua_pop(L, 1);
+    return true;
+}
+
 // TODO: MAKE THIS STRICTER (It marks but doesnt ever check, it needs to throw when it sets an existing value directly, or into an inline table)
 // gets [-1] value and [-2] root table from top of stack but leaves root table on top of stack, and sets value at place indexed to by keys
 static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
@@ -101,7 +120,7 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
             lua_newtable(L);    // create new table
             lua_pushvalue(L, -1);
             lua_insert(L, -3);
-            lua_settable(L, -4);   // t[key] = new table
+            lua_rawset(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 18, "key is not a table");
         } else {
@@ -116,7 +135,7 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
         return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
     }
     lua_pushvalue(L, -3);  // push value
-    lua_settable(L, -3);          // t[last_key] = value
+    lua_rawset(L, -3);          // t[last_key] = value
 
     lua_pop(L, 2);
     return true;

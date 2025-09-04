@@ -23,7 +23,7 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
             lua_newtable(L);  // create table
             lua_pushvalue(L, -1);
             lua_insert(L, -3);
-            lua_settable(L, -4);   // t[key] = new table
+            lua_rawset(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
         } else {
@@ -50,7 +50,7 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
         lua_newtable(L);               // new element
         lua_pushinteger(L, len + 1);
         lua_pushvalue(L, -2);          // copy new element
-        lua_settable(L, -4);           // t[len+1] = new element
+        lua_rawset(L, -4);           // t[len+1] = new element
 
         // remove parent array table, leave new element on top
         lua_remove(L, -2);
@@ -74,7 +74,7 @@ static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type,
             lua_newtable(L);  // create table
             lua_pushvalue(L, -1);
             lua_insert(L, -3);
-            lua_settable(L, -4);   // t[key] = new table
+            lua_rawset(L, -4);   // t[key] = new table
         } else if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
         } else {
@@ -96,7 +96,7 @@ static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type,
         lua_newtable(L);               // new element
         lua_pushinteger(L, len + 1);
         lua_pushvalue(L, -2);          // copy new element
-        lua_settable(L, -4);           // t[len+1] = new element
+        lua_rawset(L, -4);           // t[len+1] = new element
 
         // remove parent array table, leave new element on top
         lua_remove(L, -2);
