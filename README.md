@@ -3,7 +3,7 @@
 > [!WARNING]
 > This is not finished software yet!
 
-Parses .toml files into lua tables quickly, and hopefully eventually back again.
+Parses toml files into lua tables quickly, and hopefully eventually back again.
 
 Implemented in C
 
