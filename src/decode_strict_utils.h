@@ -180,7 +180,7 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     if (set_defined_key(L, -2, -1)) {
         return set_err_upval(L, false, 23, "key was already defined");
     }
-    if (lua_istable(L, value_idx)) add_inline(L, value_idx);  // if value was an inline table, add it because we are going to add it
+    if (lua_istable(L, value_idx)) add_inline(L, value_idx);
     lua_pushvalue(L, value_idx);  // push value
     lua_rawset(L, -3);          // t[last_key] = value
 
