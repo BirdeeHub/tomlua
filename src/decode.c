@@ -7,7 +7,22 @@
 #include "parse_keys.h"
 #include "parse_val.h"
 
-// TODO: make this more strict?
+// NOTE: FOR STRICT MODE ONLY!!
+static inline void create_defined_table(lua_State *L) {
+    lua_newtable(L);
+    if (luaL_newmetatable(L, "TomluaDefined")) {
+        lua_pushstring(L, "k");
+        lua_setfield(L, -2, "__mode");
+    }
+    lua_setmetatable(L, -2);
+    lua_replace(L, lua_upvalueindex(3));
+}
+// NOTE: FOR STRICT MODE ONLY!!
+static inline void reset_defined_table(lua_State *L) {
+    lua_pushnil(L);
+    lua_replace(L, lua_upvalueindex(3));
+}
+// NOTE: FOR STRICT MODE ONLY!!
 static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return false;
