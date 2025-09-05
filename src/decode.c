@@ -6,7 +6,7 @@
 #include "types.h"
 #include "parse_keys.h"
 #include "parse_val.h"
-#include "strict_utils.h"
+#include "decode_strict_utils.h"
 
 static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;

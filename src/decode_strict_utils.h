@@ -1,6 +1,6 @@
 // Copyright 2025 Birdee
-#ifndef SRC_STRICT_UTILS_H_
-#define SRC_STRICT_UTILS_H_
+#ifndef SRC_DECODE_STRICT_UTILS_H_
+#define SRC_DECODE_STRICT_UTILS_H_
 
 #include <lua.h>
 #include "./types.h"
@@ -188,4 +188,4 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     return true;
 }
 
-#endif  // SRC_STRICT_UTILS_H_
+#endif  // SRC_DECODE_STRICT_UTILS_H_
