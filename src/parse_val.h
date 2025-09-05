@@ -81,9 +81,11 @@ static inline void add_defined(lua_State *L, int idx) {
     lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
 }
 
-static inline bool add_key_to_defined(lua_State *L, int idx) {
-    int defidx = absindex(L, idx);
-    int key = absindex(L, -1);
+// TODO: make defined values tables and use this?
+// NOTE: FOR STRICT MODE ONLY!!
+// does not pop table, adds defined table to stack
+static inline void get_defined_table(lua_State *L, int idx) {
+    int defidx = absindex(lua_gettop(L), idx);
     lua_pushvalue(L, defidx);
     lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
     if (!lua_istable(L, -1)) {
@@ -92,18 +94,7 @@ static inline bool add_key_to_defined(lua_State *L, int idx) {
         lua_pushvalue(L, defidx);
         lua_pushvalue(L, -2);
         lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
-        lua_pushvalue(L, key);
-        lua_pushboolean(L, true);
-        lua_rawset(L, -3);
-        lua_pop(L, 1);
-        return false;
     }
-    // TODO: check if the key was defined already here.
-    lua_pushvalue(L, key);
-    lua_pushboolean(L, true);
-    lua_rawset(L, -3);
-    lua_pop(L, 1);
-    return true;
 }
 
 // TODO: MAKE THIS STRICTER (It marks but doesnt ever check, it needs to throw when it sets an existing value directly, or into an inline table)
@@ -111,8 +102,11 @@ static inline bool add_key_to_defined(lua_State *L, int idx) {
 static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return set_err_upval(L, false, 22, "no key provided to set");
-    if (lua_istable(L, -1)) add_defined(L, -1);  // if value was an inline table, add it because we are going to add it
-    lua_pushvalue(L, -2);     // copy root table to top
+    int stack_top = lua_gettop(L);
+    int value_idx = absindex(stack_top, -1);
+    int root_idx = absindex(stack_top, -2);
+    if (lua_istable(L, value_idx)) add_defined(L, value_idx);  // if value was an inline table, add it because we are going to add it
+    lua_pushvalue(L, root_idx);     // copy root table to top
 
     // Navigate through all keys except the last
     for (size_t i = 0; i < keys->len - 1; i++) {
@@ -140,7 +134,7 @@ static inline bool set_kv_strict(lua_State *L, keys_result *keys) {
     if (!push_buf_to_lua_string(L, &keys->v[keys->len - 1])) {
         return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
     }
-    lua_pushvalue(L, -3);  // push value
+    lua_pushvalue(L, value_idx);  // push value
     lua_rawset(L, -3);          // t[last_key] = value
 
     lua_pop(L, 2);

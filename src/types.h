@@ -34,10 +34,10 @@ static void print_lua_stack(lua_State *L, const char *label) {
     printf("===================\n");
 }
 
-static inline int absindex(lua_State *L, int idx) {
+static inline int absindex(int top, int idx) {
     if (idx > 0 || idx <= LUA_REGISTRYINDEX)  // already absolute or special
         return idx;
-    return lua_gettop(L) - idx + 1;
+    return top + idx + 1;
 }
 
 static inline bool is_hex_char(char c) {
