@@ -6,72 +6,7 @@
 #include "types.h"
 #include "parse_keys.h"
 #include "parse_val.h"
-
-// NOTE: FOR STRICT MODE ONLY!!
-static inline void create_defined_table(lua_State *L) {
-    lua_newtable(L);
-    if (luaL_newmetatable(L, "TomluaDefined")) {
-        lua_pushstring(L, "k");
-        lua_setfield(L, -2, "__mode");
-    }
-    lua_setmetatable(L, -2);
-    lua_replace(L, lua_upvalueindex(3));
-}
-// NOTE: FOR STRICT MODE ONLY!!
-static inline void reset_defined_table(lua_State *L) {
-    lua_pushnil(L);
-    lua_replace(L, lua_upvalueindex(3));
-}
-// NOTE: FOR STRICT MODE ONLY!!
-static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool array_type, int top) {
-    if (!keys->ok) return false;
-    if (keys->len <= 0) return false;
-    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
-    for (size_t i = 0; i < keys->len; i++) {
-        if (!push_buf_to_lua_string(L, &keys->v[i])) {
-            return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
-        }
-        lua_pushvalue(L, -1);
-        lua_rawget(L, -3);  // get t[key]
-        if (lua_isnil(L, -1)) {
-            lua_pop(L, 1);  // remove non-table
-            lua_newtable(L);  // create table
-            lua_pushvalue(L, -1);
-            lua_insert(L, -3);
-            lua_rawset(L, -4);   // t[key] = new table
-        } else if (!lua_istable(L, -1)) {
-            return set_err_upval(L, false, 33, "cannot navigate through non-table");
-        } else {
-            lua_remove(L, -3);
-        }
-        lua_remove(L, -2);  // remove parent table, keep child on top
-    }
-    if (!array_type) {
-        if (!add_defined(L, -1)) {
-            return set_err_upval(L, false, 32, "cannot set the same table twice!");
-        }
-    } else {
-        // We’re at the table that should act as an array
-        if (!lua_istable(L, -1)) {
-            return set_err_upval(L, false, 37, "target of array heading isn't a table");
-        }
-#if LUA_VERSION_NUM == 501
-        size_t len = lua_objlen(L, -1);
-#else
-        size_t len = lua_rawlen(L, -1);
-#endif
-        // append new table at len+1
-        lua_newtable(L);               // new element
-        lua_pushinteger(L, len + 1);
-        lua_pushvalue(L, -2);          // copy new element
-        lua_rawset(L, -4);           // t[len+1] = new element
-
-        // remove parent array table, leave new element on top
-        lua_remove(L, -2);
-        add_defined(L, -1);
-    }
-    return true;
-}
+#include "strict_utils.h"
 
 static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;
