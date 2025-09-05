@@ -33,54 +33,6 @@ static inline bool add_defined(lua_State *L, int idx) {
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
-// does not remove table added
-static inline void add_inline(lua_State *L, int idx) {
-    lua_pushvalue(L, idx);
-    lua_pushboolean(L, true);
-    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
-}
-
-// NOTE: FOR STRICT MODE ONLY!!
-// does not pop table, adds defined table to stack
-// returns err == true if inline or already defined
-// 1 for already defined 2 for inline
-static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
-    t_idx = absindex(lua_gettop(L), t_idx);
-    k_idx = absindex(lua_gettop(L), k_idx);
-    lua_pushvalue(L, t_idx);
-    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
-    int vtype = lua_type(L, -1);
-    if (vtype == LUA_TBOOLEAN && lua_toboolean(L, -1)) {
-        lua_pop(L, 1);
-        return 2;  // return error, code inline
-    } else if (vtype != LUA_TTABLE) {
-        lua_pop(L, 1);
-        lua_newtable(L);
-        lua_pushvalue(L, t_idx);
-        lua_pushvalue(L, -2);
-        lua_rawset(L, lua_upvalueindex(3));
-        lua_pushvalue(L, k_idx);
-        lua_pushboolean(L, true);
-        lua_rawset(L, -3);
-        lua_pop(L, 1);
-        return false;  // return no error
-    } else {
-        lua_pushvalue(L, k_idx);
-        lua_rawget(L, -2);
-        if (!lua_isnil(L, -1)) {
-            lua_pop(L, 2);
-            return true;  // return error
-        }
-        lua_pop(L, 1);
-        lua_pushvalue(L, k_idx);
-        lua_pushboolean(L, true);
-        lua_rawset(L, -3);
-        lua_pop(L, 1);
-        return false;  // return no error
-    }
-}
-
-// NOTE: FOR STRICT MODE ONLY!!
 static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool array_type, int top) {
     if (!keys->ok) return false;
     if (keys->len <= 0) return false;
@@ -129,6 +81,54 @@ static inline bool heading_nav_strict(lua_State *L, keys_result *keys, bool arra
         add_defined(L, -1);
     }
     return true;
+}
+
+// NOTE: FOR STRICT MODE ONLY!!
+// does not remove table added
+static inline void add_inline(lua_State *L, int idx) {
+    lua_pushvalue(L, idx);
+    lua_pushboolean(L, true);
+    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+}
+
+// NOTE: FOR STRICT MODE ONLY!!
+// does not pop table, adds defined table to stack
+// returns err == true if inline or already defined
+// 1 for already defined 2 for inline
+static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
+    t_idx = absindex(lua_gettop(L), t_idx);
+    k_idx = absindex(lua_gettop(L), k_idx);
+    lua_pushvalue(L, t_idx);
+    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
+    int vtype = lua_type(L, -1);
+    if (vtype == LUA_TBOOLEAN && lua_toboolean(L, -1)) {
+        lua_pop(L, 1);
+        return 2;  // return error, code inline
+    } else if (vtype != LUA_TTABLE) {
+        lua_pop(L, 1);
+        lua_newtable(L);
+        lua_pushvalue(L, t_idx);
+        lua_pushvalue(L, -2);
+        lua_rawset(L, lua_upvalueindex(3));
+        lua_pushvalue(L, k_idx);
+        lua_pushboolean(L, true);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
+        return false;  // return no error
+    } else {
+        lua_pushvalue(L, k_idx);
+        lua_rawget(L, -2);
+        if (!lua_isnil(L, -1)) {
+            lua_pop(L, 2);
+            return true;  // return error
+        }
+        lua_pop(L, 1);
+        lua_pushvalue(L, k_idx);
+        lua_pushboolean(L, true);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
+        return false;  // return no error
+    }
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
