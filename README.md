@@ -46,8 +46,7 @@ local tomlua = require("tomlua")({
     -- key = value still must be on the same line
     -- the tables, much like arrays, must still start on the same line as their key as well
     enhanced_tables = false,
-    -- TODO: fully support strict = true
-    -- add further uniqueness checking to be fully compliant with the toml spec
+    -- adds further uniqueness checking to be fully compliant with the toml spec
     strict = false,
 })
 
