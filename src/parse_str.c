@@ -91,7 +91,7 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                         escaped[i] = iter_next(src).v;
                     }
                     if (!push_unicode(L, dst, escaped, hex_len)) {
-                        return set_err_upval(L, false, 3, "invalid unicode escape");
+                        return false;
                     }
                 } break;
                 default:
@@ -135,7 +135,7 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                         escaped[i] = iter_next(src).v;
                     }
                     if (!push_unicode(L, dst, escaped, hex_len)) {
-                        return set_err_upval(L, false, 3, "invalid unicode escape");
+                        return false;
                     }
                 } break;
                 default:
