@@ -49,7 +49,7 @@ local tomlua = require("tomlua")({
     -- adds further uniqueness checking to be fully compliant with the toml spec
     strict = false,
     -- causes keys that parse as lua integers to be interpreted as integer keys
-    -- unless they were enclosed in ""
+    -- unless they were enclosed in "" or ''
     int_keys = false,
 })
 
