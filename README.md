@@ -88,27 +88,29 @@ If it does I will finish the README.
 
 Basic benchmarking shows decode compares at about 1.5x cjson in runtime duration for 100000+ iterations of processing the example.toml file.
 
-1 billion iterations
+1_000_000 iterations
 
 ```
-Parsed TOML 1000000 times in 19.632652 seconds, avg. 50935.553689 iterations per second, avg. 19.63 µ/iteration
-Parsed JSON 1000000 times in 14.465032 seconds, avg. 69132.235587 iterations per second, avg. 14.47 µ/iteration
-speed tomlua/cjson: 73.68%, duration tomlua/cjson: 135.72%
+Parsed TOML 1000000 times in 17.133017 seconds, avg. 58366.836384 iterations per second, avg. 17.13 µs/iteration
+Parsed TOML 1000000 times in 30.161624 seconds, avg. 33154.713420 iterations per second, avg. 30.16 µs/iteration
+speed tomlua/tomlua_strict: 176.04%, duration tomlua/tomlua_strict: 56.80%
+Parsed JSON 1000000 times in 13.512785 seconds, avg. 74003.989555 iterations per second, avg. 13.51 µs/iteration
+speed tomlua/cjson: 78.87%, duration tomlua/cjson: 126.79%
 ```
 
-1 million iterations with toml_edit as well
+100_000 iterations with toml_edit as well
 
 ```
-Parsed TOML 100000 times in 1.668857 seconds, avg. 59921.251491 iterations per second, avg. 16.69 µ/iteration
-Parsed JSON 100000 times in 1.142505 seconds, avg. 87526.969247 iterations per second, avg. 11.43 µ/iteration
-speed tomlua/cjson: 68.46%, duration tomlua/cjson: 146.07%
-Parsed TOML 100000 times in 14.630555 seconds, avg. 6835.010702 iterations per second, avg. 146.31 µ/iteration
-speed tomlua/toml_edit: 876.68%, duration tomlua/toml_edit: 11.41%
+Parsed TOML 100000 times in 2.091281 seconds, avg. 47817.581664 iterations per second, avg. 20.91 µs/iteration
+Parsed TOML 100000 times in 2.902198 seconds, avg. 34456.642862 iterations per second, avg. 29.02 µs/iteration
+speed tomlua/tomlua_strict: 138.78%, duration tomlua/tomlua_strict: 72.06%
+Parsed JSON 100000 times in 1.113013 seconds, avg. 89846.210242 iterations per second, avg. 11.13 µs/iteration
+speed tomlua/cjson: 53.22%, duration tomlua/cjson: 187.89%
+Parsed TOML 100000 times in 14.123938 seconds, avg. 7080.178347 iterations per second, avg. 141.24 µs/iteration
+speed tomlua/toml_edit: 675.37%, duration tomlua/toml_edit: 14.81%
 ```
 
 However the cjson in the benchmark does not need to deal with comments or empty lines, or the headings of toml.
 cjson is parsing the result of cjson.encode on the output of tomlua.decode.
 
 So I feel this is pretty good for something that doesn't use SIMD(yet?) or parallelism or other such fancy tricks.
-
-Unfortunately, I am also slightly cheating, I have yet to add strict mode for decode which checks for table uniqueness following the toml spec precisely. This will be something you can toggle on or off.
