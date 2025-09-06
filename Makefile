@@ -4,7 +4,6 @@ CFLAGS     = -O3 -fPIC -flto -finline-functions -shared -Wl,-s
 DESTDIR    ?= ./lib
 SRCS       = $(SRC)/src/tomlua.c \
              $(SRC)/src/parse_str.c \
-             $(SRC)/src/parse_val.c \
              $(SRC)/src/decode.c \
              $(SRC)/src/encode.c
 
