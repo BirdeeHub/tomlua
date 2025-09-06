@@ -33,6 +33,7 @@ static inline bool add_defined(lua_State *L, int idx) {
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
+// pops keys, leaves new root on top
 static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_type, int top) {
     if (keys_len <= 0) return set_err_upval(L, false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
@@ -131,6 +132,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
+// pops value and keys, leaves root on top
 // returns ok == false if it sets an existing value directly, or into an inline table
 static inline bool set_kv_strict(lua_State *L, int keys_len) {
     if (keys_len <= 0) return set_err_upval(L, false, 22, "no key provided to set");

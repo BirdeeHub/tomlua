@@ -8,6 +8,7 @@
 #include "parse_val.h"
 #include "decode_strict_utils.h"
 
+// pops keys, leaves new root on top
 static inline bool heading_nav(lua_State *L, int keys_len, bool array_type, int top) {
     if (keys_len <= 0) return set_err_upval(L, false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
