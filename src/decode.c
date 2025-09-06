@@ -445,10 +445,6 @@ int tomlua_decode(lua_State *L) {
             }
             if (!parse_value(L, &src, &scratch, uopts)) goto fail;
             lua_insert(L, -keys_len -1);
-            if (!consume_whitespace_to_line(&src)) {
-                set_err_upval(L, false, 66, "key value pairs must be followed by a new line (or end of content)");
-                goto fail;
-            }
             // [-1?] keys
             // [-?] value
             // [-?-1] current root table
@@ -458,6 +454,10 @@ int tomlua_decode(lua_State *L) {
                 if (!set_kv(L, keys_len)) goto fail;
             }
             // [-1] current root table
+            if (!consume_whitespace_to_line(&src)) {
+                set_err_upval(L, false, 66, "key value pairs must be followed by a new line (or end of content)");
+                goto fail;
+            }
         }
     }
 
