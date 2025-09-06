@@ -30,8 +30,8 @@ ifdef LIBDIR
 		false; \
 	fi
 	@if [ -d "$(LIBDIR)" ]; then \
-		@cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/"; \
-		echo "Installed to $(LIBDIR)"; \
+		cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/"; \
+		@echo "Installed to $(LIBDIR)"; \
 	else \
 		@echo "LIBDIR set but does not exist: $(LIBDIR)"; \
 		false; \
