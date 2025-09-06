@@ -33,7 +33,7 @@ int embed_run(lua_State *L) {
 
     fprintf(out, "#ifndef %s_H_\n#define %s_H_\n\n#include <lua.h>\n#include <lauxlib.h>\n\n", header_name, header_name);
     fprintf(out, "static inline int push_embedded_%s(lua_State *L) {\n", var_name);
-    fprintf(out, "\tconst unsigned char data[] = {\n\t\t");
+    fprintf(out, "\tconst char data[] = {\n\t\t");
 
     for (size_t i = 0; i < buf.len; i++) {
         fprintf(out, "0x%02x", (unsigned char)buf.data[i]);
@@ -43,7 +43,7 @@ int embed_run(lua_State *L) {
     fprintf(out, "\n\t};\n");
 
     fprintf(out, "\tconst size_t len = %zu;\n", buf.len);
-    fprintf(out, "\tif (luaL_loadbuffer(L, (const char *)data, len, \"%s\")) {\n", var_name);
+    fprintf(out, "\tif (luaL_loadbuffer(L, data, len, \"%s\")) {\n", var_name);
     fprintf(out, "\t\tconst char *err = lua_tostring(L, -1);\n");
     fprintf(out, "\t\tlua_pop(L, 1);\n");
     fprintf(out, "\t\treturn luaL_error(L, \"Error loading embedded Lua code: %%s\", err);\n");
