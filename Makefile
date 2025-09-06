@@ -44,7 +44,7 @@ endif
 embed: $(SRCS) $(EMBEDDER) $(SRC)/src/encode.lua
 	@mkdir -p $(SRC)/embed
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(SRC)/embed/embed_lua.so $(EMBEDDER)
-	$(LUA) -e "package.cpath = [[$(SRC)/embed/?.so;]]; require([[embed_lua]])([[$(SRC)/src/encode.lua]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]])"
+	$(LUA) -e "package.cpath = [[$(SRC)/embed/?.so]]; require([[embed_lua]])([[$(SRC)/src/encode.lua]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]])"
 
 build: $(SRCS) embed
 	@if [ -z "$(LUA_INCDIR)" ]; then \
