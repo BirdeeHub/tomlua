@@ -15,6 +15,9 @@ LUA        ?= lua
 GREP_BIN   ?= grep
 BEAR_BIN   ?= bear
 
+EMBED_CMD  = local embed = package.loadlib([[$(SRC)/embed/embed_lua.so]], [[luaopen_embed_lua]])(); \
+             embed([[$(SRC)/src/encode.lua]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]]);
+
 all: build test
 
 test: $(SRCS) $(TESTS)
@@ -41,10 +44,10 @@ else
 	@echo "LIBDIR not set, skipping install"
 endif
 
-embed: $(SRCS) $(EMBEDDER) $(SRC)/src/encode.lua
+embed: $(EMBEDDER) $(SRC)/src/encode.lua
 	@mkdir -p $(SRC)/embed
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(SRC)/embed/embed_lua.so $(EMBEDDER)
-	$(LUA) -e "package.cpath = [[$(SRC)/embed/?.so]]; require([[embed_lua]])([[$(SRC)/src/encode.lua]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]])"
+	$(LUA) -e "$(EMBED_CMD)"
 
 build: $(SRCS) embed
 	@if [ -z "$(LUA_INCDIR)" ]; then \
@@ -54,7 +57,7 @@ build: $(SRCS) embed
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
 
-bear: $(SRCS) clean embed
+bear: $(SRCS) clean
 	$(BEAR_BIN) -- $(CC) -### $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP_BIN) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
