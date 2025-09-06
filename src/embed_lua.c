@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     }
 
     fseek(in, 0, SEEK_END);
-    long size = ftell(in);
+    size_t size = ftell(in);
     if (size < 0) { perror("ftell"); fclose(in); return 1; }
     if (size == 0) { fprintf(stderr, "Input file is empty\n"); fclose(in); return 1; }
     fseek(in, 0, SEEK_SET);
@@ -45,18 +45,14 @@ int main(int argc, char *argv[]) {
     fprintf(out, "static inline int push_embedded_%s(lua_State *L) {\n", var_name);
     fprintf(out, "\tconst unsigned char data[] = {\n\t\t");
 
-    for (long i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         fprintf(out, "0x%02x", buffer[i]);
-        if (i != size - 1) {
-            fprintf(out, ", ");
-        }
-        if ((i + 1) % 8 == 0 && i != size - 1) {
-            fprintf(out, "\n\t\t");
-        }
+        if (i + 1 < size) fprintf(out, ", ");
+        if ((i + 1) % 8 == 0 && i + 1 < size) fprintf(out, "\n\t\t");
     }
     fprintf(out, "\n\t};\n");
 
-    fprintf(out, "\tconst size_t len = %ld;\n", size);
+    fprintf(out, "\tconst size_t len = %zu;\n", size);
     fprintf(out, "\tif (luaL_loadbuffer(L, (const char *)data, len, \"%s\")) {\n", var_name);
     fprintf(out, "\t\tconst char *err = lua_tostring(L, -1);\n");
     fprintf(out, "\t\tlua_pop(L, 1);\n");

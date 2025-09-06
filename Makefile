@@ -59,9 +59,9 @@ build: $(SRCS) embed
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) -I"$(LUA_INCDIR)" -o $(DESTDIR)/tomlua.so $(SRCS)
 
-bear: $(SRCS)
+bear: $(SRCS) clean embed
 	$(BEAR_BIN) -- $(CC) -### $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP_BIN) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
 clean:
-	rm -rf $(DESTDIR) compile_commands.json
+	rm -rf $(DESTDIR) compile_commands.json $(SRC)/embed
