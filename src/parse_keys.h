@@ -34,7 +34,7 @@ static inline int consume_whitespace_to_line(str_iter *src) {
                 curr = iter_next(src);
             }
             // reached EOF in a comment
-            return true;
+            return 2;
         } else if (d == '\n') {
             iter_skip(src);
             return true;
