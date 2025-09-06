@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "types.h"
 #include "decode.h"
+#include "encode_lib.h"
 #include "../embed/encode.h"
 
 static int tomlua_new(lua_State *L) {
@@ -25,7 +26,8 @@ static int tomlua_new(lua_State *L) {
     push_embedded_encode(L);
     lua_pushvalue(L, 1);
     lua_remove(L, 1);
-    lua_call(L, 1, 1);
+    lua_pushcfunction(L, is_lua_array);
+    lua_call(L, 2, 1);
     lua_setfield(L, -2, "encode");
     // upvalue 1: error object
     new_TMLErr(L);
