@@ -4,18 +4,21 @@ local is_array = upvals[2]
 
 local function to_escaped_toml_str(str)
     return ("\"%s\""):format(tostring(str):gsub("[\\\n\r\"\b\f\t]", function(c)
-        if c == "\n" then
-            c = "n"
-        elseif c == "\b" then
-            c = "b"
-        elseif c == "\f" then
-            c = "f"
+        if c == "\\" then
+            return "\\\\"
+        elseif c == "\n" then
+            return "\\n"
         elseif c == "\r" then
-            c = "r"
+            return "\\r"
+        elseif c == "\"" then
+            return "\\\""
+        elseif c == "\b" then
+            return "\\b"
+        elseif c == "\f" then
+            return "\\f"
         elseif c == "\t" then
-            c = "t"
+            return "\\t"
         end
-        return "\\"..c
     end))
 end
 
