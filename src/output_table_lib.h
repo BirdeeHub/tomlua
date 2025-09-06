@@ -4,11 +4,19 @@
 #include <lua.h>
 #include "./types.h"
 
+static inline void push_to_output_table(lua_State *L) {
+    return lua_replace(L, lua_upvalueindex(3));
+}
+
+static inline void push_output_table(lua_State *L) {
+    return lua_pushvalue(L, lua_upvalueindex(3));
+}
+
 // pops keys, leaves new root on top
-static inline bool heading_nav(lua_State *L, int keys_len, bool array_type, int top) {
+static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_err_upval(L, false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
+    push_output_table(L);
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
         int parent_idx = lua_gettop(L);
         lua_pushvalue(L, key_idx);
@@ -86,13 +94,13 @@ static inline bool set_kv(lua_State *L, int keys_len) {
 // NOTE: FOR STRICT MODE ONLY!!
 static inline void create_defined_table(lua_State *L) {
     lua_newtable(L);
-    lua_replace(L, lua_upvalueindex(3));
+    lua_replace(L, lua_upvalueindex(4));
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
 static inline void reset_defined_table(lua_State *L) {
     lua_pushnil(L);
-    lua_replace(L, lua_upvalueindex(3));
+    lua_replace(L, lua_upvalueindex(4));
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
@@ -100,13 +108,13 @@ static inline void reset_defined_table(lua_State *L) {
 // returns false for already defined
 static inline bool add_defined(lua_State *L, int idx) {
     lua_pushvalue(L, idx);
-    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
+    lua_rawget(L, lua_upvalueindex(4));  // use table as key for lookup
     bool was = !lua_isnil(L, -1);
     lua_pop(L, 1);
     if (was) return false;
     lua_pushvalue(L, idx);
     lua_newtable(L);
-    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+    lua_rawset(L, lua_upvalueindex(4));  // register this heading as created
     return true;
 }
 
@@ -115,7 +123,7 @@ static inline bool add_defined(lua_State *L, int idx) {
 static inline void add_inline(lua_State *L, int idx) {
     lua_pushvalue(L, idx);
     lua_pushboolean(L, true);
-    lua_rawset(L, lua_upvalueindex(3));  // register this heading as created
+    lua_rawset(L, lua_upvalueindex(4));  // register this heading as created
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
@@ -126,7 +134,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
     t_idx = absindex(lua_gettop(L), t_idx);
     k_idx = absindex(lua_gettop(L), k_idx);
     lua_pushvalue(L, t_idx);
-    lua_rawget(L, lua_upvalueindex(3));  // use table as key for lookup
+    lua_rawget(L, lua_upvalueindex(4));  // use table as key for lookup
     int vtype = lua_type(L, -1);
     if (vtype == LUA_TBOOLEAN && lua_toboolean(L, -1)) {
         lua_pop(L, 1);
@@ -136,7 +144,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
         lua_newtable(L);
         lua_pushvalue(L, t_idx);
         lua_pushvalue(L, -2);
-        lua_rawset(L, lua_upvalueindex(3));
+        lua_rawset(L, lua_upvalueindex(4));
         lua_pushvalue(L, k_idx);
         lua_pushboolean(L, true);
         lua_rawset(L, -3);
@@ -160,10 +168,10 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
 
 // NOTE: FOR STRICT MODE ONLY!!
 // pops keys, leaves new root on top
-static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_type, int top) {
+static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_err_upval(L, false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
+    push_output_table(L);
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
         int parent_idx = lua_gettop(L);
         lua_pushvalue(L, key_idx);

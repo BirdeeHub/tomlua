@@ -32,10 +32,12 @@ static int tomlua_new(lua_State *L) {
 
     if (strict) {
         lua_pushnil(L);                        // init upvalue 3 for storing defined values
-        lua_pushcclosure(L, tomlua_decode, 3); // pops err+opts+defined, adds function
+        lua_pushnil(L);                        // init upvalue 4 for uniquness bookkeeping
+        lua_pushcclosure(L, tomlua_decode, 4); // pops err+opts+defined, adds function
         lua_setfield(L, 1, "decode");         // pops function
     } else {
-        lua_pushcclosure(L, tomlua_decode, 2); // pops err+opts
+        lua_pushnil(L);                        // init upvalue 3 for storing defined values
+        lua_pushcclosure(L, tomlua_decode, 3); // pops err+opts
         lua_setfield(L, 1, "decode");         // pops function
     }
     return 1;

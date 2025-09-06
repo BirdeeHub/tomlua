@@ -372,7 +372,7 @@ int tomlua_decode(lua_State *L) {
         lua_newtable(L);
     }
     // pop and store top, this will be our result at the end
-    const int top = luaL_ref(L, LUA_REGISTRYINDEX);
+    push_to_output_table(L);
 
     str_iter src;
     {
@@ -383,7 +383,7 @@ int tomlua_decode(lua_State *L) {
     }
 
     // set top as the starting location
-    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
+    push_output_table(L);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
     while (iter_peek(&src).ok) {
@@ -408,9 +408,9 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, keys_len, true, top)) goto fail;
+                if (!heading_nav_strict(L, keys_len, true)) goto fail;
             } else {
-                if (!heading_nav(L, keys_len, true, top)) goto fail;
+                if (!heading_nav(L, keys_len, true)) goto fail;
             }
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);
@@ -427,9 +427,9 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, keys_len, false, top)) goto fail;
+                if (!heading_nav_strict(L, keys_len, false)) goto fail;
             } else {
-                if (!heading_nav(L, keys_len, false, top)) goto fail;
+                if (!heading_nav(L, keys_len, false)) goto fail;
             }
         } else {
             int keys_len = parse_keys(L, &src, &scratch);
@@ -464,13 +464,15 @@ int tomlua_decode(lua_State *L) {
     lua_settop(L, 0);
     if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
-    luaL_unref(L, LUA_REGISTRYINDEX, top);
+    push_output_table(L);
+    lua_pushnil(L);
+    push_to_output_table(L);
     return 1;
 
 fail:
     lua_settop(L, 0);
-    luaL_unref(L, LUA_REGISTRYINDEX, top);
+    lua_pushnil(L);
+    push_to_output_table(L);
     if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
     lua_pushnil(L);
