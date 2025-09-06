@@ -8,12 +8,15 @@
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     bool strict = false;
+    bool int_keys = false;
     bool enhanced_tables = false;
     if (lua_istable(L, 1)) {
         lua_getfield(L, 1, "strict");
         strict = lua_toboolean(L, -1);
         lua_getfield(L, 1, "enhanced_tables");
         enhanced_tables = lua_toboolean(L, -1);
+        lua_getfield(L, 1, "int_keys");
+        int_keys = lua_toboolean(L, -1);
     }
 
     lua_settop(L, 0);
@@ -23,6 +26,7 @@ static int tomlua_new(lua_State *L) {
     // upvalue 2: options
     TomluaUserOpts *opts = lua_newuserdata(L, sizeof(TomluaUserOpts));
     opts->strict = strict;
+    opts->int_keys = int_keys;
     opts->enhanced_tables = enhanced_tables;
 
     lua_pushvalue(L, -2);

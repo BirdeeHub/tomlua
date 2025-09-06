@@ -2,6 +2,7 @@
 #ifndef SRC_PARSE_KEYS_H_
 #define SRC_PARSE_KEYS_H_
 
+#include <math.h>
 #include "./parse_str.h"
 #include "./types.h"
 
@@ -83,7 +84,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *res) {
     return true;
 }
 
-static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf) {
+static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
     int i = 0;
     while (iter_peek(src).ok) {
         i++;
@@ -98,6 +99,13 @@ static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf) {
         if (!push_buf_to_lua_string(L, buf)) {
             set_err_upval(L, false, 3, "OOM");
             return false;
+        }
+        if (int_keys) {
+            lua_Number n = lua_tonumber(L, -1);
+            if (n == (lua_Number)(int64_t)n) {
+                lua_pop(L, 1);
+                lua_pushnumber(L, n);
+            }
         }
         if (consume_whitespace_to_line(src)) {
             set_err_upval(L, false, 68, "newlines not allowed between keys and their terminators: =, ], or ]]");

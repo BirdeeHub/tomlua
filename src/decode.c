@@ -16,6 +16,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
     lua_newtable(L);
     bool last_was_comma = false;
     const bool strict = opts->strict;
+    const bool int_keys = opts->int_keys;
     const bool enhanced_tables = opts->enhanced_tables;
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
@@ -45,7 +46,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             continue;
         }
         last_was_comma = false;
-        int keys_len = parse_keys(L, src, buf);
+        int keys_len = parse_keys(L, src, buf, int_keys);
         if (!keys_len) return false;
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
             return set_err_upval(L, false, 35, "keys for assignment must end with =");
@@ -356,6 +357,7 @@ int tomlua_decode(lua_State *L) {
     }
     TomluaUserOpts *uopts = get_opts_upval(L);
     const bool strict = uopts->strict;
+    const bool int_keys = uopts->int_keys;
     if (strict) create_defined_table(L);
     if (lua_istable(L, 2)) {
         lua_settop(L, 2);
@@ -388,7 +390,7 @@ int tomlua_decode(lua_State *L) {
         if (iter_starts_with(&src, "[[", 2)) {
             iter_skip_n(&src, 2);
             lua_pop(L, 1); // pop current location, we are moving
-            int keys_len = parse_keys(L, &src, &scratch);
+            int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (!iter_starts_with(&src, "]]", 2)) {
                 set_err_upval(L, false, 30, "table heading must end with ]]");
@@ -407,7 +409,7 @@ int tomlua_decode(lua_State *L) {
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);
             lua_pop(L, 1);  // pop current location, we are moving
-            int keys_len = parse_keys(L, &src, &scratch);
+            int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != ']') {
                 set_err_upval(L, false, 29, "table heading must end with ]");
@@ -424,7 +426,7 @@ int tomlua_decode(lua_State *L) {
                 if (!heading_nav(L, keys_len, false)) goto fail;
             }
         } else {
-            int keys_len = parse_keys(L, &src, &scratch);
+            int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != '=') {
                 set_err_upval(L, false, 35, "keys for assignment must end with =");

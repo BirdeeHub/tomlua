@@ -48,6 +48,8 @@ local tomlua = require("tomlua")({
     enhanced_tables = false,
     -- adds further uniqueness checking to be fully compliant with the toml spec
     strict = false,
+    -- causes keys that parse as lua integers to be interpreted as integer keys
+    int_keys = false,
 })
 
 local data, err = tomlua.decode(some_string)
