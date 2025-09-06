@@ -44,36 +44,28 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             continue;
         }
         last_was_comma = false;
-        keys_result keys = parse_keys(L, src);
-        if (!keys.ok) {
-            clear_keys_result(&keys);
-            return false;
-        }
+        int keys_len = parse_keys(L, src, buf);
+        if (!keys_len) return false;
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
-            clear_keys_result(&keys);
             return set_err_upval(L, false, 35, "keys for assignment must end with =");
         }
         iter_skip(src);
         if (consume_whitespace_to_line(src)) {
-            clear_keys_result(&keys);
             return set_err_upval(L, false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
         if (!parse_value(L, src, buf, opts)) {
-            clear_keys_result(&keys);
             return false;
         }
+        lua_insert(L, -keys_len - 1);
         if (strict) {
-            if (!set_kv_strict(L, &keys)) {
-                clear_keys_result(&keys);
+            if (!set_kv_strict(L, keys_len)) {
                 return false;
             }
         } else {
-            if (!set_kv(L, &keys)) {
-                clear_keys_result(&keys);
+            if (!set_kv(L, keys_len)) {
                 return false;
             }
         }
-        clear_keys_result(&keys);
         if (enhanced_tables) {
             while (consume_whitespace_to_line(src)) {}
         } else if (consume_whitespace_to_line(src)) {

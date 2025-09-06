@@ -8,28 +8,25 @@
 #include "parse_val.h"
 #include "decode_strict_utils.h"
 
-static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type, int top) {
-    if (!keys->ok) return false;
-    if (keys->len <= 0) return false;
+static inline bool heading_nav(lua_State *L, int keys_len, bool array_type, int top) {
+    if (keys_len <= 0) return set_err_upval(L, false, 28, "no keys provided to navigate");
+    int keys_start = absindex(lua_gettop(L), -keys_len);
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
-    for (size_t i = 0; i < keys->len; i++) {
-        if (!push_buf_to_lua_string(L, &keys->v[i])) {
-            return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
-        }
-        lua_pushvalue(L, -1);
-        lua_rawget(L, -3);  // get t[key]
-        if (lua_isnil(L, -1)) {
-            lua_pop(L, 1);  // remove non-table
-            lua_newtable(L);  // create table
-            lua_pushvalue(L, -1);
-            lua_insert(L, -3);
-            lua_rawset(L, -4);   // t[key] = new table
-        } else if (!lua_istable(L, -1)) {
+    for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
+        int parent_idx = lua_gettop(L);
+        lua_pushvalue(L, key_idx);
+        lua_rawget(L, parent_idx);
+        int vtype = lua_type(L, -1);
+        if (vtype == LUA_TNIL) {
+            lua_pop(L, 1);      // remove nil
+            lua_newtable(L);    // create new table
+            lua_pushvalue(L, key_idx);
+            lua_pushvalue(L, -2);
+            lua_rawset(L, parent_idx);   // t[key] = new table
+        } else if (vtype != LUA_TTABLE) {
             return set_err_upval(L, false, 33, "cannot navigate through non-table");
-        } else {
-            lua_remove(L, -3);
         }
-        lua_remove(L, -2);  // remove parent table, keep child on top
+        lua_remove(L, parent_idx);  // remove parent table, keep child on top
     }
     if (array_type) {
         // We’re at the table that should act as an array
@@ -50,6 +47,8 @@ static inline bool heading_nav(lua_State *L, keys_result *keys, bool array_type,
         // remove parent array table, leave new element on top
         lua_remove(L, -2);
     }
+    lua_insert(L, keys_start);
+    lua_settop(L, keys_start);
     return true;
 }
 
@@ -81,7 +80,6 @@ int tomlua_decode(lua_State *L) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
-    keys_result keys = {0};
     while (iter_peek(&src).ok) {
         {
             // consume until non-blank line, consume initial whitespace, then end loop
@@ -92,8 +90,8 @@ int tomlua_decode(lua_State *L) {
         if (iter_starts_with(&src, "[[", 2)) {
             iter_skip_n(&src, 2);
             lua_pop(L, 1); // pop current location, we are moving
-            keys = parse_keys(L, &src);
-            if (!keys.ok) goto fail;
+            int keys_len = parse_keys(L, &src, &scratch);
+            if (!keys_len) goto fail;
             if (!iter_starts_with(&src, "]]", 2)) {
                 set_err_upval(L, false, 30, "table heading must end with ]]");
                 goto fail;
@@ -104,15 +102,15 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, &keys, true, top)) goto fail;
+                if (!heading_nav_strict(L, keys_len, true, top)) goto fail;
             } else {
-                if (!heading_nav(L, &keys, true, top)) goto fail;
+                if (!heading_nav(L, keys_len, true, top)) goto fail;
             }
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);
             lua_pop(L, 1);  // pop current location, we are moving
-            keys = parse_keys(L, &src);
-            if (!keys.ok) goto fail;
+            int keys_len = parse_keys(L, &src, &scratch);
+            if (!keys_len) goto fail;
             if (iter_peek(&src).v != ']') {
                 set_err_upval(L, false, 29, "table heading must end with ]");
                 goto fail;
@@ -123,13 +121,13 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (strict) {
-                if (!heading_nav_strict(L, &keys, false, top)) goto fail;
+                if (!heading_nav_strict(L, keys_len, false, top)) goto fail;
             } else {
-                if (!heading_nav(L, &keys, false, top)) goto fail;
+                if (!heading_nav(L, keys_len, false, top)) goto fail;
             }
         } else {
-            keys = parse_keys(L, &src);
-            if (!keys.ok) goto fail;
+            int keys_len = parse_keys(L, &src, &scratch);
+            if (!keys_len) goto fail;
             if (iter_peek(&src).v != '=') {
                 set_err_upval(L, false, 35, "keys for assignment must end with =");
                 goto fail;
@@ -140,21 +138,21 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (!parse_value(L, &src, &scratch, uopts)) goto fail;
+            lua_insert(L, -keys_len -1);
             if (!consume_whitespace_to_line(&src)) {
                 set_err_upval(L, false, 66, "key value pairs must be followed by a new line (or end of content)");
                 goto fail;
             }
-            // [1] value
-            // [2] current root table
+            // [-1?] keys
+            // [-?] value
+            // [-?-1] current root table
             if (strict) {
-                if (!set_kv_strict(L, &keys)) goto fail;
+                if (!set_kv_strict(L, keys_len)) goto fail;
             } else {
-                if (!set_kv(L, &keys)) goto fail;
+                if (!set_kv(L, keys_len)) goto fail;
             }
-            // [1] current root table
+            // [-1] current root table
         }
-        // all branches get a key from parse_keys so clear it here
-        clear_keys_result(&keys);
     }
 
     lua_settop(L, 0);
@@ -169,7 +167,6 @@ fail:
     luaL_unref(L, LUA_REGISTRYINDEX, top);
     if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
-    clear_keys_result(&keys);
     lua_pushnil(L);
     push_err_upval(L);
     return 2;

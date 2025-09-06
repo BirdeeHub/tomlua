@@ -4,7 +4,7 @@
 
 #include "./types.h"
 
-keys_result parse_keys(lua_State *L, str_iter *src);
+int parse_keys(lua_State *L, str_iter *src, str_buf *buf);
 
 static inline bool is_identifier_char(char c) {
     return (c >= 'A' && c <= 'Z') ||
