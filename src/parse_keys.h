@@ -60,6 +60,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
         return false;
     }
     char c = current.v;
+    bool non_string = false;
     if (c == '"') {
         iter_skip(src);
         if (!parse_basic_string(L, buf, src)) return false;
@@ -67,6 +68,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
         iter_skip(src);
         if (!parse_literal_string(L, buf, src)) return false;
     } else if (is_identifier_char(c)) {
+        non_string = true;
         current = iter_peek(src);
         while (is_identifier_char(current.v)) {
             if (!buf_push(buf, current.v)) {
@@ -85,7 +87,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
         set_err_upval(L, false, 3, "OOM");
         return false;
     }
-    if (int_keys && lua_isnumber(L, -1)) {
+    if (int_keys && non_string && lua_isnumber(L, -1)) {
         lua_Number n = lua_tonumber(L, -1);
         if (n == (lua_Number)(int64_t)n) {
             lua_pop(L, 1);
