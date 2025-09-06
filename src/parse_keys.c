@@ -34,23 +34,6 @@ static bool parse_key(lua_State *L, str_iter *src, str_buf *res) {
     return true;
 }
 
-static bool keys_push_move(keys_result *dst, str_buf buf) {
-    if (dst->len >= dst->cap) {
-        dst-> cap = dst->cap > 0 ? dst->cap * 2 : 1;
-        str_buf *tmp = realloc(dst->v, dst->cap * sizeof(str_buf));
-        if (!tmp) return false;
-        dst->v = tmp;
-    }
-    dst->v[dst->len++] = (str_buf) {
-        .data = buf.data,
-        .len = buf.len,
-        .capacity = buf.capacity
-    };
-    buf.data = NULL;
-    buf.len = buf.capacity = 0;
-    return true;
-}
-
 int parse_keys(lua_State *L, str_iter *src, str_buf *buf) {
     int i = 0;
     while (iter_peek(src).ok) {
