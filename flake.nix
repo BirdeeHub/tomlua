@@ -17,10 +17,11 @@
     in {
       default = pkgs.mkShell {
         name = "${APPNAME}-dev";
-        packages = [ lua pkgs.luarocks pkgs.bear ];
+        packages = [ lua pkgs.luarocks ];
         LUA_INCDIR = "${lua}/include";
         LUA_BIN = lua.interpreter;
         GREP_BIN = "${pkgs.gnugrep}/bin/grep";
+        BEAR_BIN = "${pkgs.bear}/bin/bear";
         shellHook = ''
           make bear
           [ "$(whoami)" == "birdee" ] && exec zsh
