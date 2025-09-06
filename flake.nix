@@ -18,7 +18,6 @@
       default = pkgs.mkShell {
         name = "${APPNAME}-dev";
         packages = [ lua pkgs.luarocks pkgs.bear ];
-        inputsFrom = [ ];
         LUA_INCDIR = "${lua}/include";
         LUA_BIN = lua.interpreter;
         GREP_BIN = "${pkgs.gnugrep}/bin/grep";
