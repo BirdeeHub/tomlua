@@ -129,12 +129,6 @@ static inline bool set_err_upval(lua_State *L, size_t heap_size, size_t len, cha
     return false;  // returns `not ok` as a convenience
 }
 
-static inline void move_buf_to_err_upval(lua_State *L, str_buf *buf) {
-    set_err_upval(L, buf->capacity, buf->len, buf->data);
-    buf->data = NULL;
-    buf->len = buf->capacity = 0;
-}
-
 static inline bool err_push(lua_State *L, char c) {
     TMLErr *err = get_err_upval(L);
     if (!err) return false;
