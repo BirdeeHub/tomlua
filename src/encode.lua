@@ -2,7 +2,7 @@ local upvals = {...}
 local opts = upvals[1]
 local is_array = upvals[2]
 
-local function lua_str_to_escaped_toml_basic(str)
+local function to_escaped_toml_str(str)
     return ("\"%s\""):format(str:gsub("[\\\n\r\"\b\f\t]", function(c)
         if c == "\n" then
             c = "n"
@@ -21,7 +21,7 @@ end
 
 return function(v)
     local inspect = require("inspect")
-    print(inspect(v), inspect(opts), lua_str_to_escaped_toml_basic [[dsahdash"
+    print(inspect(v), inspect(opts), to_escaped_toml_str [[dsahdash"
     dsadsa
     dsadsa'
     """
