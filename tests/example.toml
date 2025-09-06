@@ -31,7 +31,7 @@ testkey6 = [
 
 [[test]]
 names.hello = "h\u1234i"
-key = "value"
+key = "\U0001F600 value"
 [[test]]
 key = "value"
 "names"."boo" = "hi"
