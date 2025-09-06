@@ -62,7 +62,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *res) {
     if (c == '"') {
         iter_skip(src);
         if (!parse_basic_string(L, res, src)) return false;
-    }else if (c == '\'') {
+    } else if (c == '\'') {
         iter_skip(src);
         if (!parse_literal_string(L, res, src)) return false;
     } else if (is_identifier_char(c)) {
