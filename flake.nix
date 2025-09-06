@@ -1,7 +1,5 @@
 {
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-  };
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   outputs = {self, nixpkgs}: let
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
     APPNAME = "tomlua";
