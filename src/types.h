@@ -16,6 +16,7 @@ typedef uint8_t bool;
 #endif
 
 // TODO: delete this, just for debugging
+#include <stdio.h>
 static void print_lua_stack(lua_State *L, const char *label) {
     int top = lua_gettop(L);
     printf("=== Stack: %s ===\n", label);
