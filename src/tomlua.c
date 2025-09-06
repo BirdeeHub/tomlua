@@ -53,4 +53,3 @@ int luaopen_tomlua(lua_State *L) {
     lua_pushcfunction(L, tomlua_new);
     return 1;
 }
-
