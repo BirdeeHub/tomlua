@@ -26,7 +26,7 @@
         GREP_BIN = "${pkgs.gnugrep}/bin/grep";
         shellHook = ''
           make bear
-          exec zsh
+          [ "$(whoami)" == "birdee" ] && exec zsh
         '';
       };
     });
