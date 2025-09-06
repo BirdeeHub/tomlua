@@ -71,7 +71,11 @@ int embed_run(lua_State *L) {
     if (!out) return luaL_error(L, "failed to open output");
 
     embed_buf buf = new_embed_buf();
-    int err = lua_dump(L, writer, &buf);
+    if (lua_dump(L, writer, &buf)) {
+        free_embed_buf(&buf);
+        fclose(out);
+        return luaL_error(L, "Failed to dump Lua bytecode");
+    }
 
     fprintf(out, "#ifndef %s_H_\n#define %s_H_\n\n#include <lua.h>\n#include <lauxlib.h>\n\n", header_name, header_name);
     fprintf(out, "static inline int push_embedded_%s(lua_State *L) {\n", var_name);
