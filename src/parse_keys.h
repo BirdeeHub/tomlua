@@ -2,7 +2,6 @@
 #ifndef SRC_PARSE_KEYS_H_
 #define SRC_PARSE_KEYS_H_
 
-#include <math.h>
 #include "./parse_str.h"
 #include "./types.h"
 
