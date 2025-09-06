@@ -100,9 +100,9 @@ static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int
             set_err_upval(L, false, 3, "OOM");
             return false;
         }
-        if (int_keys) {
+        if (int_keys && lua_isnumber(L, -1)) {
             lua_Number n = lua_tonumber(L, -1);
-            if (n > 0 && n == (lua_Number)(int64_t)n) {
+            if (n == (lua_Number)(int64_t)n) {
                 lua_pop(L, 1);
                 lua_pushnumber(L, n);
             }
