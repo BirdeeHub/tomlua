@@ -54,6 +54,7 @@ static inline int consume_whitespace_to_line(str_iter *src) {
 }
 
 static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
+    buf_soft_reset(buf);
     iter_result current = iter_peek(src);
     if (!current.ok) {
         set_err_upval(L, false, 32, "expected key, got end of content");
@@ -105,7 +106,6 @@ static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int
             set_err_upval(L, false, 33, "newlines not allowed between keys");
             return false;
         }
-        buf_soft_reset(buf);
         if (!parse_key(L, src, buf, int_keys)) {
             return false;
         }
