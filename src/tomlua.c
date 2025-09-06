@@ -27,18 +27,18 @@ static int tomlua_new(lua_State *L) {
 
     lua_pushvalue(L, -2);
     lua_pushvalue(L, -2);
-    lua_pushcclosure(L, tomlua_encode, 2); // pops err+opts, adds function
-    lua_setfield(L, 1, "encode");         // pops function
+    lua_pushcclosure(L, tomlua_encode, 2);
+    lua_setfield(L, 1, "encode");
 
     if (strict) {
         lua_pushnil(L);                        // init upvalue 3 for storing defined values
         lua_pushnil(L);                        // init upvalue 4 for uniquness bookkeeping
-        lua_pushcclosure(L, tomlua_decode, 4); // pops err+opts+defined, adds function
-        lua_setfield(L, 1, "decode");         // pops function
+        lua_pushcclosure(L, tomlua_decode, 4);
+        lua_setfield(L, 1, "decode");
     } else {
         lua_pushnil(L);                        // init upvalue 3 for storing defined values
-        lua_pushcclosure(L, tomlua_decode, 3); // pops err+opts
-        lua_setfield(L, 1, "decode");         // pops function
+        lua_pushcclosure(L, tomlua_decode, 3);
+        lua_setfield(L, 1, "decode");
     }
     return 1;
 }
