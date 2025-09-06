@@ -63,17 +63,6 @@ typedef struct {
 } iter_result;
 
 typedef struct {
-    str_buf v;
-    bool ok;
-} key_result;
-typedef struct {
-    size_t cap;
-    size_t len;
-    str_buf *v;
-    bool ok;
-} keys_result;
-
-typedef struct {
     bool strict;
     bool enhanced_tables;
 } TomluaUserOpts;
@@ -239,20 +228,6 @@ static inline void buf_soft_reset(str_buf *buf) {
     if (buf) {
         buf->data[0] = '\0';
         buf->len = 0;
-    }
-}
-
-static inline void clear_keys_result(keys_result *dst) {
-    if (dst) {
-        if (dst->v) {
-            for (size_t i = 0; i < dst->len; i++) {
-                free_str_buf(&dst->v[i]);
-            }
-            free(dst->v);
-        }
-        dst->v = NULL;
-        dst->len = 0;
-        dst->cap = 0;
     }
 }
 
