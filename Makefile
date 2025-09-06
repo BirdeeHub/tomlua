@@ -26,14 +26,14 @@ test: $(SRCS) $(TESTS)
 install:
 ifdef LIBDIR
 	@if [ ! -f "$(DESTDIR)/tomlua.so" ]; then \
-		@echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
+		echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
 		false; \
 	fi
 	@if [ -d "$(LIBDIR)" ]; then \
 		cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/"; \
-		@echo "Installed to $(LIBDIR)"; \
+		echo "Installed to $(LIBDIR)"; \
 	else \
-		@echo "LIBDIR set but does not exist: $(LIBDIR)"; \
+		echo "LIBDIR set but does not exist: $(LIBDIR)"; \
 		false; \
 	fi
 else
@@ -42,7 +42,7 @@ endif
 
 build: $(SRCS)
 	@if [ -z "$(LUA_INCDIR)" ]; then \
-		@echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
+		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
 		false; \
 	fi
 	@mkdir -p $(DESTDIR)
