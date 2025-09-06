@@ -22,7 +22,7 @@ end
 return function(v)
     local inspect = require("inspect")
     print(inspect(v), inspect(opts), to_escaped_toml_str [[dsahdash"
-    dsadsa\ \t b
+    dsadsa\ \t \b
     dsadsa'
     """
     '''
