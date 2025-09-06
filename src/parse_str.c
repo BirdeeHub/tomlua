@@ -1,11 +1,12 @@
 #include <stdint.h>
 #include "types.h"
 
-static uint32_t hex_to_codepoint(const str_buf *src) {
+// Convert a hex string to a codepoint
+static uint32_t hex_to_codepoint(const char src[], int len) {
     uint32_t cp = 0;
-    for (size_t i = 0; i < src->len; i++) {
-        char c = src->data[i];
-        cp <<= 4; // multiply previous value by 16
+    for (int i = 0; i < len; i++) {
+        char c = src[i];
+        cp <<= 4;
         if (c >= '0' && c <= '9') {
             cp |= c - '0';
         } else if (c >= 'A' && c <= 'F') {
@@ -53,14 +54,11 @@ static bool utf8_encode(uint32_t cp, str_buf *dst) {
     return buf_push_str(dst, buf, len);
 }
 
-static bool push_unicode(lua_State *L, str_buf *dst, str_buf *src, bool is_long) {
-    size_t expected_len = is_long ? 8 : 4;
-    if (src->len != expected_len) return set_err_upval(L, false, 32, "invalid unicode specifier length");
-    for (size_t i = 0; i < src->len; i++) {
-        if (!is_hex_char(src->data[i])) return set_err_upval(L, false, 33, "unexpected unicode specifier char");
+static bool push_unicode(lua_State *L, str_buf *dst, char src[], int len) {
+    for (size_t i = 0; i < len; i++) {
+        if (!is_hex_char(src[i])) return set_err_upval(L, false, 33, "unexpected unicode specifier char");
     }
-
-    uint32_t cp = hex_to_codepoint(src);
+    uint32_t cp = hex_to_codepoint(src, len);
     if (!utf8_encode(cp, dst)) return set_err_upval(L, false, 3, "OOM");
     return true;
 }
@@ -86,18 +84,15 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
-                    str_buf escaped = new_str_buf();
                     bool is_long = next == 'U';
                     int hex_len = is_long ? 8 : 4;
+                    char escaped[8];
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
-                        if (!buf_push(&escaped, iter_next(src).v)) {
-                            free_str_buf(&escaped);
-                            return set_err_upval(L, false, 3, "OOM");
-                        }
+                        escaped[i] = iter_next(src).v;
                     }
-                    bool ok = push_unicode(L, dst, &escaped, is_long);
-                    free_str_buf(&escaped);
-                    if (!ok) return false;
+                    if (!push_unicode(L, dst, escaped, hex_len)) {
+                        return set_err_upval(L, false, 3, "invalid unicode escape");
+                    }
                 } break;
                 default:
                     if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
@@ -133,18 +128,15 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
-                    str_buf escaped = new_str_buf();
                     bool is_long = next == 'U';
                     int hex_len = is_long ? 8 : 4;
+                    char escaped[8];
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
-                        if (!buf_push(&escaped, iter_next(src).v)) {
-                            free_str_buf(&escaped);
-                            return set_err_upval(L, false, 3, "OOM");
-                        }
+                        escaped[i] = iter_next(src).v;
                     }
-                    bool ok = push_unicode(L, dst, &escaped, is_long);
-                    free_str_buf(&escaped);
-                    if (!ok) return false;
+                    if (!push_unicode(L, dst, escaped, hex_len)) {
+                        return set_err_upval(L, false, 3, "invalid unicode escape");
+                    }
                 } break;
                 default:
                     if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
