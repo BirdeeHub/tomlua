@@ -228,8 +228,8 @@ static inline void buf_soft_reset(str_buf *buf) {
 
 static inline str_buf new_str_buf() {
     return ((str_buf) {
-        .capacity = 16,
         .len = 0,
+        .capacity = 16,
         .data = (char *)malloc(16 * sizeof(char))
     });
 }
@@ -288,7 +288,7 @@ static inline bool push_buf_to_lua_string(lua_State *L, const str_buf *buf) {
 }
 
 static inline str_iter str_to_iter(const char *str, size_t len) {
-    return ((str_iter) { .buf = str, .len = len, .pos = 0 });
+    return ((str_iter) { .len = len, .pos = 0, .buf = str });
 }
 
 static inline bool iter_starts_with(const str_iter *a, char *b, size_t len) {
