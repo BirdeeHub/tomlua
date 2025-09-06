@@ -18,7 +18,7 @@
       lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson lp.toml-edit]);
     in {
       default = pkgs.mkShell {
-        name = "tomlua-dev";
+        name = "${APPNAME}-dev";
         packages = [ lua pkgs.luarocks pkgs.bear ];
         inputsFrom = [ ];
         LUA_INCDIR = "${lua}/include";
