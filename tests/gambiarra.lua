@@ -73,13 +73,13 @@ return function(name, f, async)
 	local testfn = function(next)
 
 		local prev = {
-			ok = env.ok,
+			it = env.it,
 			spy = env.spy,
 			eq = env.eq
 		}
 
 		local restore = function()
-			env.ok = prev.ok
+			env.it = prev.it
 			env.spy = prev.spy
 			env.eq = prev.eq
 			gambiarrahandler('end', name)
@@ -91,7 +91,7 @@ return function(name, f, async)
 
 		env.eq = deepeq
 		env.spy = spy
-		env.ok = function(cond, msg)
+		env.it = function(cond, msg)
 			if not msg then
 				msg = debug.getinfo(2, 'S').short_src..":"..debug.getinfo(2, 'l').currentline
 			end
@@ -117,7 +117,7 @@ return function(name, f, async)
 
 		if not async then
 			handler('end', name);
-			env.ok = prev.ok;
+			env.it = prev.it;
 			env.spy = prev.spy;
 			env.eq = prev.eq;
 		end
