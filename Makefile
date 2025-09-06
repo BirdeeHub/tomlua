@@ -7,6 +7,8 @@ SRCS       = $(SRC)/src/tomlua.c \
              $(SRC)/src/decode.c \
              $(SRC)/src/encode.c
 
+EMBEDDER   = $(SRC)/src/embed_lua.c
+
 TESTDIR    ?= $(SRC)/tests
 TEST       = $(TESTDIR)/init.lua
 INCLUDES   = -I"$(LUA_INCDIR)"
@@ -45,7 +47,12 @@ else
 	@echo "LIBDIR not set, skipping install"
 endif
 
-build: $(SRCS)
+embed: $(SRCS) $(EMBEDDER) $(SRC)/src/encode.lua
+	@mkdir -p $(SRC)/embed
+	$(CC) -o $(SRC)/embed/embed_lua $(EMBEDDER)
+	$(SRC)/embed/embed_lua $(SRC)/src/encode.lua $(SRC)/embed/encode.h EMBED_ENCODE encode
+
+build: $(SRCS) embed
 	@if [ -z "$(LUA_INCDIR)" ]; then \
 		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
 		false; \

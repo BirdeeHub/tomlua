@@ -1,3 +1,4 @@
+```C
 #include <math.h>
 #include <lua.h>
 #include <lauxlib.h>
@@ -140,3 +141,4 @@ int tomlua_encode(lua_State *L) {
     free_str_buf(&output);
     return 1;
 }
+```

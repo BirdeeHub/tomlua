@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include "types.h"
 #include "decode.h"
-#include "encode.h"
+#include "../embed/encode.h"
 
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
@@ -17,10 +17,16 @@ static int tomlua_new(lua_State *L) {
         enhanced_tables = lua_toboolean(L, -1);
         lua_getfield(L, 1, "int_keys");
         int_keys = lua_toboolean(L, -1);
+        lua_pop(L, 3);
     }
 
-    lua_settop(L, 0);
+    lua_settop(L, 1);
     lua_newtable(L); // module table
+    push_embedded_encode(L);
+    lua_pushvalue(L, 1);
+    lua_remove(L, 1);
+    lua_call(L, 1, 1);
+    lua_setfield(L, -2, "encode");
     // upvalue 1: error object
     new_TMLErr(L);
     // upvalue 2: options
@@ -29,18 +35,13 @@ static int tomlua_new(lua_State *L) {
     opts->int_keys = int_keys;
     opts->enhanced_tables = enhanced_tables;
 
-    lua_pushvalue(L, -2);
-    lua_pushvalue(L, -2);
-    lua_pushcclosure(L, tomlua_encode, 2);
-    lua_setfield(L, 1, "encode");
+    lua_pushnil(L);                        // init upvalue 3 for storing defined values
 
     if (strict) {
-        lua_pushnil(L);                        // init upvalue 3 for storing defined values
         lua_pushnil(L);                        // init upvalue 4 for uniquness bookkeeping
         lua_pushcclosure(L, tomlua_decode, 4);
         lua_setfield(L, 1, "decode");
     } else {
-        lua_pushnil(L);                        // init upvalue 3 for storing defined values
         lua_pushcclosure(L, tomlua_decode, 3);
         lua_setfield(L, 1, "decode");
     }
