@@ -463,10 +463,10 @@ int tomlua_decode(lua_State *L) {
 
 fail:
     lua_settop(L, 0);
-    lua_pushnil(L);
-    push_to_output_table(L);
     if (strict) reset_defined_table(L);
     free_str_buf(&scratch);
+    lua_pushnil(L);
+    push_to_output_table(L);
     lua_pushnil(L);
     push_err_upval(L);
     return 2;
