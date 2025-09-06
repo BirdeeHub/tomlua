@@ -3,7 +3,7 @@ return function(define, test_dir)
 local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
 
 define("decode example.toml", function()
-	local tomlua_s = require("tomlua")({ enhanced_tables = false, strict = true })
+    local tomlua_s = require("tomlua")({ enhanced_tables = false, strict = true })
     local f = io.open(("%s/example.toml"):format(test_dir), "r")
     local contents
     if f then
