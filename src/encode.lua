@@ -3,7 +3,7 @@ local opts = upvals[1]
 local is_array = upvals[2]
 
 local function lua_str_to_escaped_toml_basic(str)
-    return "\""..str:gsub("[\\\n\r\"\b\f\t]", function(c)
+    return ("\"%s\""):format(str:gsub("[\\\n\r\"\b\f\t]", function(c)
         if c == "\n" then
             c = "n"
         elseif c == "\b" then
@@ -16,7 +16,7 @@ local function lua_str_to_escaped_toml_basic(str)
             c = "t"
         end
         return "\\"..c
-    end).."\""
+    end))
 end
 
 return function(v)
