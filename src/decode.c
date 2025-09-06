@@ -9,7 +9,7 @@
 #include "parse_keys.h"
 #include "output_table_lib.h"
 
-bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
+static inline bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
 
 // adds a table to the lua stack and return NULL or error
 static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
