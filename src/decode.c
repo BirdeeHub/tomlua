@@ -54,9 +54,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
         if (consume_whitespace_to_line(src)) {
             return set_err_upval(L, false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
-        if (!parse_value(L, src, buf, opts)) {
-            return false;
-        }
+        if (!parse_value(L, src, buf, opts)) return false;
         lua_insert(L, lua_gettop(L) - keys_len);
         if (strict) {
             if (!set_kv_strict(L, keys_len)) {
