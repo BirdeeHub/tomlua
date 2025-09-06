@@ -6,10 +6,9 @@
 #include "encode_lib.h"
 #include "../embed/encode.h"
 
-static inline void push_encode(lua_State *L) {
+static inline void push_encode(lua_State *L, int opts_idx) {
     push_embedded_encode(L);
-    lua_pushvalue(L, 1);
-    lua_remove(L, 1);
+    lua_pushvalue(L, opts_idx);
     lua_pushcfunction(L, is_lua_array);
     lua_call(L, 2, 1);
 }
@@ -31,7 +30,8 @@ static int tomlua_new(lua_State *L) {
 
     lua_settop(L, 1);
     lua_newtable(L); // module table
-    push_encode(L);
+    push_encode(L, 1);
+    lua_remove(L, 1);
     lua_setfield(L, -2, "encode");
     // upvalue 1: error object
     new_TMLErr(L);
