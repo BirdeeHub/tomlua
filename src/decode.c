@@ -374,10 +374,13 @@ int tomlua_decode(lua_State *L) {
     // pop and store top, this will be our result at the end
     const int top = luaL_ref(L, LUA_REGISTRYINDEX);
 
-    size_t len;
-    const char *s = lua_tolstring(L, 1, &len);
-    lua_pop(L, 1); // pop the string
-    str_iter src = str_to_iter(s, len);
+    str_iter src;
+    {
+        size_t len;
+        const char *s = lua_tolstring(L, 1, &len);
+        lua_pop(L, 1); // pop the string
+        src = str_to_iter(s, len);
+    }
 
     // set top as the starting location
     lua_rawgeti(L, LUA_REGISTRYINDEX, top);
