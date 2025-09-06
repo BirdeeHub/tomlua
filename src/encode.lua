@@ -3,7 +3,7 @@ local opts = upvals[1]
 local is_array = upvals[2]
 
 local function to_escaped_toml_str(str)
-    return ("\"%s\""):format(str:gsub("[\\\n\r\"\b\f\t]", function(c)
+    return ("\"%s\""):format(tostring(str):gsub("[\\\n\r\"\b\f\t]", function(c)
         if c == "\n" then
             c = "n"
         elseif c == "\b" then
