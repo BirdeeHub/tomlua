@@ -69,7 +69,7 @@ typedef struct {
 } TomluaUserOpts;
 
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
-    return lua_touserdata(L, lua_upvalueindex(2));
+    return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(2));
 }
 
 typedef struct {
@@ -83,11 +83,11 @@ static inline void push_err_upval(lua_State *L) {
 }
 
 static inline TMLErr *get_err_upval(lua_State *L) {
-    return lua_touserdata(L, lua_upvalueindex(1));
+    return (TMLErr *)lua_touserdata(L, lua_upvalueindex(1));
 }
 
 static int tomlua_gc(lua_State *L) {
-    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    TMLErr *errorval = (TMLErr *)luaL_checkudata(L, 1, "TomluaError");
     if (errorval->heap) {
         free(errorval->msg);
         errorval->msg = NULL;
@@ -97,7 +97,7 @@ static int tomlua_gc(lua_State *L) {
     return 0;
 }
 static int tomlua_tostring(lua_State *L) {
-    TMLErr *errorval = luaL_checkudata(L, 1, "TomluaError");
+    TMLErr *errorval = (TMLErr *)luaL_checkudata(L, 1, "TomluaError");
     if (!errorval->msg) {
         lua_pushliteral(L, "Error: (no message)");
     } else {
@@ -107,7 +107,7 @@ static int tomlua_tostring(lua_State *L) {
 }
 
 static int new_TMLErr(lua_State *L) {
-    TMLErr *lasterr = lua_newuserdata(L, sizeof(TMLErr));
+    TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));
     lasterr->msg = NULL;
     lasterr->len = 0;
     lasterr->heap = 0;
@@ -136,7 +136,7 @@ static inline bool err_push(lua_State *L, char c) {
     if (!err->heap) {
         if (err->len == 0) {
             int cap = 16;
-            char *tmp = malloc(cap * sizeof(char));
+            char *tmp = (char *)malloc(cap * sizeof(char));
             if (!tmp) return false;
             err->heap = cap;
             err->msg = tmp;
@@ -144,7 +144,7 @@ static inline bool err_push(lua_State *L, char c) {
             // was static string, copy into a heap buffer
             size_t cap = 16;
             while (cap < err->len + 1) cap *= 2;
-            char *tmp = malloc(cap * sizeof(char));
+            char *tmp = (char *)malloc(cap * sizeof(char));
             if (!tmp) return false;
             memcpy(tmp, err->msg, err->len);
             err->msg = tmp;
@@ -153,7 +153,7 @@ static inline bool err_push(lua_State *L, char c) {
     }
     if (err->len >= err->heap) {
         size_t new_capacity = err->heap > 0 ? err->heap * 2 : 1;
-        char *tmp = realloc(err->msg, new_capacity * sizeof(char));
+        char *tmp = (char *)realloc(err->msg, new_capacity * sizeof(char));
         if (!tmp) {
             return false;
         }
@@ -172,7 +172,7 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
         if (err->len == 0) {
             size_t cap = 16;
             while (cap < len) cap *= 2;
-            char *tmp = malloc(cap * sizeof(char));
+            char *tmp = (char *)malloc(cap * sizeof(char));
             if (!tmp) return false;
             err->msg = tmp;
             err->heap = cap;
@@ -180,7 +180,7 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
             // was static string, copy into a new heap buffer
             size_t cap = 16;
             while (cap < err->len + len) cap *= 2;
-            char *tmp = malloc(cap * sizeof(char));
+            char *tmp = (char *)malloc(cap * sizeof(char));
             if (!tmp) return false;
             memcpy(tmp, err->msg, err->len);
             err->msg = tmp;
@@ -192,7 +192,7 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     if (err->len + len > err->heap) {
         size_t new_capacity = err->heap;
         while (new_capacity < err->len + len) new_capacity *= 2;
-        char *tmp = realloc(err->msg, new_capacity * sizeof(char));
+        char *tmp = (char *)realloc(err->msg, new_capacity * sizeof(char));
         if (!tmp) return false;
         err->msg = tmp;
         err->heap = new_capacity;
@@ -230,7 +230,7 @@ static inline str_buf new_str_buf() {
     return ((str_buf) {
         .capacity = 16,
         .len = 0,
-        .data = malloc(16 * sizeof(char))
+        .data = (char *)malloc(16 * sizeof(char))
     });
 }
 
@@ -243,7 +243,7 @@ static inline str_buf new_buf_from_str(const char *str, size_t len) {
     }
     buf.capacity = cap;
     buf.len = len;
-    buf.data = malloc(buf.capacity * sizeof(char));
+    buf.data = (char *)malloc(buf.capacity * sizeof(char));
     memcpy(buf.data, str, len);
     return buf;
 }
@@ -252,7 +252,7 @@ static inline bool buf_push(str_buf *buf, char c) {
     if (!buf) return false;
     if (buf->len >= buf->capacity) {
         size_t new_capacity = buf->capacity > 0 ? buf->capacity * 2 : 1;
-        char *tmp = realloc(buf->data, new_capacity * sizeof(char));
+        char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
         if (!tmp) return false;
         buf->data = tmp;
         buf->capacity = new_capacity;
@@ -269,7 +269,7 @@ static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
         while (new_capacity < required_len) {
             new_capacity *= 2;
         }
-        char *tmp = realloc(buf->data, new_capacity * sizeof(char));
+        char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
         if (!tmp) return false;
         buf->data = tmp;
         buf->capacity = new_capacity;
