@@ -90,9 +90,7 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         escaped[i] = iter_next(src).v;
                     }
-                    if (!push_unicode(L, dst, escaped, hex_len)) {
-                        return false;
-                    }
+                    if (!push_unicode(L, dst, escaped, hex_len)) return false;
                 } break;
                 default:
                     if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
@@ -134,9 +132,7 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         escaped[i] = iter_next(src).v;
                     }
-                    if (!push_unicode(L, dst, escaped, hex_len)) {
-                        return false;
-                    }
+                    if (!push_unicode(L, dst, escaped, hex_len)) return false;
                 } break;
                 default:
                     if (!buf_push(dst, next)) return set_err_upval(L, false, 3, "OOM");
