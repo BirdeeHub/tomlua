@@ -16,6 +16,7 @@ LUA_BIN ?= $(LUA)
 else
 LUA_BIN ?= $(LUA_BINDIR)/$(LUA)
 endif
+GREP_BIN   ?= grep
 
 all: build test
 
@@ -47,9 +48,10 @@ build: $(SRCS)
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) -I"$(LUA_INCDIR)" -o $(DESTDIR)/tomlua.so $(SRCS)
 
-bear: $(SRCS) clean
+bear: $(SRCS)
 	@mkdir -p $(DESTDIR)
-	bear -- $(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
+	bear -- $(CC) -### $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
+	$(GREP_BIN) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
 clean:
 	rm -rf $(DESTDIR) compile_commands.json

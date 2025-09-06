@@ -23,6 +23,7 @@
         inputsFrom = [ ];
         LUA_INCDIR = "${lua}/include";
         LUA_BIN = lua.interpreter;
+        GREP_BIN = pkgs.gnugrep;
         shellHook = ''
           make bear
           exec zsh
