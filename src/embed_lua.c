@@ -79,22 +79,22 @@ int embed_run(lua_State *L) {
 
     fprintf(out, "#ifndef %s_H_\n#define %s_H_\n\n#include <lua.h>\n#include <lauxlib.h>\n\n", header_name, header_name);
     fprintf(out, "static inline int push_embedded_%s(lua_State *L) {\n", var_name);
-    fprintf(out, "\tconst unsigned char data[] = {\n\t\t");
+    fprintf(out, "    const unsigned char data[] = {\n        ");
 
     for (size_t i = 0; i < buf.len; i++) {
         fprintf(out, "0x%02x", buf.data[i]);
-        if (i + 1 < buf.len) fprintf(out, ", ");
-        if ((i + 1) % 8 == 0 && i + 1 < buf.len) fprintf(out, "\n\t\t");
+        if (i + 1 < buf.len) fprintf(out, ",%s", ((i + 1) % 8 != 0) ? " " : "");
+        if ((i + 1) % 8 == 0 && i + 1 < buf.len) fprintf(out, "\n        ");
     }
-    fprintf(out, "\n\t};\n");
+    fprintf(out, "\n    };\n");
 
-    fprintf(out, "\tconst size_t len = %zu;\n", buf.len);
-    fprintf(out, "\tif (luaL_loadbuffer(L, (const char *)data, len, \"%s\")) {\n", var_name);
-    fprintf(out, "\t\tconst char *err = lua_tostring(L, -1);\n");
-    fprintf(out, "\t\tlua_pop(L, 1);\n");
-    fprintf(out, "\t\treturn luaL_error(L, \"Error loading embedded Lua code: %%s\", err);\n");
-    fprintf(out, "\t}\n");
-    fprintf(out, "\treturn 1;\n");
+    fprintf(out, "    const size_t len = %zu;\n", buf.len);
+    fprintf(out, "    if (luaL_loadbuffer(L, (const char *)data, len, \"%s\")) {\n", var_name);
+    fprintf(out, "        const char *err = lua_tostring(L, -1);\n");
+    fprintf(out, "        lua_pop(L, 1);\n");
+    fprintf(out, "        return luaL_error(L, \"Error loading embedded Lua code: %%s\", err);\n");
+    fprintf(out, "    }\n");
+    fprintf(out, "    return 1;\n");
     fprintf(out, "}\n");
 
     fprintf(out, "\n#endif  // %s_H_\n", header_name);
