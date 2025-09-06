@@ -188,7 +188,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             }
             if (buf->len == 0) return set_err_upval(L, false, 17, "empty hex literal");
             // Convert buffer to integer
-            long long val = strtoll(buf->data, NULL, 16);
+            int64_t val = strtoll(buf->data, NULL, 16);
             lua_pushinteger(L, val);
             return true;
         } else if (iter_starts_with(src, "0o", 2)) {
@@ -214,7 +214,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 return set_err_upval(L, false, 55, "octal literals not allowed to have trailing underscores");
             }
             if (buf->len == 0) return set_err_upval(L, false, 19, "empty octal literal");
-            long long val = strtoll(buf->data, NULL, 8);
+            int64_t val = strtoll(buf->data, NULL, 8);
             lua_pushinteger(L, val);
             return true;
         } else if (iter_starts_with(src, "0b", 2)) {
@@ -240,7 +240,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 return set_err_upval(L, false, 56, "binary literals not allowed to have trailing underscores");
             }
             if (buf->len == 0) return set_err_upval(L, false, 20, "empty binary literal");
-            long long val = strtoll(buf->data, NULL, 2);
+            int64_t val = strtoll(buf->data, NULL, 2);
             lua_pushinteger(L, val);
             return true;
         } else {
