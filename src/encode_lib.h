@@ -7,34 +7,34 @@
 
 static int is_lua_array(lua_State *L) {
     // probably dont need this check:
-    int idx = lua_gettop(L);
-    if (!lua_istable(L, idx)) {
+    if (!lua_istable(L, 1)) {
         lua_settop(L, 0);
         lua_pushboolean(L, false);
         return 1;
     }
 
     // getmetatable(stack_top).array to allow overriding of representation
-    if (lua_getmetatable(L, idx)) {
+    if (lua_getmetatable(L, 1)) {
         // stack: ... table mt
         lua_getfield(L, -1, "array");
         if (!lua_isnil(L, -1)) {
-            lua_settop(L, 0);
             if (lua_toboolean(L, -1)) {
+                lua_settop(L, 0);
                 lua_pushboolean(L, true);
                 return 1;
             } else {
+                lua_settop(L, 0);
                 lua_pushboolean(L, false);
                 return 1;
             }
         }
-        lua_pop(L, 2);  // pop value + mt
+        lua_settop(L, 1);
     }
     bool is_array = true;
     int count = 0;
     lua_Number highest_int_key = 0;
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
-    while (lua_next(L, idx) != 0) {
+    while (lua_next(L, 1) != 0) {
         // now at stack: key value
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
         if (lua_isnumber(L, -1)) {
