@@ -6,8 +6,6 @@ SRCS       = $(SRC)/src/tomlua.c \
              $(SRC)/src/parse_str.c \
              $(SRC)/src/decode.c
 
-EMBEDDER   = $(SRC)/src/embed_lua.c
-
 TESTDIR    ?= $(SRC)/tests
 TEST       = $(TESTDIR)/init.lua
 INCLUDES   = -I"$(LUA_INCDIR)"
@@ -15,8 +13,10 @@ LUA        ?= lua
 GREP_BIN   ?= grep
 BEAR_BIN   ?= bear
 
+EMBEDDER   = $(SRC)/src/embed_lua.c
+EMBEDDED   = $(SRC)/src/encode.lua
 EMBED_CMD  = local embed = package.loadlib([[$(SRC)/embed/embed_lua.so]], [[luaopen_embed_lua]])(); \
-             embed([[$(SRC)/src/encode.lua]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]]);
+             embed([[$(EMBEDDED)]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]]);
 
 all: build test
 
