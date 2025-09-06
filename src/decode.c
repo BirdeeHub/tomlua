@@ -6,7 +6,57 @@
 #include "types.h"
 #include "parse_keys.h"
 #include "parse_val.h"
-#include "decode_strict_utils.h"
+
+// NOTE: FOR STRICT MODE ONLY!!
+// pops keys, leaves new root on top
+static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_type, int top) {
+    if (keys_len <= 0) return set_err_upval(L, false, 28, "no keys provided to navigate");
+    int keys_start = absindex(lua_gettop(L), -keys_len);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, top);
+    for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
+        int parent_idx = lua_gettop(L);
+        lua_pushvalue(L, key_idx);
+        lua_rawget(L, parent_idx);
+        int vtype = lua_type(L, -1);
+        if (vtype == LUA_TNIL) {
+            lua_pop(L, 1);      // remove nil
+            lua_newtable(L);    // create new table
+            lua_pushvalue(L, key_idx);
+            lua_pushvalue(L, -2);
+            lua_rawset(L, parent_idx);   // t[key] = new table
+        } else if (vtype != LUA_TTABLE) {
+            return set_err_upval(L, false, 33, "cannot navigate through non-table");
+        }
+        lua_remove(L, parent_idx);  // remove parent table, keep child on top
+    }
+    if (!array_type) {
+        if (!add_defined(L, -1)) {
+            return set_err_upval(L, false, 32, "cannot set the same table twice!");
+        }
+    } else {
+        // We’re at the table that should act as an array
+        if (!lua_istable(L, -1)) {
+            return set_err_upval(L, false, 37, "target of array heading isn't a table");
+        }
+#if LUA_VERSION_NUM == 501
+        size_t len = lua_objlen(L, -1);
+#else
+        size_t len = lua_rawlen(L, -1);
+#endif
+        // append new table at len+1
+        lua_newtable(L);               // new element
+        lua_pushinteger(L, len + 1);
+        lua_pushvalue(L, -2);          // copy new element
+        lua_rawset(L, -4);           // t[len+1] = new element
+
+        // remove parent array table, leave new element on top
+        lua_remove(L, -2);
+        add_defined(L, -1);
+    }
+    lua_insert(L, keys_start);
+    lua_settop(L, keys_start);
+    return true;
+}
 
 // pops keys, leaves new root on top
 static inline bool heading_nav(lua_State *L, int keys_len, bool array_type, int top) {
