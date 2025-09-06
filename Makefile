@@ -22,6 +22,10 @@ BEAR_BIN   ?= bear
 all: build test
 
 test: $(SRCS) $(TESTS)
+	@if [ ! -f "$(DESTDIR)/tomlua.so" ]; then \
+		echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
+		false; \
+	fi
 	$(LUA_BIN) "$(TEST)" -- "$(TESTDIR)" "$(DESTDIR)"
 
 install:
