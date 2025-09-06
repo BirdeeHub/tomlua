@@ -21,6 +21,7 @@ build = {
    type = "make",
    build_variables = {
       LUA_INCDIR="$(LUA_INCDIR)",
+      LUA="$(LUA)",
    },
    install_variables = {
       LIBDIR="$(LIBDIR)",

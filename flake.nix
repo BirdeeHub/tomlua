@@ -19,8 +19,7 @@
         name = "${APPNAME}-dev";
         packages = [ lua pkgs.luarocks ];
         LUA_INCDIR = "${lua}/include";
-        LUA_LIBDIR = "${lua}/lib";
-        LUA_BIN = lua.interpreter;
+        LUA = lua.interpreter;
         GREP_BIN = "${pkgs.gnugrep}/bin/grep";
         BEAR_BIN = "${pkgs.bear}/bin/bear";
         shellHook = ''

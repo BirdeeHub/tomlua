@@ -12,11 +12,6 @@ TESTDIR    ?= $(SRC)/tests
 TEST       = $(TESTDIR)/init.lua
 INCLUDES   = -I"$(LUA_INCDIR)"
 LUA        ?= lua
-ifndef LUA_BINDIR
-LUA_BIN ?= $(LUA)
-else
-LUA_BIN ?= $(LUA_BINDIR)/$(LUA)
-endif
 GREP_BIN   ?= grep
 BEAR_BIN   ?= bear
 
@@ -27,7 +22,7 @@ test: $(SRCS) $(TESTS)
 		echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
 		false; \
 	fi
-	$(LUA_BIN) "$(TEST)" -- "$(TESTDIR)" "$(DESTDIR)"
+	$(LUA) "$(TEST)" -- "$(TESTDIR)" "$(DESTDIR)"
 
 install:
 ifdef LIBDIR
@@ -48,8 +43,8 @@ endif
 
 embed: $(SRCS) $(EMBEDDER) $(SRC)/src/encode.lua
 	@mkdir -p $(SRC)/embed
-	$(CC) -o $(SRC)/embed/embed_lua $(EMBEDDER)
-	$(SRC)/embed/embed_lua $(SRC)/src/encode.lua $(SRC)/embed/encode.h EMBED_ENCODE encode
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(SRC)/embed/embed_lua.so $(EMBEDDER)
+	$(LUA) -e "package.cpath = [[$(SRC)/embed/?.so;]] .. package.cpath; require([[embed_lua]])([[$(SRC)/src/encode.lua]], [[$(SRC)/embed/encode.h]], [[EMBED_ENCODE]], [[encode]])"
 
 build: $(SRCS) embed
 	@if [ -z "$(LUA_INCDIR)" ]; then \
@@ -57,7 +52,7 @@ build: $(SRCS) embed
 		false; \
 	fi
 	@mkdir -p $(DESTDIR)
-	$(CC) $(CFLAGS) -I"$(LUA_INCDIR)" -o $(DESTDIR)/tomlua.so $(SRCS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS)
 
 bear: $(SRCS) clean embed
 	$(BEAR_BIN) -- $(CC) -### $(CFLAGS) $(INCLUDES) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
