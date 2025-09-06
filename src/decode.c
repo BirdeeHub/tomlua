@@ -57,7 +57,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
         if (!parse_value(L, src, buf, opts)) {
             return false;
         }
-        lua_insert(L, -keys_len - 1);
+        lua_insert(L, lua_gettop(L) - keys_len);
         if (strict) {
             if (!set_kv_strict(L, keys_len)) {
                 return false;
@@ -444,7 +444,7 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (!parse_value(L, &src, &scratch, uopts)) goto fail;
-            lua_insert(L, -keys_len -1);
+            lua_insert(L, lua_gettop(L) - keys_len);
             // [-1?] keys
             // [-?] value
             // [-?-1] current root table
