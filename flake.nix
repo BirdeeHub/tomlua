@@ -23,7 +23,7 @@
         GREP_BIN = "${pkgs.gnugrep}/bin/grep";
         BEAR_BIN = "${pkgs.bear}/bin/bear";
         shellHook = ''
-          make bear embed
+          make clean bear build
           [ "$(whoami)" == "birdee" ] && exec zsh
         '';
       };
