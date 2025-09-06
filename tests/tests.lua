@@ -1,7 +1,5 @@
 return function(define, test_dir)
 
-local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
-
 define("decode example.toml", function()
     local tomlua_s = require("tomlua")({ enhanced_tables = false, strict = true })
     local f = io.open(("%s/example.toml"):format(test_dir), "r")
@@ -16,17 +14,20 @@ define("decode example.toml", function()
 end)
 
 define("decode with wrong type", function()
+    local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
     local data, err = tomlua.decode({ bleh = "haha" })
     it(err ~= nil, "Should error on table input")
 end)
 
 define("decode extra args ignored", function()
+    local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
     local data, err = tomlua.decode("hehe = 'haha'", "ignored")
     it(data.hehe == "haha", "Value should be parsed correctly")
     it(err == nil, "Should ignore extra arguments")
 end)
 
 define("overlay defaults", function()
+    local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
     local testdata = {
         a = { b = { "1b", "2b" } },
         c = "hello",
