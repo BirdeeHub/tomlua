@@ -80,7 +80,9 @@ static int embed_run(lua_State *L) {
     FILE *out = fopen(output_file, "wb");
     if (!out) return luaL_error(L, "failed to open output");
 
-    fprintf(out, "#ifndef %s\n#define %s\n\n", header_name, header_name);
+    if (header_name) {
+        fprintf(out, "#ifndef %s\n#define %s\n\n", header_name, header_name);
+    }
     fprintf(out, "#include <lua.h>\n#include <lauxlib.h>\n\n");
     fprintf(out, "static inline int %s(lua_State *L) {\n", c_func_name);
     if (!output_to_stack) {
@@ -139,7 +141,9 @@ static int embed_run(lua_State *L) {
         fprintf(out, "  return 1;\n");
     }
     fprintf(out, "}\n");
-    fprintf(out, "\n#endif  // %s\n", header_name);
+    if (header_name) {
+        fprintf(out, "\n#endif  // %s\n", header_name);
+    }
     free_embed_buf(&buf);
     fclose(out);
     return 0;
@@ -161,9 +165,17 @@ static int embed_add(lua_State *L) {
 
 static int embed_new(lua_State *L) {
     for (int i = 1; i <= 3; i++) {
-        if (!lua_isstring(L, i)) {
+        int type = lua_type(L, i);
+        if (i == 3 && type != LUA_TNIL && type != LUA_TSTRING) {
+            return luaL_error(L, "invalid argument #%d, expected string or nil.\n%s", i,
+                "Useage:\nlocal embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+                "embed.add('file1', 'path/to/file1.lua')\n"
+                "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
+                "embed.run() -- or run(true) for directly on the stack instead of table, first on top"
+            );
+        } else if (type != LUA_TSTRING) {
             return luaL_error(L, "invalid argument #%d, expected string.\n%s", i,
-                "Useage: local embed = require('embed_lua')(output_header_file, c_func_name, header_name)\n"
+                "Useage: local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
                 "embed.add('file1', 'path/to/file1.lua')\n"
                 "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
                 "embed.run() -- or run(true) for directly on the stack instead of table, first on top"
