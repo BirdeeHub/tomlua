@@ -428,28 +428,4 @@ static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
     return res;
 }
 
-static inline bool buf_push_toml_escaped_utf8(str_buf *buf, uint32_t cp) {
-    switch (cp) {
-        case '\\': return buf_push_str(buf, "\\\\", 2); break;
-        case '"':  return buf_push_str(buf, "\\\"", 2); break;
-        case '\b': return buf_push_str(buf, "\\b", 2); break;
-        case '\t': return buf_push_str(buf, "\\t", 2); break;
-        case '\n': return buf_push_str(buf, "\\n", 2); break;
-        case '\f': return buf_push_str(buf, "\\f", 2); break;
-        case '\r': return buf_push_str(buf, "\\r", 2); break;
-        default:
-            if (cp <= 0x7F) {
-                return buf_push(buf, cp);  // normal ASCII
-            } else if (cp <= 0xFFFF) {
-                char out[7];
-                int len = snprintf(out, sizeof(out), "\\u%04X", cp);
-                return buf_push_str(buf, out, len);
-            } else {
-                char out[11];
-                int len = snprintf(out, sizeof(out), "\\U%08X", cp);
-                return buf_push_str(buf, out, len);
-            }
-    }
-}
-
 #endif  // SRC_TYPES_H_
