@@ -1,18 +1,21 @@
 SRC          ?= .
+SRC          := $(abspath $(SRC))
 DESTDIR      ?= $(SRC)/lib
-TEMPDIR      ?= $(SRC)/tmp
+TEMP_DIR     ?= $(SRC)/tmp
 CC           ?= gcc
 LUA          ?= lua
 BEAR         ?= bear
 GREP         ?= grep
 CFLAGS       ?= -O3 -flto -finline-functions -Wl,-s
 
-EMBEDDED_LUA = $(TEMPDIR)/embedded.h
+EMBEDDER_SRC := $(SRC)/pkg/embed_lua.c
+EMBEDDER     := $(TEMP_DIR)/embed_lua.so
+EMBEDDED_LUA := $(TEMP_DIR)/embedded.h
 CFLAGS       += -fPIC -shared -I"$(LUA_INCDIR)"
-TESTDIR      = $(SRC)/tests
-SRCS         = $(SRC)/src/tomlua.c \
-               $(SRC)/src/parse_str.c \
-               $(SRC)/src/decode.c
+TESTDIR      := $(SRC)/tests
+SRCS         := $(SRC)/src/tomlua.c \
+                $(SRC)/src/parse_str.c \
+                $(SRC)/src/decode.c
 
 all: build test
 
@@ -40,14 +43,17 @@ else
 	@echo "LIBDIR not set, skipping install"
 endif
 
-embed: $(SRC)/src/encode.lua $(SRC)/pkg/*
+embedder: $(EMBEDDER_SRC)
 	@if [ -z "$(LUA_INCDIR)" ]; then \
 		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
 		false; \
 	fi
-	@mkdir -p $(TEMPDIR)
-	$(CC) $(CFLAGS) -o "$(TEMPDIR)/embed_lua.so" "$(SRC)/pkg/embed_lua.c"
-	$(LUA) $(SRC)/pkg/embed.lua "$(TEMPDIR)/embed_lua.so" "$(SRC)/src" "$(EMBEDDED_LUA)"
+	@mkdir -p $(TEMP_DIR)
+	$(CC) $(CFLAGS) -o "$(EMBEDDER)" "$(EMBEDDER_SRC)"
+
+embed: embedder $(SRC)/src/encode.lua $(SRC)/pkg/embed.lua
+	@mkdir -p $(TEMP_DIR)
+	$(LUA) $(SRC)/pkg/embed.lua "$(EMBEDDER)" "$(SRC)/src" "$(EMBEDDED_LUA)"
 
 build: $(SRC)/src/* embed
 	@if [ -z "$(LUA_INCDIR)" ]; then \
@@ -62,4 +68,4 @@ bear:
 	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
 clean:
-	rm -rf $(DESTDIR) $(TEMPDIR) compile_commands.json
+	rm -rf $(DESTDIR) $(TEMP_DIR) compile_commands.json
