@@ -75,10 +75,10 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
         case '\f': return buf_push_str(buf, "\\f", 2); break;
         case '\r': return buf_push_str(buf, "\\r", 2); break;
         default:
-            if (esc_non_ascii) {
-                if (c <= 0x7F) {
-                    return buf_push(buf, c);  // normal ASCII
-                } else if (c <= 0xFFFF) {
+            if (c <= 0x7F) {
+                return buf_push(buf, c);  // normal ASCII
+            } else if (esc_non_ascii) {
+                if (c <= 0xFFFF) {
                     char out[7];
                     int len = snprintf(out, sizeof(out), "\\u%04X", c);
                     return buf_push_str(buf, out, len);
