@@ -53,13 +53,13 @@ static inline int embed_buf_push_str(embed_buf *buf, const unsigned char *str, s
     return 1;
 }
 
-int writer(lua_State *L, const void *p, size_t sz, void *ud) {
+static int writer(lua_State *L, const void *p, size_t sz, void *ud) {
     embed_buf *buf = (embed_buf*)ud;
     embed_buf_push_str(buf, p, sz);
     return 0;
 }
 
-int embed_run(lua_State *L) {
+static int embed_run(lua_State *L) {
     const int output_to_stack = lua_toboolean(L, 1);
     const char *output_file = lua_tostring(L, lua_upvalueindex(1));
     const char *c_func_name = lua_tostring(L, lua_upvalueindex(2));
@@ -140,7 +140,7 @@ int embed_run(lua_State *L) {
     return 0;
 }
 
-int embed_add(lua_State *L) {
+static int embed_add(lua_State *L) {
     if (!lua_isstring(L, 1)) return luaL_error(L, "invalid first argument to embed.add!\nExpected string `name` (used for output table and for debug info when calling luaL_loadbuffer)");
     if (!lua_isstring(L, 2)) return luaL_error(L, "invalid second argument to embed.add!\nExpected string `input_path`");
 #if LUA_VERSION_NUM == 501
@@ -158,7 +158,7 @@ int embed_add(lua_State *L) {
     return 0;
 }
 
-int embed_new(lua_State *L) {
+static int embed_new(lua_State *L) {
     for (int i = 1; i <= 3; i++) {
         if (!lua_isstring(L, i)) {
             return luaL_error(L, "invalid argument #%d, expected string.\n%s", i,
