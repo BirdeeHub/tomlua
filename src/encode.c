@@ -102,8 +102,9 @@ static inline int lbuf_push_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     size_t len;
     const char *str = lua_tolstring(L, 2, &len);
-    buf_push_str(buf, str, len);
-    return 0;
+    if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+    lua_settop(L, 1);
+    return 1;
 }
 
 // TODO: make this better?
@@ -120,7 +121,8 @@ static inline int lbuf_push_simple_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     str_iter src = lua_str_to_iter(L, 2);
     if (!buf_push_esc_simple(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
-    return 0;
+    lua_settop(L, 1);
+    return 1;
 }
 
 static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
@@ -146,7 +148,6 @@ static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
     return true;
 }
 
-// TODO: make this push an escaped toml key (varargs, don't push =)
 static inline int lbuf_push_keys(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     int top = lua_gettop(L);
@@ -157,7 +158,8 @@ static inline int lbuf_push_keys(lua_State *L) {
             if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key");
         }
     }
-    return 0;
+    lua_settop(L, 1);
+    return 1;
 }
 
 static inline int lbuf_index(lua_State *L) {
