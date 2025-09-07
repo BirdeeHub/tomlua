@@ -55,7 +55,7 @@ static inline bool is_valid_toml_type(lua_Number t) {
     return (t >= 0 && t < TOML_MAX_TYPES && t == (lua_Number)(int64_t)t);
 }
 
-static inline char *toml_type_to_lua_name(int t) {
+static inline const char *toml_type_to_lua_name(int t) {
     switch (t) {
         case TOML_STRING: return "STRING"; break;
         case TOML_STRING_MULTI: return "STRING_MULTI"; break;
