@@ -4,14 +4,6 @@
 #include "types.h"
 #include "decode.h"
 #include "encode_lib.h"
-#include "../embed/encode.h"
-
-static inline void push_encode(lua_State *L, int opts_idx) {
-    push_embedded_encode(L);
-    lua_pushvalue(L, opts_idx);
-    lua_pushcfunction(L, is_lua_array);
-    lua_call(L, 2, 1);
-}
 
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil

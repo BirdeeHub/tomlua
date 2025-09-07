@@ -1,6 +1,7 @@
 local upvals = {...}
 local opts = upvals[1]
 local is_array = upvals[2]
+local tomlib = upvals[3]
 
 local function escape_toml_str(str)
     return ("\"%s\""):format(tostring(str):gsub("[\\\n\r\"\b\f\t]", function(c)

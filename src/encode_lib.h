@@ -3,7 +3,15 @@
 #define SRC_ENCODE_LIB_H_
 
 #include <lua.h>
+#include <stddef.h>
 #include "./types.h"
+
+#define STR(x) #x
+#define XSTR(x) STR(x)
+#ifndef EMBEDDED_LUA
+#define EMBEDDED_LUA ../tmp/embedded.h
+#endif
+#include XSTR(EMBEDDED_LUA)
 
 static int is_lua_array(lua_State *L) {
     // probably dont need this check:
@@ -54,6 +62,62 @@ static int is_lua_array(lua_State *L) {
     lua_settop(L, 0);
     lua_pushboolean(L, is_array);
     return 1;
+}
+
+static int lbuf_push_str(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
+    size_t len;
+    const char *str = lua_tolstring(L, 2, &len);
+    buf_push_str(buf, str, len);
+    return 0;
+}
+
+static int lbuf_index(lua_State *L) {
+    lua_newtable(L);
+    lua_pushcfunction(L, lbuf_push_str);
+    lua_setfield(L, -2, "push_str");
+    return 1;
+}
+
+static int lbuf_gc(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
+    if (buf->capacity) {
+        free(buf->data);
+        buf->data = NULL;
+    }
+    buf->capacity = buf->len = 0;
+    return 0;
+}
+
+static int lbuf_tostring(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
+    if (!buf->data) lua_pushliteral(L, "");
+    else lua_pushlstring(L, buf->data, buf->len);
+    return 1;
+}
+
+static int lbuf_new(lua_State *L) {
+    str_buf *buf = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
+    if (luaL_newmetatable(L, "LStrBuf")) {
+        lua_pushcfunction(L, lbuf_tostring);
+        lua_setfield(L, -2, "__tostring");
+        lua_pushcfunction(L, lbuf_gc);
+        lua_setfield(L, -2, "__gc");
+        lbuf_index(L);
+        lua_setfield(L, -2, "__index");
+    }
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
+static inline void push_encode(lua_State *L, int opts_idx) {
+    push_embedded_encode(L);
+    lua_pushvalue(L, opts_idx);
+    lua_pushcfunction(L, is_lua_array);
+    lua_newtable(L);
+    lua_pushcfunction(L, lbuf_new);
+    lua_setfield(L, -2, "new_buf");
+    lua_call(L, 3, 1);
 }
 
 #endif  // SRC_ENCODE_LIB_H_

@@ -1,6 +1,6 @@
 {
   APPNAME ? "tomlua",
-  self ? builtins.path { path = ./.; },
+  self ? builtins.path { path = ../.; },
 }: final: prev: let
   packageOverrides = luaself: luaprev: {
     ${APPNAME} = luaself.callPackage ({buildLuarocksPackage}:

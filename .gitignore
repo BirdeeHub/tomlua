@@ -2,4 +2,4 @@
 **/lib
 **/.cache
 **/compile_commands.json
-**/embed
+**/tmp

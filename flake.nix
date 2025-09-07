@@ -4,7 +4,7 @@
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
     APPNAME = "tomlua";
   in {
-    overlays.default = import ./overlay.nix { inherit APPNAME self; };
+    overlays.default = import ./pkg { inherit APPNAME self; };
     packages = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
     in {
@@ -20,10 +20,10 @@
         packages = [ lua pkgs.luarocks ];
         LUA_INCDIR = "${lua}/include";
         LUA = lua.interpreter;
-        GREP_BIN = "${pkgs.gnugrep}/bin/grep";
-        BEAR_BIN = "${pkgs.bear}/bin/bear";
+        GREP = "${pkgs.gnugrep}/bin/grep";
+        BEAR = "${pkgs.bear}/bin/bear";
         shellHook = ''
-          make clean bear build
+          make clean build bear
           [ "$(whoami)" == "birdee" ] && exec zsh
         '';
       };
