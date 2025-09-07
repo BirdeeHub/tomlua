@@ -300,9 +300,9 @@ static inline str_buf new_buf_from_str(const char *str, size_t len) {
     }
     memcpy(tmp, str, len);
     return ((str_buf) {
-        .data = tmp,
+        .len = len,
         .cap = cap,
-        .len = len
+        .data = tmp,
     });
 }
 
