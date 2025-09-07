@@ -116,7 +116,7 @@ static int embed_run(lua_State *L) {
         fprintf(out, "  {\n");
         fprintf(out, "    const unsigned char data[] = {\n      ");
         for (size_t i = 0; i < buf.len; i++) {
-            fprintf(out, "0x%02x", buf.data[i]);
+            fprintf(out, "0x%02X", buf.data[i]);
             if (i + 1 < buf.len) fprintf(out, ",%s", ((i + 1) % 8 != 0) ? " " : "");
             if ((i + 1) % 8 == 0 && i + 1 < buf.len) fprintf(out, "\n      ");
         }
