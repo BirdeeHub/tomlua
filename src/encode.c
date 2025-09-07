@@ -124,15 +124,38 @@ static inline int lbuf_push_simple_str(lua_State *L) {
 }
 
 static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
+    bool is_safe = false;
+    {
+        iter_result curr = iter_next(iter);
+        while (curr.ok) {
+            if (is_identifier_char(curr.v)) {
+                is_safe = true;
+            } else {
+                is_safe = false;
+                break;
+            }
+            curr = iter_next(iter);
+        }
+    }
+    if (is_safe) {
+        if (!buf_push_str(buf, iter->buf, iter->len)) return false;
+    } else {
+        iter->pos = 0;
+        if (!buf_push_esc_simple(buf, iter)) return false;
+    }
     return true;
 }
 
 // TODO: make this push an escaped toml key (varargs, don't push =)
 static inline int lbuf_push_keys(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
-    str_iter src = lua_str_to_iter(L, 2);
-    if (!buf_push_esc_key(buf, &src)) {
-        return luaL_error(L, "failed to push escaped key");
+    int top = lua_gettop(L);
+    for (int i = 2; i <= top; i++) {
+        str_iter src = lua_str_to_iter(L, i);
+        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key");
+        if (i != top) {
+            if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key");
+        }
     }
     return 0;
 }
