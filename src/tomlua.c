@@ -10,6 +10,8 @@ static int tomlua_types(lua_State *L) {
     lua_newtable(L);
     lua_pushnumber(L, TOML_STRING);
     lua_setfield(L, -2, "TOML_STRING");
+    lua_pushnumber(L, TOML_STRING_MULTI);
+    lua_setfield(L, -2, "TOML_STRING_MULTI");
     lua_pushnumber(L, TOML_INTEGER);
     lua_setfield(L, -2, "TOML_INTEGER");
     lua_pushnumber(L, TOML_FLOAT);

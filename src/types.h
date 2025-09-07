@@ -17,6 +17,7 @@ typedef uint8_t bool;
 
 enum ValueType {
     TOML_STRING,  // lua string
+    TOML_STRING_MULTI,  // lua string
     TOML_INTEGER,  // lua number
     TOML_FLOAT,  // lua number
     TOML_BOOL,  // lua bool

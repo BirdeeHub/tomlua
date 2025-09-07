@@ -66,6 +66,7 @@ local str, err = tomlua.encode(some_table) -- with options to control some emit 
 
 enum ValueType {
     TOML_STRING,  // lua string
+    TOML_STRING_MULTI,  // lua string
     TOML_INTEGER,  // lua number
     TOML_FLOAT,  // lua number
     TOML_BOOL,  // lua bool
