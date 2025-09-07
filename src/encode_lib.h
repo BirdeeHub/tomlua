@@ -65,7 +65,7 @@ static int is_lua_array(lua_State *L) {
 }
 
 static int lbuf_push_str(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     size_t len;
     const char *str = lua_tolstring(L, 2, &len);
     buf_push_str(buf, str, len);
@@ -80,7 +80,7 @@ static int lbuf_index(lua_State *L) {
 }
 
 static int lbuf_gc(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     if (buf->cap) {
         free(buf->data);
         buf->data = NULL;
@@ -90,7 +90,7 @@ static int lbuf_gc(lua_State *L) {
 }
 
 static int lbuf_tostring(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     if (!buf->data) lua_pushliteral(L, "");
     else lua_pushlstring(L, buf->data, buf->len);
     return 1;
