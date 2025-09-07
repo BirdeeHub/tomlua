@@ -31,7 +31,7 @@ typedef enum {
 } TomlType;
 
 static inline bool is_valid_toml_type(lua_Number t) {
-    return (t > 0 && t < 12 && t == (lua_Number)(int64_t)t);
+    return (t >= 0 && t <= 11 && t == (lua_Number)(int64_t)t);
 }
 
 // TODO: delete this, just for debugging
