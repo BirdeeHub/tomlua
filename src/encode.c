@@ -28,6 +28,7 @@ static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
 
 static inline bool is_lua_array(lua_State *L, int idx) {
     int old_top = lua_gettop(L);
+    idx = absindex(old_top, idx);
     if (!lua_istable(L, idx)) {
         lua_settop(L, old_top);
         return false;
@@ -161,6 +162,13 @@ static inline int lbuf_push_keys(lua_State *L) {
     return 1;
 }
 
+static inline int lbuf_reset(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    buf_soft_reset(buf);
+    lua_settop(L, 1);
+    return 1;
+}
+
 static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
@@ -169,6 +177,8 @@ static inline int lbuf_index(lua_State *L) {
     lua_setfield(L, -2, "push_esc_simple");
     lua_pushcfunction(L, lbuf_push_keys);
     lua_setfield(L, -2, "push_keys");
+    lua_pushcfunction(L, lbuf_reset);
+    lua_setfield(L, -2, "reset");
     return 1;
 }
 
@@ -191,6 +201,7 @@ static inline int lbuf_tostring(lua_State *L) {
 
 static inline int lbuf_new(lua_State *L) {
     str_buf *buf = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
+    *buf = (str_buf){0};
     if (luaL_newmetatable(L, "LStrBuf")) {
         lua_pushcfunction(L, lbuf_tostring);
         lua_setfield(L, -2, "__tostring");
