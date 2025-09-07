@@ -38,21 +38,21 @@ end
 -- tostring and return the buffer 1 time at the end
 return function(input)
     local inspect = require("inspect")
-    print(inspect(input))
-    print(inspect(opts))
-    print(inspect(tomlib))
     local res = {
-        is_array({}),
-        is_array({ 1, 2, 3, 4 }),
-        is_array({ a = 1, b = 2, c = 3, d = 4 }),
-        escape_toml_str [[dsahdash"
+        input = inspect(input),
+        opts = inspect(opts),
+        lib = inspect(tomlib),
+        isarr1 = is_array({}),
+        isarr2 = is_array({ 1, 2, 3, 4 }),
+        isarr3 = is_array({ a = 1, b = 2, c = 3, d = 4 }),
+        tstr   = escape_toml_str [[dsahdash"
         dsadsa\ \t \b
         dsadsa'
         """
         '''
         adsdasdas]],
-        escape_toml_key [[1ab12-23_1sAAGG]],
-        escape_toml_key [[dsahdash"
+        tmlk1 = escape_toml_key [[1ab12-23_1sAAGG]],
+        tmlk2 = escape_toml_key [[dsahdash"
         dsadsa\ \t \b
         dsadsa'
         """
