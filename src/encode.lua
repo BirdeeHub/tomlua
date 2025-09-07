@@ -31,11 +31,15 @@ local function escape_toml_key(str)
     end
 end
 
-return function(v)
+return function(input)
     local inspect = require("inspect")
-    print(
-        inspect(v),
-        inspect(opts),
+    print(inspect(input))
+    print(inspect(opts))
+    print(inspect(tomlib))
+    local res = {
+        is_array({}),
+        is_array({ 1, 2, 3, 4 }),
+        is_array({ a = 1, b = 2, c = 3, d = 4 }),
         escape_toml_str [[dsahdash"
         dsadsa\ \t \b
         dsadsa'
@@ -49,5 +53,8 @@ return function(v)
         """
         '''
         adsdasdas]]
-    )
+    }
+    for k, v in pairs(res) do
+        print(inspect(k), inspect(v))
+    end
 end
