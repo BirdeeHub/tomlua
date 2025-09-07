@@ -2,7 +2,7 @@ local upvals = {...}
 local opts = upvals[1]
 local is_array = upvals[2]
 
-local function to_escaped_toml_str(str)
+local function escape_toml_str(str)
     return ("\"%s\""):format(tostring(str):gsub("[\\\n\r\"\b\f\t]", function(c)
         if c == "\\" then
             return "\\\\"
@@ -22,9 +22,22 @@ local function to_escaped_toml_str(str)
     end))
 end
 
+local function escape_toml_key(str)
+    if str:find("^[A-Za-z0-9_-]*$") ~= nil then
+        return str
+    else
+        return escape_toml_str(str)
+    end
+end
+
 return function(v)
     local inspect = require("inspect")
-    print(inspect(v), inspect(opts), to_escaped_toml_str [[dsahdash"
+    print(inspect(v), inspect(opts), escape_toml_str [[dsahdash"
+    dsadsa\ \t \b
+    dsadsa'
+    """
+    '''
+    adsdasdas]], escape_toml_key [[1ab12-23_1sAAGG]], escape_toml_key [[dsahdash"
     dsadsa\ \t \b
     dsadsa'
     """
