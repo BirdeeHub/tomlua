@@ -141,7 +141,7 @@ int embed_run(lua_State *L) {
 }
 
 int embed_add(lua_State *L) {
-    if (!lua_isstring(L, 1)) return luaL_error(L, "invalid first argument to embed.add!\nExpected string `name` (used for debug info when calling luaL_loadbuffer)");
+    if (!lua_isstring(L, 1)) return luaL_error(L, "invalid first argument to embed.add!\nExpected string `name` (used for output table and for debug info when calling luaL_loadbuffer)");
     if (!lua_isstring(L, 2)) return luaL_error(L, "invalid second argument to embed.add!\nExpected string `input_path`");
 #if LUA_VERSION_NUM == 501
     size_t len = lua_objlen(L, lua_upvalueindex(1));
@@ -165,7 +165,7 @@ int embed_new(lua_State *L) {
                 "Useage: local embed = require('embed_lua')(output_header_file, c_func_name, header_name)\n"
                 "embed.add('file1', 'path/to/file1.lua')\n"
                 "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
-                "embed.run()"
+                "embed.run() -- or run(true) for directly on the stack instead of table, first on top"
             );
         };
     }
