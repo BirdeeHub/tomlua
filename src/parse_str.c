@@ -22,45 +22,12 @@ static uint32_t hex_to_codepoint(const char src[], int len) {
     return cp;
 }
 
-static bool utf8_encode(uint32_t cp, str_buf *dst) {
-    char buf[4];
-    size_t len = 0;
-
-    if (cp <= 0x7F) {
-        buf[0] = cp & 0x7F;
-        len = 1;
-    } else if (cp <= 0x7FF) {
-        buf[0] = 0xC0 | ((cp >> 6) & 0x1F);
-        buf[1] = 0x80 | (cp & 0x3F);
-        len = 2;
-    } else if (cp <= 0xFFFF) {
-        buf[0] = 0xE0 | ((cp >> 12) & 0x0F);
-        buf[1] = 0x80 | ((cp >> 6) & 0x3F);
-        buf[2] = 0x80 | (cp & 0x3F);
-        len = 3;
-    } else if (cp <= 0x10FFFF) {
-        buf[0] = 0xF0 | ((cp >> 18) & 0x07);
-        buf[1] = 0x80 | ((cp >> 12) & 0x3F);
-        buf[2] = 0x80 | ((cp >> 6) & 0x3F);
-        buf[3] = 0x80 | (cp & 0x3F);
-        len = 4;
-    } else {
-        // replacement character U+FFFD
-        buf[0] = (char)0xEF;
-        buf[1] = (char)0xBF;
-        buf[2] = (char)0xBD;
-        len = 3;
-    }
-
-    return buf_push_str(dst, buf, len);
-}
-
 static bool push_unicode(lua_State *L, str_buf *dst, char src[], int len) {
     for (size_t i = 0; i < len; i++) {
         if (!is_hex_char(src[i])) return set_err_upval(L, false, 33, "unexpected unicode specifier char");
     }
     uint32_t cp = hex_to_codepoint(src, len);
-    if (!utf8_encode(cp, dst)) return set_err_upval(L, false, 3, "OOM");
+    if (!buf_push_utf8(dst, cp)) return set_err_upval(L, false, 3, "OOM");
     return true;
 }
 

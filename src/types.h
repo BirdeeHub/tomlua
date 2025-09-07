@@ -70,6 +70,10 @@ typedef struct {
     bool ok;
     char v;
 } iter_result;
+typedef struct {
+    bool ok;
+    uint32_t v;
+} iter_utf8_result;
 
 typedef struct {
     bool strict;
@@ -338,6 +342,82 @@ static inline iter_result iter_peek(str_iter *iter) {
     res.v = iter->buf[iter->pos];
     res.ok = true;
     return res;
+}
+
+static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
+    iter_utf8_result res = { .ok = false, .v = 0 };
+    if (!iter || !iter->buf || iter->pos >= iter->len) {
+        return res;
+    }
+
+    const unsigned char *s = (const unsigned char *)iter->buf + iter->pos;
+    size_t remaining = iter->len - iter->pos;
+
+    unsigned char c = s[0];
+    uint32_t cp;
+    size_t nbytes;
+
+    if (c < 0x80) {
+        cp = c;
+        nbytes = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+        if (remaining < 2 || (s[1] & 0xC0) != 0x80) return res;
+        cp = ((c & 0x1F) << 6) | (s[1] & 0x3F);
+        nbytes = 2;
+        if (cp < 0x80) return res; // overlong
+    } else if ((c & 0xF0) == 0xE0) {
+        if (remaining < 3 || (s[1] & 0xC0) != 0x80 || (s[2] & 0xC0) != 0x80) return res;
+        cp = ((c & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F);
+        nbytes = 3;
+        if (cp < 0x800) return res; // overlong
+    } else if ((c & 0xF8) == 0xF0) {
+        if (remaining < 4 || (s[1] & 0xC0) != 0x80 || (s[2] & 0xC0) != 0x80 || (s[3] & 0xC0) != 0x80) return res;
+        cp = ((c & 0x07) << 18) | ((s[1] & 0x3F) << 12) |
+             ((s[2] & 0x3F) << 6) | (s[3] & 0x3F);
+        nbytes = 4;
+        if (cp < 0x10000 || cp > 0x10FFFF) return res; // overlong or out of range
+    } else {
+        return res; // invalid first byte
+    }
+
+    iter->pos += nbytes;
+    res.ok = true;
+    res.v = cp;
+    return res;
+}
+
+
+static bool buf_push_utf8(str_buf *dst, uint32_t cp) {
+    char buf[4];
+    size_t len = 0;
+
+    if (cp <= 0x7F) {
+        buf[0] = cp & 0x7F;
+        len = 1;
+    } else if (cp <= 0x7FF) {
+        buf[0] = 0xC0 | ((cp >> 6) & 0x1F);
+        buf[1] = 0x80 | (cp & 0x3F);
+        len = 2;
+    } else if (cp <= 0xFFFF) {
+        buf[0] = 0xE0 | ((cp >> 12) & 0x0F);
+        buf[1] = 0x80 | ((cp >> 6) & 0x3F);
+        buf[2] = 0x80 | (cp & 0x3F);
+        len = 3;
+    } else if (cp <= 0x10FFFF) {
+        buf[0] = 0xF0 | ((cp >> 18) & 0x07);
+        buf[1] = 0x80 | ((cp >> 12) & 0x3F);
+        buf[2] = 0x80 | ((cp >> 6) & 0x3F);
+        buf[3] = 0x80 | (cp & 0x3F);
+        len = 4;
+    } else {
+        // replacement character U+FFFD
+        buf[0] = (char)0xEF;
+        buf[1] = (char)0xBF;
+        buf[2] = (char)0xBD;
+        len = 3;
+    }
+
+    return buf_push_str(dst, buf, len);
 }
 
 #endif  // SRC_TYPES_H_

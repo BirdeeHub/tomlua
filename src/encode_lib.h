@@ -72,6 +72,22 @@ static int lbuf_push_str(lua_State *L) {
     return 0;
 }
 
+static int lbuf_push_simple_str(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    size_t len;
+    const char *str = lua_tolstring(L, 2, &len);
+    buf_push_str(buf, str, len);
+    return 0;
+}
+
+static int lbuf_push_key(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    size_t len;
+    const char *str = lua_tolstring(L, 2, &len);
+    buf_push_str(buf, str, len);
+    return 0;
+}
+
 static int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
