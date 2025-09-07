@@ -4,6 +4,7 @@
 
 #include <lua.h>
 #include <stddef.h>
+#include <stdio.h>
 #include "./types.h"
 
 #define STR(x) #x
