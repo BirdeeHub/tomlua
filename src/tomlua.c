@@ -8,16 +8,14 @@
 
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
-    bool strict = false;
-    bool int_keys = false;
-    bool enhanced_tables = false;
+    TomluaUserOpts opts = {0};
     if (lua_istable(L, 1)) {
         lua_getfield(L, 1, "strict");
-        strict = lua_toboolean(L, -1);
+        opts.strict = lua_toboolean(L, -1);
         lua_getfield(L, 1, "enhanced_tables");
-        enhanced_tables = lua_toboolean(L, -1);
+        opts.enhanced_tables = lua_toboolean(L, -1);
         lua_getfield(L, 1, "int_keys");
-        int_keys = lua_toboolean(L, -1);
+        opts.int_keys = lua_toboolean(L, -1);
         lua_pop(L, 3);
     }
 
@@ -29,17 +27,14 @@ static int tomlua_new(lua_State *L) {
     // upvalue 1: error object
     new_TMLErr(L);
     // upvalue 2: options
-    TomluaUserOpts *opts = lua_newuserdata(L, sizeof(TomluaUserOpts));
-    *opts = (TomluaUserOpts) {
-        .strict = strict,
-        .int_keys = int_keys,
-        .enhanced_tables = enhanced_tables
-    };
+    TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
+    *uopts = opts;
+    // upvalue 3: for storing output until it is returned
+    lua_pushnil(L);
 
-    lua_pushnil(L);                        // init upvalue 3 for storing defined values
-
-    if (strict) {
-        lua_pushnil(L);                        // init upvalue 4 for uniquness bookkeeping
+    if (opts.strict) {
+        // upvalue 4: for uniquness bookkeeping
+        lua_pushnil(L);
         lua_pushcclosure(L, tomlua_decode, 4);
         lua_setfield(L, 1, "decode");
     } else {
