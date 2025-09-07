@@ -261,12 +261,12 @@ static inline str_buf new_buf_from_str(const char *str, size_t len) {
     if (!tmp) {
         return ((str_buf) {0});
     }
-    str_buf buf;
-    buf.data = tmp;
-    buf.cap = cap;
-    buf.len = len;
-    memcpy(buf.data, str, len);
-    return buf;
+    memcpy(tmp, str, len);
+    return ((str_buf) {
+        .data = tmp,
+        .cap = cap,
+        .len = len
+    });
 }
 
 static inline bool buf_push(str_buf *buf, char c) {
