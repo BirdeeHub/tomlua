@@ -168,17 +168,23 @@ static int embed_new(lua_State *L) {
         int type = lua_type(L, i);
         if (i == 3 && type != LUA_TNIL && type != LUA_TSTRING) {
             return luaL_error(L, "invalid argument #%d, expected string or nil.\n%s", i,
-                "Useage:\nlocal embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+                "Useage:\n"
+                "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+                "-- if header_name is nil, it will not be made into a header file\n"
                 "embed.add('file1', 'path/to/file1.lua')\n"
                 "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
-                "embed.run() -- or run(true) for directly on the stack instead of table, first on top"
+                "embed.run()\n"
+                "-- or run(true) for returning directly on the stack instead of table, first on top\n"
             );
         } else if (type != LUA_TSTRING) {
             return luaL_error(L, "invalid argument #%d, expected string.\n%s", i,
-                "Useage: local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+                "Useage:\n"
+                "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+                "-- if header_name is nil, it will not be made into a header file\n"
                 "embed.add('file1', 'path/to/file1.lua')\n"
                 "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
-                "embed.run() -- or run(true) for directly on the stack instead of table, first on top"
+                "embed.run()\n"
+                "-- or run(true) for returning directly on the stack instead of table, first on top\n"
             );
         };
     }
