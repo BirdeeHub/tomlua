@@ -118,7 +118,7 @@ static int lbuf_push_simple_str(lua_State *L) {
 }
 
 // TODO: make this push an escaped toml key (varargs, don't push =)
-static int lbuf_push_key(lua_State *L) {
+static int lbuf_push_keys(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     size_t len;
     const char *str = lua_tolstring(L, 2, &len);
@@ -130,6 +130,10 @@ static int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
     lua_setfield(L, -2, "push_str");
+    lua_pushcfunction(L, lbuf_push_simple_str);
+    lua_setfield(L, -2, "push_esc_simple");
+    lua_pushcfunction(L, lbuf_push_keys);
+    lua_setfield(L, -2, "push_keys");
     return 1;
 }
 
