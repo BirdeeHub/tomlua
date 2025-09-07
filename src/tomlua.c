@@ -47,7 +47,6 @@ static int tomlua_new(lua_State *L) {
 }
 
 int luaopen_tomlua(lua_State *L) {
-    if (sizeof(lua_Integer) < 8) return luaL_error(L, "tomlua requires Lua integers to be 64-bit");
     lua_pushcfunction(L, tomlua_new);
     return 1;
 }
