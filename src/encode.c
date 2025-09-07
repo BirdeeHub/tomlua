@@ -131,8 +131,7 @@ static inline bool buf_push_esc_key(lua_State *L, str_buf *buf, str_iter *iter) 
 static inline int lbuf_push_keys(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     str_iter src = lua_str_to_iter(L, 2);
-    if (!buf_push_esc_key(L, buf, &src)) {
-    }
+    buf_push_esc_key(L, buf, &src);
     return 0;
 }
 
