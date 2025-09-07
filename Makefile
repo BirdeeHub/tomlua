@@ -17,21 +17,45 @@ SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/parse_str.c \
                 $(SRC)/src/decode.c
 
-all: build test
+check_lua_incdir = \
+	@if [ -z "$(LUA_INCDIR)" ]; then \
+		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
+		false; \
+	fi
 
-test: $(SRC)/src/* $(SRC)/pkg/* $(TESTDIR)/*
+check_so_was_built = \
 	@if [ ! -f "$(DESTDIR)/tomlua.so" ]; then \
 		echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
 		false; \
 	fi
+
+all: build test
+
+embedder: $(EMBEDDER_SRC)
+	$(check_lua_incdir)
+	@mkdir -p $(TEMP_DIR)
+	$(CC) $(CFLAGS) -o "$(EMBEDDER)" "$(EMBEDDER_SRC)"
+
+embed: embedder $(SRC)/src/encode.lua $(SRC)/pkg/embed.lua
+	@mkdir -p $(TEMP_DIR)
+	$(LUA) $(SRC)/pkg/embed.lua "$(EMBEDDER)" "$(SRC)/src" "$(EMBEDDED_LUA)"
+
+build: $(SRC)/src/* embed
+	$(check_lua_incdir)
+	@mkdir -p $(DESTDIR)
+	$(CC) $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS)
+
+bear:
+	$(BEAR) -- $(CC) -### $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
+	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
+
+test: $(SRC)/src/* $(SRC)/pkg/* $(TESTDIR)/*
+	$(check_so_was_built)
 	$(LUA) "$(TESTDIR)/init.lua" -- "$(TESTDIR)" "$(DESTDIR)"
 
 install:
 ifdef LIBDIR
-	@if [ ! -f "$(DESTDIR)/tomlua.so" ]; then \
-		echo "Error: $(DESTDIR)/tomlua.so not built. Run make build first."; \
-		false; \
-	fi
+	$(check_so_was_built)
 	@if [ -d "$(LIBDIR)" ]; then \
 		cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/"; \
 		echo "Installed to $(LIBDIR)"; \
@@ -42,30 +66,6 @@ ifdef LIBDIR
 else
 	@echo "LIBDIR not set, skipping install"
 endif
-
-embedder: $(EMBEDDER_SRC)
-	@if [ -z "$(LUA_INCDIR)" ]; then \
-		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
-		false; \
-	fi
-	@mkdir -p $(TEMP_DIR)
-	$(CC) $(CFLAGS) -o "$(EMBEDDER)" "$(EMBEDDER_SRC)"
-
-embed: embedder $(SRC)/src/encode.lua $(SRC)/pkg/embed.lua
-	@mkdir -p $(TEMP_DIR)
-	$(LUA) $(SRC)/pkg/embed.lua "$(EMBEDDER)" "$(SRC)/src" "$(EMBEDDED_LUA)"
-
-build: $(SRC)/src/* embed
-	@if [ -z "$(LUA_INCDIR)" ]; then \
-		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
-		false; \
-	fi
-	@mkdir -p $(DESTDIR)
-	$(CC) $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS)
-
-bear:
-	$(BEAR) -- $(CC) -### $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
-	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
 clean:
 	rm -rf $(DESTDIR) $(TEMP_DIR) compile_commands.json
