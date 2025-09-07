@@ -47,7 +47,7 @@ static int tomlua_new(lua_State *L) {
     lua_settop(L, 1);
     lua_newtable(L); // module table
     lua_insert(L, 1);
-    tomlua_types(L);
+    lua_pushvalue(L, lua_upvalueindex(1));
     push_encode(L, 2, 3);
     lua_setfield(L, 1, "encode");
     lua_setfield(L, 1, "types");
@@ -75,6 +75,7 @@ static int tomlua_new(lua_State *L) {
 }
 
 int luaopen_tomlua(lua_State *L) {
-    lua_pushcfunction(L, tomlua_new);
+    tomlua_types(L);
+    lua_pushcclosure(L, tomlua_new, 1);
     return 1;
 }
