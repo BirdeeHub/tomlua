@@ -63,17 +63,18 @@ local str, err = tomlua.encode(some_table) -- with options to control some emit 
 ```
 
 ```c
+
 enum ValueType {
-    VALUE_STRING, // lua string
-    VALUE_INTEGER, // lua number
-    VALUE_FLOAT, // lua number
-    VALUE_BOOL, // lua bool
-    VALUE_ARRAY, // lua table
-    VALUE_TABLE, // lua table
-    LOCAL_DATE, // string for now
-    LOCAL_TIME, // string for now
-    LOCAL_DATETIME, // string for now
-    OFFSET_DATETIME, // string for now
+    TOML_STRING,  // lua string
+    TOML_INTEGER,  // lua number
+    TOML_FLOAT,  // lua number
+    TOML_BOOL,  // lua bool
+    TOML_ARRAY,  // lua table
+    TOML_TABLE,  // lua table
+    TOML_LOCAL_DATE,  // string for now
+    TOML_LOCAL_TIME,  // string for now
+    TOML_LOCAL_DATETIME,  // string for now
+    TOML_OFFSET_DATETIME,  // string for now
 };
 ```
 
