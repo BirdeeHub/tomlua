@@ -110,7 +110,7 @@ static int lbuf_push_multi_str(lua_State *L) {
     return 0;
 }
 
-// TODO: make this push an escaped simple string
+// TODO: make this push an escaped "simple" string
 static int lbuf_push_simple_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     size_t len;
