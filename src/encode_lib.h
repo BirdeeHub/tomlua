@@ -29,48 +29,51 @@ static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
     return TOML_UTI;
 }
 
-static int is_lua_array(lua_State *L) {
-    if (!lua_istable(L, 1)) {
-        lua_settop(L, 0);
-        lua_pushboolean(L, false);
-        return 1;
+static bool is_lua_array(lua_State *L, int idx) {
+    int old_top = lua_gettop(L);
+    if (!lua_istable(L, idx)) {
+        lua_settop(L, old_top);
+        return false;
     }
-    switch (get_meta_toml_type(L, 1)) {
+    switch (get_meta_toml_type(L, idx)) {
         case TOML_ARRAY: {
-            lua_settop(L, 0);
-            lua_pushboolean(L, true);
-            return 1;
+            lua_settop(L, old_top);
+            return true;
         }
         case TOML_TABLE: {
-            lua_settop(L, 0);
-            lua_pushboolean(L, false);
-            return 1;
+            lua_settop(L, old_top);
+            return false;
         }
         default: break;
     }
-    bool is_array = true;
     int count = 0;
     lua_Number highest_int_key = 0;
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
-    while (lua_next(L, 1) != 0) {
+    while (lua_next(L, idx) != 0) {
         // now at stack: key value
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
         if (lua_isnumber(L, -1)) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != (lua_Number)(int64_t)(key)) {
-                is_array = false;
-                break;
+                lua_settop(L, old_top);
+                return false;
             }
             count++;
             if (key > highest_int_key) highest_int_key = key;
         } else {
-            is_array = false;
-            break;
+            lua_settop(L, old_top);
+            return false;
         }
     }
-    if (highest_int_key != count || count == 0) is_array = false;
-    lua_settop(L, 0);
-    lua_pushboolean(L, is_array);
+    lua_settop(L, old_top);
+    if (highest_int_key != count || count == 0) {
+        return false;
+    }
+    return true;
+}
+
+static int lis_lua_array(lua_State *L) {
+    lua_pushboolean(L, is_lua_array(L, 1));
     return 1;
 }
 
@@ -184,7 +187,7 @@ static inline void push_encode(lua_State *L, int opts_idx, int types_idx) {
     push_embedded_encode(L);
     lua_pushvalue(L, opts_idx);
     lua_newtable(L);
-    lua_pushcfunction(L, is_lua_array);
+    lua_pushcfunction(L, lis_lua_array);
     lua_setfield(L, -2, "is_array");
     lua_pushcfunction(L, lbuf_new);
     lua_setfield(L, -2, "new_buf");
