@@ -26,7 +26,7 @@ static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
         }
         lua_pop(L, 1);
     }
-    return TOML_UTI;
+    return TOML_UNTYPED;
 }
 
 static bool is_lua_array(lua_State *L, int idx) {

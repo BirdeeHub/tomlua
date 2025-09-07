@@ -64,7 +64,7 @@ local str, err = tomlua.encode(some_table) -- with options to control some emit 
 
 ```c
 enum TomlType {
-    TOML_UTI,  // Untyped TOML Item
+    TOML_UNTYPED,  // Untyped TOML Item
     TOML_STRING,  // lua string
     TOML_STRING_MULTI,  // lua string
     TOML_INTEGER,  // lua number

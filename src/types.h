@@ -16,7 +16,7 @@ typedef uint8_t bool;
 #endif
 
 typedef enum {
-    TOML_UTI,  // Untyped TOML Item
+    TOML_UNTYPED,  // Untyped TOML Item
     TOML_STRING,  // lua string
     TOML_STRING_MULTI,  // lua string
     TOML_INTEGER,  // lua number
@@ -28,10 +28,28 @@ typedef enum {
     TOML_LOCAL_TIME,  // string for now
     TOML_LOCAL_DATETIME,  // string for now
     TOML_OFFSET_DATETIME,  // string for now
+    TOML_MAX_TYPES  // contains the length of this enum
 } TomlType;
 
 static inline bool is_valid_toml_type(lua_Number t) {
-    return (t >= 0 && t <= 11 && t == (lua_Number)(int64_t)t);
+    return (t >= 0 && t < TOML_MAX_TYPES && t == (lua_Number)(int64_t)t);
+}
+
+static inline char *toml_type_to_lua_name(int t) {
+    switch (t) {
+        case TOML_STRING: return "STRING"; break;
+        case TOML_STRING_MULTI: return "STRING_MULTI"; break;
+        case TOML_INTEGER: return "INTEGER"; break;
+        case TOML_FLOAT: return "FLOAT"; break;
+        case TOML_BOOL: return "BOOL"; break;
+        case TOML_ARRAY: return "ARRAY"; break;
+        case TOML_TABLE: return "TABLE"; break;
+        case TOML_LOCAL_DATE: return "LOCAL_DATE"; break;
+        case TOML_LOCAL_TIME: return "LOCAL_TIME"; break;
+        case TOML_LOCAL_DATETIME: return "LOCAL_DATETIME"; break;
+        case TOML_OFFSET_DATETIME: return "OFFSET_DATETIME"; break;
+        default: return "UNTYPED";
+    }
 }
 
 // TODO: delete this, just for debugging
