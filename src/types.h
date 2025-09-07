@@ -386,7 +386,6 @@ static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
     return res;
 }
 
-
 static bool buf_push_utf8(str_buf *dst, uint32_t cp) {
     char buf[4];
     size_t len = 0;
