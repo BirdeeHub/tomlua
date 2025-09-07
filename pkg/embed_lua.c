@@ -150,7 +150,10 @@ static int embed_run(lua_State *L) {
 }
 
 static int embed_add(lua_State *L) {
-    if (!lua_isstring(L, 1)) return luaL_error(L, "invalid first argument to embed.add!\nExpected string `name` (used for output table and for debug info when calling luaL_loadbuffer)");
+    if (!lua_isstring(L, 1)) return luaL_error(L,
+        "invalid first argument to embed.add!\n"
+        "Expected string `name` (used for output table and for debug info when calling luaL_loadbuffer)"
+    );
     if (!lua_isstring(L, 2)) return luaL_error(L, "invalid second argument to embed.add!\nExpected string `input_path`");
     size_t len = lua_arraylen(L, lua_upvalueindex(1));
     lua_newtable(L);
