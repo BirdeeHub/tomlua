@@ -149,7 +149,7 @@ static inline int lbuf_index(lua_State *L) {
 
 static inline int lbuf_gc(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
-    if (buf->cap) {
+    if (buf->data) {
         free(buf->data);
         buf->data = NULL;
     }
