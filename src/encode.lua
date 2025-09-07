@@ -32,15 +32,21 @@ end
 
 return function(v)
     local inspect = require("inspect")
-    print(inspect(v), inspect(opts), escape_toml_str [[dsahdash"
-    dsadsa\ \t \b
-    dsadsa'
-    """
-    '''
-    adsdasdas]], escape_toml_key [[1ab12-23_1sAAGG]], escape_toml_key [[dsahdash"
-    dsadsa\ \t \b
-    dsadsa'
-    """
-    '''
-    adsdasdas]])
+    print(
+        inspect(v),
+        inspect(opts),
+        escape_toml_str [[dsahdash"
+        dsadsa\ \t \b
+        dsadsa'
+        """
+        '''
+        adsdasdas]],
+        escape_toml_key [[1ab12-23_1sAAGG]],
+        escape_toml_key [[dsahdash"
+        dsadsa\ \t \b
+        dsadsa'
+        """
+        '''
+        adsdasdas]]
+    )
 end
