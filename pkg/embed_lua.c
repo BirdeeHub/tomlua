@@ -1,8 +1,17 @@
+// Copyright 2025 Birdee
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
+
+static inline size_t lua_arraylen(lua_State *L, int idx) {
+#if LUA_VERSION_NUM == 501
+    return lua_objlen(L, idx);
+#else
+    return lua_rawlen(L, idx);
+#endif
+}
 
 typedef struct {
     size_t len;
@@ -65,11 +74,7 @@ static int embed_run(lua_State *L) {
     const char *c_func_name = lua_tostring(L, lua_upvalueindex(2));
     const char *header_name = lua_tostring(L, lua_upvalueindex(3));
 
-#if LUA_VERSION_NUM == 501
-    size_t rlen = lua_objlen(L, lua_upvalueindex(4));
-#else
-    size_t rlen = lua_rawlen(L, lua_upvalueindex(4));
-#endif
+    size_t num_inputs = lua_arraylen(L, lua_upvalueindex(4));
 
     embed_buf buf = new_embed_buf();
     FILE *out = fopen(output_file, "wb");
@@ -83,7 +88,7 @@ static int embed_run(lua_State *L) {
         fprintf(out, "  int out_table_idx = lua_gettop(L);\n");
     }
 
-    for (size_t cidx = rlen; cidx > 0; cidx--) {
+    for (size_t cidx = num_inputs; cidx > 0; cidx--) {
         lua_rawgeti(L, lua_upvalueindex(4), cidx);
         lua_rawgeti(L, -1, 1);
         const char *f_name = lua_tostring(L, -1);
@@ -129,7 +134,7 @@ static int embed_run(lua_State *L) {
     }
 
     if (output_to_stack) {
-        fprintf(out, "  return %zu;\n", rlen);
+        fprintf(out, "  return %zu;\n", num_inputs);
     } else {
         fprintf(out, "  return 1;\n");
     }
@@ -143,11 +148,7 @@ static int embed_run(lua_State *L) {
 static int embed_add(lua_State *L) {
     if (!lua_isstring(L, 1)) return luaL_error(L, "invalid first argument to embed.add!\nExpected string `name` (used for output table and for debug info when calling luaL_loadbuffer)");
     if (!lua_isstring(L, 2)) return luaL_error(L, "invalid second argument to embed.add!\nExpected string `input_path`");
-#if LUA_VERSION_NUM == 501
-    size_t len = lua_objlen(L, lua_upvalueindex(1));
-#else
-    size_t len = lua_rawlen(L, lua_upvalueindex(1));
-#endif
+    size_t len = lua_arraylen(L, lua_upvalueindex(1));
     lua_newtable(L);
     lua_pushvalue(L, 1);
     lua_rawseti(L, -2, 1);

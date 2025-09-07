@@ -1,3 +1,4 @@
+// Copyright 2025 Birdee
 #include <lua.h>
 #include <lauxlib.h>
 #include <stddef.h>

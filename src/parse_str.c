@@ -1,3 +1,4 @@
+// Copyright 2025 Birdee
 #include <stdint.h>
 #include "types.h"
 

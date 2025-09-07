@@ -1,3 +1,4 @@
+// Copyright 2025 Birdee
 #ifndef SRC_OUTPUT_TABLE_LIB_H_
 #define SRC_OUTPUT_TABLE_LIB_H_
 
@@ -38,11 +39,7 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
         if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 37, "target of array heading isn't a table");
         }
-#if LUA_VERSION_NUM == 501
-        size_t len = lua_objlen(L, -1);
-#else
-        size_t len = lua_rawlen(L, -1);
-#endif
+        size_t len = lua_arraylen(L, -1);
         // append new table at len+1
         lua_newtable(L);               // new element
         lua_pushinteger(L, len + 1);
@@ -197,11 +194,7 @@ static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_typ
         if (!lua_istable(L, -1)) {
             return set_err_upval(L, false, 37, "target of array heading isn't a table");
         }
-#if LUA_VERSION_NUM == 501
-        size_t len = lua_objlen(L, -1);
-#else
-        size_t len = lua_rawlen(L, -1);
-#endif
+        size_t len = lua_arraylen(L, -1);
         // append new table at len+1
         lua_newtable(L);               // new element
         lua_pushinteger(L, len + 1);

@@ -47,6 +47,14 @@ static inline bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
+static inline size_t lua_arraylen(lua_State *L, int idx) {
+#if LUA_VERSION_NUM == 501
+    return lua_objlen(L, idx);
+#else
+    return lua_rawlen(L, idx);
+#endif
+}
+
 typedef struct {
     size_t len;
     size_t cap;
