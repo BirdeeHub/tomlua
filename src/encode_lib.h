@@ -64,7 +64,7 @@ static int is_lua_array(lua_State *L) {
     return 1;
 }
 
-static inline bool buf_push_toml_escaped_utf8(str_buf *buf, uint32_t cp) {
+static inline bool buf_push_toml_escaped_utf8(str_buf *buf, uint32_t cp, bool esc_non_ascii) {
     switch (cp) {
         case '\\': return buf_push_str(buf, "\\\\", 2); break;
         case '"':  return buf_push_str(buf, "\\\"", 2); break;
@@ -74,16 +74,20 @@ static inline bool buf_push_toml_escaped_utf8(str_buf *buf, uint32_t cp) {
         case '\f': return buf_push_str(buf, "\\f", 2); break;
         case '\r': return buf_push_str(buf, "\\r", 2); break;
         default:
-            if (cp <= 0x7F) {
-                return buf_push(buf, cp);  // normal ASCII
-            } else if (cp <= 0xFFFF) {
-                char out[7];
-                int len = snprintf(out, sizeof(out), "\\u%04X", cp);
-                return buf_push_str(buf, out, len);
+            if (esc_non_ascii) {
+                if (cp <= 0x7F) {
+                    return buf_push(buf, cp);  // normal ASCII
+                } else if (cp <= 0xFFFF) {
+                    char out[7];
+                    int len = snprintf(out, sizeof(out), "\\u%04X", cp);
+                    return buf_push_str(buf, out, len);
+                } else {
+                    char out[11];
+                    int len = snprintf(out, sizeof(out), "\\U%08X", cp);
+                    return buf_push_str(buf, out, len);
+                }
             } else {
-                char out[11];
-                int len = snprintf(out, sizeof(out), "\\U%08X", cp);
-                return buf_push_str(buf, out, len);
+                return buf_push_utf8(buf, cp);
             }
     }
 }
