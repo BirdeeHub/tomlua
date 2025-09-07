@@ -365,7 +365,7 @@ static inline iter_result iter_peek(str_iter *iter) {
 }
 
 static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
-    iter_utf8_result res = { .ok = false, .v = 0 };
+    iter_utf8_result res = {0};
     if (!iter || !iter->buf || iter->pos >= iter->len) {
         return res;
     }
