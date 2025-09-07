@@ -171,11 +171,12 @@ static int lbuf_new(lua_State *L) {
 static inline void push_encode(lua_State *L, int opts_idx) {
     push_embedded_encode(L);
     lua_pushvalue(L, opts_idx);
-    lua_pushcfunction(L, is_lua_array);
     lua_newtable(L);
+    lua_pushcfunction(L, is_lua_array);
+    lua_setfield(L, -2, "is_array");
     lua_pushcfunction(L, lbuf_new);
     lua_setfield(L, -2, "new_buf");
-    lua_call(L, 3, 1);
+    lua_call(L, 2, 1);
 }
 
 #endif  // SRC_ENCODE_LIB_H_
