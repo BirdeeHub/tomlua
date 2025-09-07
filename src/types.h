@@ -47,6 +47,12 @@ static inline bool is_hex_char(char c) {
            (c >= 'a' && c <= 'f');
 }
 
+static inline bool is_hex_codepoint(uint32_t c) {
+    return (c >= '0' && c <= '9') ||
+           (c >= 'A' && c <= 'F') ||
+           (c >= 'a' && c <= 'f');
+}
+
 static inline size_t lua_arraylen(lua_State *L, int idx) {
 #if LUA_VERSION_NUM == 501
     return lua_objlen(L, idx);
