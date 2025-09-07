@@ -22,16 +22,15 @@ static int is_lua_array(lua_State *L) {
         return 1;
     }
 
-    // getmetatable(stack_top).array to allow overriding of representation
-    if (lua_getmetatable(L, 1)) {
-        // stack: ... table mt
-        lua_getfield(L, -1, "array");
-        if (!lua_isnil(L, -1)) {
-            if (lua_toboolean(L, -1)) {
+    // getmetatable(stack_top).toml_type to allow overriding of representation
+    if (luaL_getmetafield(L, 1, "toml_type")) {
+        if (lua_isnumber(L, -1)) {
+            lua_Number n = lua_tonumber(L, -1);
+            if (n == TOML_ARRAY) {
                 lua_settop(L, 0);
                 lua_pushboolean(L, true);
                 return 1;
-            } else {
+            } else if (n == TOML_TABLE) {
                 lua_settop(L, 0);
                 lua_pushboolean(L, false);
                 return 1;
@@ -168,7 +167,10 @@ static int lbuf_new(lua_State *L) {
     return 1;
 }
 
-static inline void push_encode(lua_State *L, int opts_idx) {
+static inline void push_encode(lua_State *L, int opts_idx, int types_idx) {
+    int top = lua_gettop(L);
+    opts_idx = absindex(top, opts_idx);
+    types_idx = absindex(top, types_idx);
     push_embedded_encode(L);
     lua_pushvalue(L, opts_idx);
     lua_newtable(L);
@@ -176,6 +178,8 @@ static inline void push_encode(lua_State *L, int opts_idx) {
     lua_setfield(L, -2, "is_array");
     lua_pushcfunction(L, lbuf_new);
     lua_setfield(L, -2, "new_buf");
+    lua_pushvalue(L, types_idx);
+    lua_setfield(L, -2, "types");
     lua_call(L, 2, 1);
 }
 

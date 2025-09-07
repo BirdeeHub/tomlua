@@ -15,6 +15,19 @@ typedef uint8_t bool;
 #define false 0
 #endif
 
+enum ValueType {
+    TOML_STRING,  // lua string
+    TOML_INTEGER,  // lua number
+    TOML_FLOAT,  // lua number
+    TOML_BOOL,  // lua bool
+    TOML_ARRAY,  // lua table
+    TOML_TABLE,  // lua table
+    TOML_LOCAL_DATE,  // string for now
+    TOML_LOCAL_TIME,  // string for now
+    TOML_LOCAL_DATETIME,  // string for now
+    TOML_OFFSET_DATETIME,  // string for now
+};
+
 // TODO: delete this, just for debugging
 #include <stdio.h>
 static void print_lua_stack(lua_State *L, const char *label) {

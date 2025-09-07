@@ -6,6 +6,31 @@
 #include "decode.h"
 #include "encode_lib.h"
 
+static int tomlua_types(lua_State *L) {
+    lua_newtable(L);
+    lua_pushnumber(L, TOML_STRING);
+    lua_setfield(L, -2, "TOML_STRING");
+    lua_pushnumber(L, TOML_INTEGER);
+    lua_setfield(L, -2, "TOML_INTEGER");
+    lua_pushnumber(L, TOML_FLOAT);
+    lua_setfield(L, -2, "TOML_FLOAT");
+    lua_pushnumber(L, TOML_BOOL);
+    lua_setfield(L, -2, "TOML_BOOL");
+    lua_pushnumber(L, TOML_ARRAY);
+    lua_setfield(L, -2, "TOML_ARRAY");
+    lua_pushnumber(L, TOML_TABLE);
+    lua_setfield(L, -2, "TOML_TABLE");
+    lua_pushnumber(L, TOML_LOCAL_DATE);
+    lua_setfield(L, -2, "TOML_LOCAL_DATE");
+    lua_pushnumber(L, TOML_LOCAL_TIME);
+    lua_setfield(L, -2, "TOML_LOCAL_TIME");
+    lua_pushnumber(L, TOML_LOCAL_DATETIME);
+    lua_setfield(L, -2, "TOML_LOCAL_DATETIME");
+    lua_pushnumber(L, TOML_OFFSET_DATETIME);
+    lua_setfield(L, -2, "TOML_OFFSET_DATETIME");
+    return 1;
+}
+
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     TomluaUserOpts opts = {0};
@@ -21,9 +46,12 @@ static int tomlua_new(lua_State *L) {
 
     lua_settop(L, 1);
     lua_newtable(L); // module table
-    push_encode(L, 1);
-    lua_remove(L, 1);
-    lua_setfield(L, -2, "encode");
+    lua_insert(L, 1);
+    tomlua_types(L);
+    push_encode(L, 2, 3);
+    lua_setfield(L, 1, "encode");
+    lua_setfield(L, 1, "types");
+    lua_settop(L, 1);
     // upvalue 1: error object
     new_TMLErr(L);
     // upvalue 2: options
