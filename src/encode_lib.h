@@ -64,7 +64,7 @@ static int is_lua_array(lua_State *L) {
     return 1;
 }
 
-static inline bool buf_push_toml_escaped(str_buf *buf, uint32_t c, bool esc_non_ascii) {
+static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc_non_ascii) {
     switch (c) {
         case '\\': return buf_push_str(buf, "\\\\", 2); break;
         case '"':  return buf_push_str(buf, "\\\"", 2); break;
