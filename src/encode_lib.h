@@ -72,11 +72,6 @@ static bool is_lua_array(lua_State *L, int idx) {
     return true;
 }
 
-static int lis_lua_array(lua_State *L) {
-    lua_pushboolean(L, is_lua_array(L, 1));
-    return 1;
-}
-
 // works for char or uint32_t
 static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc_non_ascii) {
     switch (c) {
@@ -177,6 +172,11 @@ static int lbuf_new(lua_State *L) {
         lua_setfield(L, -2, "__index");
     }
     lua_setmetatable(L, -2);
+    return 1;
+}
+
+static int lis_lua_array(lua_State *L) {
+    lua_pushboolean(L, is_lua_array(L, 1));
     return 1;
 }
 
