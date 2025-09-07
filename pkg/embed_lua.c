@@ -6,7 +6,7 @@
 
 typedef struct {
     size_t len;
-    size_t capacity;
+    size_t cap;
     unsigned char *data;
 } embed_buf;
 
@@ -14,7 +14,7 @@ static inline void free_embed_buf(embed_buf *buf) {
     if (buf) {
         if (buf->data) free(buf->data);
         buf->data = NULL;
-        buf->len = buf->capacity = 0;
+        buf->len = buf->cap = 0;
     }
 }
 
@@ -28,7 +28,7 @@ static inline void buf_soft_reset(embed_buf *buf) {
 static inline embed_buf new_embed_buf() {
     return ((embed_buf) {
         .len = 0,
-        .capacity = 16,
+        .cap = 16,
         .data = (unsigned char *)malloc(16 * sizeof(char))
     });
 }
@@ -36,15 +36,15 @@ static inline embed_buf new_embed_buf() {
 static inline int embed_buf_push_str(embed_buf *buf, const unsigned char *str, size_t len) {
     if (!buf || !str) return 0;
     size_t required_len = buf->len + len;
-    if (required_len > buf->capacity) {
-        size_t new_capacity = buf->capacity > 0 ? buf->capacity : 1;
+    if (required_len > buf->cap) {
+        size_t new_capacity = buf->cap > 0 ? buf->cap : 1;
         while (new_capacity < required_len) {
             new_capacity *= 2;
         }
         unsigned char *tmp = (unsigned char *)realloc(buf->data, new_capacity * sizeof(unsigned char));
         if (!tmp) return 0;
         buf->data = tmp;
-        buf->capacity = new_capacity;
+        buf->cap = new_capacity;
     }
 
     memcpy(buf->data + buf->len, str, len);

@@ -49,7 +49,7 @@ static inline bool is_hex_char(char c) {
 
 typedef struct {
     size_t len;
-    size_t capacity;
+    size_t cap;
     char *data;
 } str_buf;
 
@@ -216,7 +216,7 @@ static inline void free_str_buf(str_buf *buf) {
     if (buf) {
         if (buf->data) free(buf->data);
         buf->data = NULL;
-        buf->len = buf->capacity = 0;
+        buf->len = buf->cap = 0;
     }
 }
 
@@ -228,35 +228,37 @@ static inline void buf_soft_reset(str_buf *buf) {
 }
 
 static inline str_buf new_str_buf() {
-    return ((str_buf) {
+    str_buf res = (str_buf) {
         .len = 0,
-        .capacity = 16,
+        .cap = 16,
         .data = (char *)malloc(16 * sizeof(char))
-    });
+    };
+    if (!res.data) res.cap = 0;
+    return res;
 }
 
 static inline str_buf new_buf_from_str(const char *str, size_t len) {
     str_buf buf;
-    // set capacity to at least len, rounded up to power-of-2
+    // set cap to at least len, rounded up to power-of-2
     size_t cap = 16;
     while (cap < len) {
         cap *= 2;
     }
-    buf.capacity = cap;
+    buf.cap = cap;
     buf.len = len;
-    buf.data = (char *)malloc(buf.capacity * sizeof(char));
+    buf.data = (char *)malloc(buf.cap * sizeof(char));
     memcpy(buf.data, str, len);
     return buf;
 }
 
 static inline bool buf_push(str_buf *buf, char c) {
     if (!buf) return false;
-    if (buf->len >= buf->capacity) {
-        size_t new_capacity = buf->capacity > 0 ? buf->capacity * 2 : 1;
+    if (buf->len >= buf->cap) {
+        size_t new_capacity = buf->cap > 0 ? buf->cap * 2 : 1;
         char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
         if (!tmp) return false;
         buf->data = tmp;
-        buf->capacity = new_capacity;
+        buf->cap = new_capacity;
     }
     buf->data[buf->len++] = c;
     return true;
@@ -265,15 +267,15 @@ static inline bool buf_push(str_buf *buf, char c) {
 static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
     if (!buf || !str) return false;
     size_t required_len = buf->len + len;
-    if (required_len > buf->capacity) {
-        size_t new_capacity = buf->capacity > 0 ? buf->capacity : 1;
+    if (required_len > buf->cap) {
+        size_t new_capacity = buf->cap > 0 ? buf->cap : 1;
         while (new_capacity < required_len) {
             new_capacity *= 2;
         }
         char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
         if (!tmp) return false;
         buf->data = tmp;
-        buf->capacity = new_capacity;
+        buf->cap = new_capacity;
     }
 
     memcpy(buf->data + buf->len, str, len);

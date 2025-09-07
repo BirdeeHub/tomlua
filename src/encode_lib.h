@@ -81,11 +81,11 @@ static int lbuf_index(lua_State *L) {
 
 static int lbuf_gc(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomlStrBuf");
-    if (buf->capacity) {
+    if (buf->cap) {
         free(buf->data);
         buf->data = NULL;
     }
-    buf->capacity = buf->len = 0;
+    buf->cap = buf->len = 0;
     return 0;
 }
 
