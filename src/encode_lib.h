@@ -14,29 +14,39 @@
 #endif
 #include XSTR(EMBEDDED_LUA)
 
+// getmetatable(stack_top).toml_type to allow overriding of representation
+static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
+    if (luaL_getmetafield(L, idx, "toml_type")) {
+        if (lua_isnumber(L, -1)) {
+            lua_Number n = lua_tonumber(L, -1);
+            if (is_valid_toml_type(n)) {
+                lua_pop(L, 1);
+                return (TomlType)n;
+            }
+        }
+        lua_pop(L, 1);
+    }
+    return TOML_UTI;
+}
+
 static int is_lua_array(lua_State *L) {
-    // probably dont need this check:
     if (!lua_istable(L, 1)) {
         lua_settop(L, 0);
         lua_pushboolean(L, false);
         return 1;
     }
-
-    // getmetatable(stack_top).toml_type to allow overriding of representation
-    if (luaL_getmetafield(L, 1, "toml_type")) {
-        if (lua_isnumber(L, -1)) {
-            lua_Number n = lua_tonumber(L, -1);
-            if (n == TOML_ARRAY) {
-                lua_settop(L, 0);
-                lua_pushboolean(L, true);
-                return 1;
-            } else if (n == TOML_TABLE) {
-                lua_settop(L, 0);
-                lua_pushboolean(L, false);
-                return 1;
-            }
+    switch (get_meta_toml_type(L, 1)) {
+        case TOML_ARRAY: {
+            lua_settop(L, 0);
+            lua_pushboolean(L, true);
+            return 1;
         }
-        lua_settop(L, 1);
+        case TOML_TABLE: {
+            lua_settop(L, 0);
+            lua_pushboolean(L, false);
+            return 1;
+        }
+        default: break;
     }
     bool is_array = true;
     int count = 0;

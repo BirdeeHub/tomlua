@@ -15,7 +15,8 @@ typedef uint8_t bool;
 #define false 0
 #endif
 
-enum ValueType {
+typedef enum {
+    TOML_UTI,  // Untyped TOML Item
     TOML_STRING,  // lua string
     TOML_STRING_MULTI,  // lua string
     TOML_INTEGER,  // lua number
@@ -27,7 +28,11 @@ enum ValueType {
     TOML_LOCAL_TIME,  // string for now
     TOML_LOCAL_DATETIME,  // string for now
     TOML_OFFSET_DATETIME,  // string for now
-};
+} TomlType;
+
+static inline bool is_valid_toml_type(int t) {
+    return (t > 0 && t < 12);
+}
 
 // TODO: delete this, just for debugging
 #include <stdio.h>
