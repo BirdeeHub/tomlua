@@ -8,7 +8,7 @@ GREP         ?= grep
 CFLAGS       ?= -O3 -flto -finline-functions -Wl,-s
 
 EMBEDDED_LUA = $(TEMPDIR)/embedded.h
-CFLAGS       += -fPIC -shared -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -I"$(LUA_INCDIR)"
+CFLAGS       += -fPIC -shared -I"$(LUA_INCDIR)"
 TESTDIR      = $(SRC)/tests
 SRCS         = $(SRC)/src/tomlua.c \
                $(SRC)/src/parse_str.c \
@@ -55,7 +55,7 @@ build: $(SRC)/src/* embed
 		false; \
 	fi
 	@mkdir -p $(DESTDIR)
-	$(CC) $(CFLAGS) -o $(DESTDIR)/tomlua.so $(SRCS)
+	$(CC) $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS)
 
 bear:
 	$(BEAR) -- $(CC) -### $(CFLAGS) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
