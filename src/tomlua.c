@@ -30,9 +30,11 @@ static int tomlua_new(lua_State *L) {
     new_TMLErr(L);
     // upvalue 2: options
     TomluaUserOpts *opts = lua_newuserdata(L, sizeof(TomluaUserOpts));
-    opts->strict = strict;
-    opts->int_keys = int_keys;
-    opts->enhanced_tables = enhanced_tables;
+    *opts = (TomluaUserOpts) {
+        .strict = strict,
+        .int_keys = int_keys,
+        .enhanced_tables = enhanced_tables
+    };
 
     lua_pushnil(L);                        // init upvalue 3 for storing defined values
 
