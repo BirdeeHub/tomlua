@@ -3,6 +3,7 @@ local opts = upvals[1]
 local is_array = upvals[2]
 local tomlib = upvals[3]
 
+-- TODO: write this in C
 local function escape_toml_str(str)
     return ("\"%s\""):format(tostring(str):gsub("[\\\n\r\"\b\f\t]", function(c)
         if c == "\\" then
@@ -23,6 +24,7 @@ local function escape_toml_str(str)
     end))
 end
 
+-- TODO: write this in C
 local function escape_toml_key(str)
     if str:find("^[A-Za-z0-9_-]*$") ~= nil then
         return str
