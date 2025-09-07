@@ -5,13 +5,6 @@
 #include "./parse_str.h"
 #include "./types.h"
 
-static inline bool is_identifier_char(char c) {
-    return (c >= 'A' && c <= 'Z') ||
-           (c >= 'a' && c <= 'z') ||
-           (c >= '0' && c <= '9') ||
-           (c == '_') || (c == '-');
-}
-
 // consumes whitespace until end of whitespace, line, or file.
 // returns true if the end of the line or file was found
 // 0 for whitespace ending before end of line

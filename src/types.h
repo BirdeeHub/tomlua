@@ -53,6 +53,20 @@ static inline bool is_hex_utf8(uint32_t c) {
            (c >= 'a' && c <= 'f');
 }
 
+static inline bool is_identifier_char(char c) {
+    return (c >= 'A' && c <= 'Z') ||
+           (c >= 'a' && c <= 'z') ||
+           (c >= '0' && c <= '9') ||
+           (c == '_') || (c == '-');
+}
+
+static inline bool is_identifier_utf8(uint32_t c) {
+    return (c >= 'A' && c <= 'Z') ||
+           (c >= 'a' && c <= 'z') ||
+           (c >= '0' && c <= '9') ||
+           (c == '_') || (c == '-');
+}
+
 static inline size_t lua_arraylen(lua_State *L, int idx) {
 #if LUA_VERSION_NUM == 501
     return lua_objlen(L, idx);
@@ -392,7 +406,7 @@ static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
     return res;
 }
 
-static bool buf_push_utf8(str_buf *dst, uint32_t cp) {
+static inline bool buf_push_utf8(str_buf *dst, uint32_t cp) {
     char buf[4];
     size_t len = 0;
 
