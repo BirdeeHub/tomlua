@@ -14,6 +14,7 @@ return function(input)
         isarr1 = lib.is_array({}),
         isarr2 = lib.is_array({ 1, 2, 3, 4 }),
         isarr3 = lib.is_array({ a = 1, b = 2, c = 3, d = 4 }),
+        isarr4 = lib.is_array(setmetatable({ a = 1, b = 2, c = 3, d = 4 }, { toml_type = lib.types.ARRAY })),
     }
     for k, v in pairs(res) do
         print(k, ":", v)

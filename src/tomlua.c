@@ -9,29 +9,29 @@
 static int tomlua_types(lua_State *L) {
     lua_newtable(L);
     lua_pushnumber(L, TOML_UTI);
-    lua_setfield(L, -2, "TOML_UTI");
+    lua_setfield(L, -2, "UTI");
     lua_pushnumber(L, TOML_STRING);
-    lua_setfield(L, -2, "TOML_STRING");
+    lua_setfield(L, -2, "STRING");
     lua_pushnumber(L, TOML_STRING_MULTI);
-    lua_setfield(L, -2, "TOML_STRING_MULTI");
+    lua_setfield(L, -2, "STRING_MULTI");
     lua_pushnumber(L, TOML_INTEGER);
-    lua_setfield(L, -2, "TOML_INTEGER");
+    lua_setfield(L, -2, "INTEGER");
     lua_pushnumber(L, TOML_FLOAT);
-    lua_setfield(L, -2, "TOML_FLOAT");
+    lua_setfield(L, -2, "FLOAT");
     lua_pushnumber(L, TOML_BOOL);
-    lua_setfield(L, -2, "TOML_BOOL");
+    lua_setfield(L, -2, "BOOL");
     lua_pushnumber(L, TOML_ARRAY);
-    lua_setfield(L, -2, "TOML_ARRAY");
+    lua_setfield(L, -2, "ARRAY");
     lua_pushnumber(L, TOML_TABLE);
-    lua_setfield(L, -2, "TOML_TABLE");
+    lua_setfield(L, -2, "TABLE");
     lua_pushnumber(L, TOML_LOCAL_DATE);
-    lua_setfield(L, -2, "TOML_LOCAL_DATE");
+    lua_setfield(L, -2, "LOCAL_DATE");
     lua_pushnumber(L, TOML_LOCAL_TIME);
-    lua_setfield(L, -2, "TOML_LOCAL_TIME");
+    lua_setfield(L, -2, "LOCAL_TIME");
     lua_pushnumber(L, TOML_LOCAL_DATETIME);
-    lua_setfield(L, -2, "TOML_LOCAL_DATETIME");
+    lua_setfield(L, -2, "LOCAL_DATETIME");
     lua_pushnumber(L, TOML_OFFSET_DATETIME);
-    lua_setfield(L, -2, "TOML_OFFSET_DATETIME");
+    lua_setfield(L, -2, "OFFSET_DATETIME");
     return 1;
 }
 
