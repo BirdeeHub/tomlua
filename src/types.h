@@ -257,15 +257,17 @@ static inline str_buf new_str_buf() {
 }
 
 static inline str_buf new_buf_from_str(const char *str, size_t len) {
-    str_buf buf;
     // set cap to at least len, rounded up to power-of-2
     size_t cap = 16;
-    while (cap < len) {
-        cap *= 2;
+    while (cap < len) cap *= 2;
+    char * tmp = (char *)malloc(cap * sizeof(char));
+    if (!tmp) {
+        return ((str_buf) {0});
     }
+    str_buf buf;
+    buf.data = tmp;
     buf.cap = cap;
     buf.len = len;
-    buf.data = (char *)malloc(buf.cap * sizeof(char));
     memcpy(buf.data, str, len);
     return buf;
 }
