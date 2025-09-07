@@ -48,10 +48,9 @@ static inline bool is_hex_char(char c) {
 }
 
 static inline bool is_hex_utf8(uint32_t c) {
-    return (c <= 0x7F) && (
-               (c >= '0' && c <= '9') ||
-               (c >= 'A' && c <= 'F') ||
-               (c >= 'a' && c <= 'f'));
+    return (c >= '0' && c <= '9') ||
+           (c >= 'A' && c <= 'F') ||
+           (c >= 'a' && c <= 'f');
 }
 
 static inline bool is_identifier_char(char c) {
@@ -62,11 +61,10 @@ static inline bool is_identifier_char(char c) {
 }
 
 static inline bool is_identifier_utf8(uint32_t c) {
-    return (c <= 0x7F) && (
-           (c >= 'A' && c <= 'Z') ||
+    return (c >= 'A' && c <= 'Z') ||
            (c >= 'a' && c <= 'z') ||
            (c >= '0' && c <= '9') ||
-           (c == '_') || (c == '-'));
+           (c == '_') || (c == '-');
 }
 
 static inline size_t lua_arraylen(lua_State *L, int idx) {
