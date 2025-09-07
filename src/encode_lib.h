@@ -96,6 +96,16 @@ static int lbuf_push_str(lua_State *L) {
     return 0;
 }
 
+// TODO: make this push an escaped """multiline""" string
+static int lbuf_push_multi_str(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    size_t len;
+    const char *str = lua_tolstring(L, 2, &len);
+    buf_push_str(buf, str, len);
+    return 0;
+}
+
+// TODO: make this push an escaped simple string
 static int lbuf_push_simple_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     size_t len;
@@ -104,6 +114,7 @@ static int lbuf_push_simple_str(lua_State *L) {
     return 0;
 }
 
+// TODO: make this push an escaped toml key (varargs)
 static int lbuf_push_key(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     size_t len;
