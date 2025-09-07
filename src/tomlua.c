@@ -27,8 +27,10 @@ static int tomlua_new(lua_State *L) {
     // upvalue 1: error object
     new_TMLErr(L);
     // upvalue 2: options
-    TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
-    *uopts = opts;
+    {
+        TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
+        *uopts = opts;
+    }
     // upvalue 3: for storing output until it is returned
     lua_pushnil(L);
 
