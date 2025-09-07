@@ -109,11 +109,13 @@ static int lbuf_push_str(lua_State *L) {
     return 0;
 }
 
-// TODO: make this push an escaped "simple" string to dst
+// TODO: make this better?
 static inline bool buf_push_esc_simple(str_buf *dst, str_iter *src) {
-    buf_push(dst, '"');
-    buf_push_str(dst, "TODO: escape simple string contents", 35);
-    buf_push(dst, '"');
+    if (!buf_push(dst, '"')) return false;
+    while (iter_peek(src).ok) {
+        if (!buf_push_toml_escaped_char(dst, iter_next(src).v, false)) return false;
+    }
+    if (!buf_push(dst, '"')) return false;
     return true;
 }
 
