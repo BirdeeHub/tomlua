@@ -33,6 +33,8 @@ local function escape_toml_key(str)
     end
 end
 
+-- use this for working with the headings and key = value
+-- expose a c push_heading, push_value, and push_key on your lua string buffer type
 return function(input)
     local inspect = require("inspect")
     print(inspect(input))
@@ -57,6 +59,6 @@ return function(input)
         adsdasdas]]
     }
     for k, v in pairs(res) do
-        print(inspect(k), inspect(v))
+        print(k, ":", v)
     end
 end
