@@ -308,6 +308,12 @@ static inline bool push_buf_to_lua_string(lua_State *L, const str_buf *buf) {
     return true;
 }
 
+static inline str_iter lua_str_to_iter(lua_State *L, int idx) {
+    str_iter res = {0};
+    res.buf = lua_tolstring(L, idx, &res.len);
+    return res;
+}
+
 static inline str_iter str_to_iter(const char *str, size_t len) {
     return ((str_iter) { .len = len, .pos = 0, .buf = str });
 }
