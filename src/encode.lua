@@ -35,6 +35,7 @@ end
 
 -- use this for working with the headings and key = value
 -- expose a c push_heading, push_value, and push_key on your lua string buffer type
+-- tostring and return the buffer 1 time at the end
 return function(input)
     local inspect = require("inspect")
     print(inspect(input))
