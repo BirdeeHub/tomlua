@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "types.h"
 #include "decode.h"
-#include "encode_lib.h"
+#include "encode.h"
 
 static int tomlua_types(lua_State *L) {
     lua_newtable(L);

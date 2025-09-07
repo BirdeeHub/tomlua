@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "types.h"
-#include "encode_lib.h"
+#include "encode.h"
 
 #define STR(x) #x
 #define XSTR(x) STR(x)

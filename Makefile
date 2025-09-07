@@ -16,7 +16,7 @@ TESTDIR      := $(SRC)/tests
 SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/parse_str.c \
                 $(SRC)/src/decode.c \
-                $(SRC)/src/encode_lib.c
+                $(SRC)/src/encode.c
 
 check_lua_incdir = \
 	@if [ -z "$(LUA_INCDIR)" ]; then \
