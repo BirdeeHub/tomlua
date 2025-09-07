@@ -107,7 +107,6 @@ static inline int lbuf_push_str(lua_State *L) {
     return 1;
 }
 
-// TODO: make this better?
 static inline bool buf_push_esc_simple(str_buf *dst, str_iter *src) {
     if (!buf_push(dst, '"')) return false;
     while (iter_peek(src).ok) {
