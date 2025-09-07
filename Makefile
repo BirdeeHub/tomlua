@@ -46,6 +46,7 @@ build: $(SRC)/src/* embed
 	$(CC) $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS)
 
 bear:
+	$(check_lua_incdir)
 	$(BEAR) -- $(CC) -### $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
