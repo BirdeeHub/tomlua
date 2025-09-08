@@ -26,7 +26,15 @@ testkey6 = [
     1, 2, 3, 4, 5,
 ]
 multi-line-double = """
-leading newline should be stripped! ""\" " '''
+leading newline should be stripped! ""\" " '''\
+
+
+
+
+
+
+
+And this should be on the same line!
 """
 multi-line-single = '''
 leading newline should be stripped! """ ' '' '
