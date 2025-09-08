@@ -15,8 +15,8 @@ return function(input)
         :push_keys("t4-_", [['\"
 tg\U000111115]], "t6")
         :push_str(" = ")
-        :push_esc_simple([[
-            test
+        :push_esc_multi([[
+            test "
             bleh'"""sss
         ]])
     local res = {

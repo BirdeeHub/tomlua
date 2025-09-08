@@ -73,13 +73,13 @@ static inline bool is_lua_array(lua_State *L, int idx) {
 // works for char or uint32_t
 static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc_non_ascii) {
     switch (c) {
-        case '\\': return buf_push_str(buf, "\\\\", 2); break;
         case '"':  return buf_push_str(buf, "\\\"", 2); break;
+        case '\n': return buf_push_str(buf, "\\n", 2); break;
+        case '\r': return buf_push_str(buf, "\\r", 2); break;
+        case '\\': return buf_push_str(buf, "\\\\", 2); break;
         case '\b': return buf_push_str(buf, "\\b", 2); break;
         case '\t': return buf_push_str(buf, "\\t", 2); break;
-        case '\n': return buf_push_str(buf, "\\n", 2); break;
         case '\f': return buf_push_str(buf, "\\f", 2); break;
-        case '\r': return buf_push_str(buf, "\\r", 2); break;
         default:
             if (c <= 0x7F) {
                 return buf_push(buf, c);  // normal ASCII
@@ -104,6 +104,38 @@ static inline int lbuf_push_str(lua_State *L) {
     size_t len;
     const char *str = lua_tolstring(L, 2, &len);
     if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+    lua_settop(L, 1);
+    return 1;
+}
+
+static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
+    if (!buf_push_str(dst, "\"\"\"", 3)) return false;
+    while (iter_peek(src).ok) {
+        char c = iter_peek(src).v;
+        if (iter_starts_with(src, "\r\n", 2)) {
+            iter_skip_n(src, 2);
+            if (!buf_push_str(dst, "\r\n", 2)) return false;
+        } else if (iter_starts_with(src, "\"\"\"", 3)) {
+            iter_skip_n(src, 3);
+            if (!buf_push_str(dst, "\"\"\\\"", 4)) return false;
+        } else if (c == '"') {
+            iter_skip(src);
+            if (!buf_push(dst, '"')) return false;
+        } else if (c == '\n') {
+            iter_skip(src);
+            if (!buf_push(dst, '\n')) return false;
+        } else {
+            if (!buf_push_toml_escaped_char(dst, iter_next(src).v, false)) return false;
+        }
+    }
+    if (!buf_push_str(dst, "\"\"\"", 3)) return false;
+    return true;
+}
+
+static inline int lbuf_push_multi_str(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_iter src = lua_str_to_iter(L, 2);
+    if (!buf_push_esc_multi(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
     lua_settop(L, 1);
     return 1;
 }
@@ -175,6 +207,8 @@ static inline int lbuf_index(lua_State *L) {
     lua_setfield(L, -2, "push_str");
     lua_pushcfunction(L, lbuf_push_simple_str);
     lua_setfield(L, -2, "push_esc_simple");
+    lua_pushcfunction(L, lbuf_push_multi_str);
+    lua_setfield(L, -2, "push_esc_multi");
     lua_pushcfunction(L, lbuf_push_keys);
     lua_setfield(L, -2, "push_keys");
     lua_pushcfunction(L, lbuf_reset);

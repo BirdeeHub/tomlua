@@ -25,6 +25,12 @@ testkey5 = 1.5
 testkey6 = [
     1, 2, 3, 4, 5,
 ]
+multi-line-double = """
+leading newline should be stripped! ""\" " '''
+"""
+multi-line-single = '''
+leading newline should be stripped! """ ' '' '
+'''
 
 # should fail on strict mode later at database heading
 # database.replica_backup = { host = "replica2.local", port = 5434 }
