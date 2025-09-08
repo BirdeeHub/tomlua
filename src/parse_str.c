@@ -40,8 +40,6 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
         if (c == '\\' && nextres.ok) {
             char next = iter_next(src).v;
             switch (next) {
-                // Yes, using strdup on OOM error is stupid.
-                // No, I do not want to find a way to track which of my errors are heap allocated for when I free them.
                 case 'b': if (!buf_push(dst, '\b')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 't': if (!buf_push(dst, '\t')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 'n': if (!buf_push(dst, '\n')) return set_err_upval(L, false, 3, "OOM"); break;
@@ -86,8 +84,6 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
         if (c == '\\' && nextres.ok) {
             char next = iter_next(src).v;
             switch (next) {
-                // Yes, using strdup on OOM error is stupid.
-                // No, I do not want to find a way to track which of my errors are heap allocated for when I free them.
                 case 'b': if (!buf_push(dst, '\b')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 't': if (!buf_push(dst, '\t')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 'n': if (!buf_push(dst, '\n')) return set_err_upval(L, false, 3, "OOM"); break;
