@@ -9,13 +9,13 @@ return function(input)
     local inspect = require("inspect")
     local buf = lib.new_buf()
         :push_keys("t1", "t2", "t3")
-        :push_str(" = ")
-        :push_esc_simple("test")
-        :push_str("\n")
+        :push(" = ")
+        :push_str("test")
+        :push("\n")
         :push_keys("t4-_", [['\"
 tg\U000111115]], "t6")
-        :push_str(" = ")
-        :push_esc_multi([[
+        :push(" = ")
+        :push_multi_str([[
             test "
             bleh'"""sss
         ]])

@@ -204,11 +204,11 @@ static inline int lbuf_reset(lua_State *L) {
 static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
-    lua_setfield(L, -2, "push_str");
+    lua_setfield(L, -2, "push");
     lua_pushcfunction(L, lbuf_push_simple_str);
-    lua_setfield(L, -2, "push_esc_simple");
+    lua_setfield(L, -2, "push_str");
     lua_pushcfunction(L, lbuf_push_multi_str);
-    lua_setfield(L, -2, "push_esc_multi");
+    lua_setfield(L, -2, "push_multi_str");
     lua_pushcfunction(L, lbuf_push_keys);
     lua_setfield(L, -2, "push_keys");
     lua_pushcfunction(L, lbuf_reset);
