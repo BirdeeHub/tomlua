@@ -12,7 +12,7 @@
 #endif
 #include XSTR(EMBEDDED_LUA)
 
-// getmetatable(stack_top).toml_type to allow overriding of representation
+// getmetatable(idx).toml_type to allow overriding of representation
 static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
     if (luaL_getmetafield(L, idx, "toml_type")) {
         if (lua_isnumber(L, -1)) {
@@ -120,17 +120,19 @@ static inline int is_str_or_buf(lua_State *L, int idx) {
 
 static inline int lbuf_push_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
-    int argtype = is_str_or_buf(L, 2);
-    if (!argtype) return luaL_error(L, "expected string or string buffer");
-    if (argtype == 1) {
-        size_t len;
-        const char *str = lua_tolstring(L, 2, &len);
-        if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
-        lua_settop(L, 1);
-    } else {
-        str_buf * arg = (str_buf *)lua_touserdata(L, 2);
-        if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
-        lua_settop(L, 1);
+    switch (is_str_or_buf(L, 2)) {
+        case 1: {
+            size_t len;
+            const char *str = lua_tolstring(L, 2, &len);
+            if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+            lua_settop(L, 1);
+        } break;
+        case 2: {
+            str_buf * arg = (str_buf *)lua_touserdata(L, 2);
+            if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
+            lua_settop(L, 1);
+        } break;
+        default: return luaL_error(L, "expected string or string buffer");
     }
     return 1;
 }
@@ -265,15 +267,15 @@ static inline int lbuf_push_sep(lua_State *L) {
     size_t total_len = 0;
     lstr_tmp tmp_res[tmp_len];
     for (int i = 3; i <= top; i++) {
-        int argtype = is_str_or_buf(L, i);
-        if (!argtype) return luaL_error(L, "expected string or string buffer");
         lstr_tmp v = {0};
-        if (argtype == 1) {
-            v.str = lua_tolstring(L, i, &v.len);
-        } else {
-            str_buf * arg = (str_buf *)lua_touserdata(L, i);
-            v.len = arg->len;
-            v.str = arg->data;
+        switch (is_str_or_buf(L, i)) {
+            case 1: v.str = lua_tolstring(L, i, &v.len); break;
+            case 2: {
+                str_buf * arg = (str_buf *)lua_touserdata(L, i);
+                v.len = arg->len;
+                v.str = arg->data;
+            } break;
+            default: return luaL_error(L, "expected string or string buffer");
         }
         total_len += v.len;
         tmp_res[pos++] = v;

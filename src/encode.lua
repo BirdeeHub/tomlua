@@ -7,7 +7,7 @@ local lib = upvals[2]
 -- tostring and return the buffer 1 time at the end
 return function(input)
     local inspect = require("inspect")
-    local buf = lib.new_buf()
+    local dst = lib.new_buf()
         :push_keys("t1", "t2", "t3")
         :push(" = ")
         :push_str("test")
@@ -32,15 +32,15 @@ tg\U000111115]], "t6")
         :push("\n")
         :push_num(0/0)
         :push("\n# testing push_sep:\n")
-        :push_sep(" : ", lib.new_buf():push("abcdefghijk"), "testa","testb","testc")
+        :push_sep(" : ", "testa", lib.new_buf():push("abcdefghijk"), "testb", "testc")
         :push(lib.new_buf():push("\n"):push("lmnop"))
         :push("\n")
     local res = {
         input = inspect(input),
         opts = inspect(opts),
         lib = inspect(lib),
-        buf = inspect(buf),
-        strbuf = buf,
+        buf = inspect(dst),
+        strbuf = dst,
         isarr1 = lib.is_array({}),
         isarr2 = lib.is_array({ 1, 2, 3, 4 }),
         isarr3 = lib.is_array({ a = 1, b = 2, c = 3, d = 4 }),
