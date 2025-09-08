@@ -222,6 +222,24 @@ static inline int lbuf_push_keys(lua_State *L) {
     return 1;
 }
 
+// 0 for neither, 1 for str, 2 for buf.
+static inline int is_str_or_buf(lua_State *L, int idx) {
+    int type = lua_type(L, idx);
+    if (type == LUA_TUSERDATA) {
+        if (lua_getmetatable(L, idx)) {
+            luaL_getmetatable(L, "LStrBuf");
+            if (lua_rawequal(L, -1, -2)) {
+                lua_pop(L, 2);
+                return 2;
+            }
+            lua_pop(L, 2);
+        }
+    } else if (type == LUA_TSTRING) {
+        return 1;
+    }
+    return 0;
+}
+
 typedef struct {
     size_t len;
     const char * str;
@@ -239,9 +257,16 @@ static inline int lbuf_push_sep(lua_State *L) {
     size_t total_len = 0;
     lstr_tmp tmp_res[tmp_len];
     for (int i = 3; i <= top; i++) {
-        if (!lua_isstring(L, i)) return luaL_error(L, "expected string");
+        int argtype = is_str_or_buf(L, i);
+        if (!argtype) return luaL_error(L, "expected string or string buffer");
         lstr_tmp v = {0};
-        v.str = lua_tolstring(L, i, &v.len);
+        if (argtype == 1) {
+            v.str = lua_tolstring(L, i, &v.len);
+        } else {
+            str_buf * arg = (str_buf *)lua_touserdata(L, i);
+            v.len = arg->len;
+            v.str = arg->data;
+        }
         total_len += v.len;
         tmp_res[pos++] = v;
         if (i != top) {
