@@ -82,11 +82,22 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
         char c = current.v;
         iter_result nextres = iter_peek(src);
         if (c == '\\' && nextres.ok) {
-            char next = iter_next(src).v;
+            if (iter_starts_with(src, "\r\n", 2)) {
+                iter_skip_n(src, 2);
+                int code = consume_whitespace_to_line(src);
+                while (code == 1) code = consume_whitespace_to_line(src);
+                continue;
+            };
+            char next = nextres.v;
             switch (next) {
                 case 'b': if (!buf_push(dst, '\b')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 't': if (!buf_push(dst, '\t')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 'n': if (!buf_push(dst, '\n')) return set_err_upval(L, false, 3, "OOM"); break;
+                case '\n': {
+                    iter_skip(src);
+                    int code = consume_whitespace_to_line(src);
+                    while (code == 1) code = consume_whitespace_to_line(src);
+                } break;
                 case 'f': if (!buf_push(dst, '\f')) return set_err_upval(L, false, 3, "OOM"); break;
                 case 'r': if (!buf_push(dst, '\r')) return set_err_upval(L, false, 3, "OOM"); break;
                 case '"': if (!buf_push(dst, '\"')) return set_err_upval(L, false, 3, "OOM"); break;
