@@ -103,7 +103,9 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
 // 0 for neither, 1 for str, 2 for buf.
 static inline int is_str_or_buf(lua_State *L, int idx) {
     int type = lua_type(L, idx);
-    if (type == LUA_TUSERDATA) {
+    if (type == LUA_TSTRING) {
+        return 1;
+    } else if (type == LUA_TUSERDATA) {
         if (lua_getmetatable(L, idx)) {
             luaL_getmetatable(L, "LStrBuf");
             if (lua_rawequal(L, -1, -2)) {
@@ -112,8 +114,6 @@ static inline int is_str_or_buf(lua_State *L, int idx) {
             }
             lua_pop(L, 2);
         }
-    } else if (type == LUA_TSTRING) {
-        return 1;
     }
     return 0;
 }
