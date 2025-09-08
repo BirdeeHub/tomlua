@@ -52,7 +52,7 @@ static inline bool is_lua_array(lua_State *L, int idx) {
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
         if (lua_isnumber(L, -1)) {
             lua_Number key = lua_tonumber(L, -1);
-            if (key < 1 || key != (lua_Number)(int64_t)(key)) {
+            if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
                 lua_settop(L, old_top);
                 return false;
             }

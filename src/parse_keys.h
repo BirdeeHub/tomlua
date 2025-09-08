@@ -42,7 +42,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
     }
     if (int_keys && non_string && lua_isnumber(L, -1)) {
         lua_Number n = lua_tonumber(L, -1);
-        if (n == (lua_Number)(int64_t)n) {
+        if (n == (lua_Number)(lua_Integer)n) {
             lua_pop(L, 1);
             lua_pushnumber(L, n);
         }

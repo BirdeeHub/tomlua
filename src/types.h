@@ -52,7 +52,7 @@ typedef enum {
 } TomlType;
 
 static inline bool is_valid_toml_type(lua_Number t) {
-    return (t >= 0 && t < TOML_MAX_TYPES && t == (lua_Number)(int64_t)t);
+    return (t >= 0 && t < TOML_MAX_TYPES && t == (lua_Number)(lua_Integer)t);
 }
 
 static inline const char *toml_type_to_lua_name(int t) {
