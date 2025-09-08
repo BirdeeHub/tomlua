@@ -270,7 +270,7 @@ static inline int lbuf_reset(lua_State *L) {
     return 1;
 }
 
-// TODO: make all of these also accept other string buffers
+// TODO: make some which also accept other string buffers
 static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
