@@ -222,6 +222,25 @@ static inline int lbuf_push_keys(lua_State *L) {
     return 1;
 }
 
+static inline int lbuf_push_sep(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    int top = lua_gettop(L);
+    if (!lua_isstring(L, 2)) return luaL_error(L, "expected string");
+    size_t seplen;
+    const char *sep = lua_tolstring(L, 2, &seplen);
+    for (int i = 3; i <= top; i++) {
+        if (!lua_isstring(L, i)) return luaL_error(L, "expected string");
+        size_t len;
+        const char *str = lua_tolstring(L, i, &len);
+        if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+        if (i != top) {
+            if (!buf_push_str(buf, sep, seplen)) return luaL_error(L, "failed to push separator");
+        }
+    }
+    lua_settop(L, 1);
+    return 1;
+}
+
 static inline int lbuf_reset(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     buf_soft_reset(buf);
@@ -233,6 +252,8 @@ static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
     lua_setfield(L, -2, "push");
+    lua_pushcfunction(L, lbuf_push_sep);
+    lua_setfield(L, -2, "push_sep");
     lua_pushcfunction(L, lbuf_push_simple_str);
     lua_setfield(L, -2, "push_str");
     lua_pushcfunction(L, lbuf_push_multi_str);

@@ -19,7 +19,7 @@ tg\U000111115]], "t6")
             test "
             bleh'"""sss
         ]])
-        :push("\n# testing numbers:\n")
+        :push("\n# testing push_num:\n")
         :push_num(123.456)
         :push("\n")
         :push_num(123)
@@ -31,6 +31,9 @@ tg\U000111115]], "t6")
         :push_num(-math.huge)
         :push("\n")
         :push_num(0/0)
+        :push("\n# testing push_sep:\n")
+        :push_sep(" ", "testa","testb","testc")
+        :push("\n")
     local res = {
         input = inspect(input),
         opts = inspect(opts),
