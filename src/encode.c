@@ -271,6 +271,7 @@ static inline int lbuf_reset(lua_State *L) {
 }
 
 // TODO: make some which also accept other string buffers
+// to check type: lua_isuserdata lua_getmetatable luaL_getmetatable lua_rawequal
 static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
