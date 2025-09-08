@@ -222,20 +222,42 @@ static inline int lbuf_push_keys(lua_State *L) {
     return 1;
 }
 
+typedef struct {
+    size_t len;
+    const char * str;
+} lstr_tmp;
+
 static inline int lbuf_push_sep(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
     int top = lua_gettop(L);
     if (!lua_isstring(L, 2)) return luaL_error(L, "expected string");
-    size_t seplen;
-    const char *sep = lua_tolstring(L, 2, &seplen);
+    if (top - 2 <= 0) return luaL_error(L, "no strings to join"); // nothing to push
+    lstr_tmp sep = {0};
+    sep.str = lua_tolstring(L, 2, &sep.len);
+    int tmp_len = 2 * (top - 2) - 1;
+    int pos = 0;
+    size_t total_len = 0;
+    lstr_tmp tmp_res[tmp_len];
     for (int i = 3; i <= top; i++) {
         if (!lua_isstring(L, i)) return luaL_error(L, "expected string");
-        size_t len;
-        const char *str = lua_tolstring(L, i, &len);
-        if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+        lstr_tmp v = {0};
+        v.str = lua_tolstring(L, i, &v.len);
+        total_len += v.len;
+        tmp_res[pos++] = v;
         if (i != top) {
-            if (!buf_push_str(buf, sep, seplen)) return luaL_error(L, "failed to push separator");
+            total_len += sep.len;
+            tmp_res[pos++] = sep;
         }
+    }
+    size_t new_capacity = buf->cap > 0 ? buf->cap : 1;
+    while (new_capacity < buf->len + total_len) new_capacity *= 2;
+    char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
+    if (!tmp) return false;
+    buf->data = tmp;
+    buf->cap = new_capacity;
+    for (int i = 0; i < tmp_len; i++) {
+        memcpy(buf->data + buf->len, tmp_res[i].str, tmp_res[i].len);
+        buf->len += tmp_res[i].len;
     }
     lua_settop(L, 1);
     return 1;
