@@ -1,11 +1,11 @@
 local tomlua_test_dir = arg[2]
 local tomlua_dir = arg[3]
 if tomlua_dir == nil then
-	print("Usage: lua ./tests/test.lua -- <test_dir> <tomlua_lib_dir>")
+	print("Usage: lua ./tests/init.lua -- <test_dir> <tomlua_lib_dir>")
 	os.exit(1)
 end
 if tomlua_test_dir == nil then
-	print("Usage: lua ./tests/test.lua -- <test_dir> <tomlua_lib_dir>")
+	print("Usage: lua ./tests/init.lua -- <test_dir> <tomlua_lib_dir>")
 	os.exit(1)
 end
 package.path = package.path .. (";%s/?.lua"):format(tomlua_test_dir)
