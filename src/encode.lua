@@ -32,7 +32,8 @@ tg\U000111115]], "t6")
         :push("\n")
         :push_num(0/0)
         :push("\n# testing push_sep:\n")
-        :push_sep(" : ", lib.new_buf():push("abcdefg"), "testa","testb","testc")
+        :push_sep(" : ", lib.new_buf():push("abcdefghijk"), "testa","testb","testc")
+        :push(lib.new_buf():push("\n"):push("lmnop"))
         :push("\n")
     local res = {
         input = inspect(input),

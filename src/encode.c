@@ -100,12 +100,38 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
     }
 }
 
+// 0 for neither, 1 for str, 2 for buf.
+static inline int is_str_or_buf(lua_State *L, int idx) {
+    int type = lua_type(L, idx);
+    if (type == LUA_TUSERDATA) {
+        if (lua_getmetatable(L, idx)) {
+            luaL_getmetatable(L, "LStrBuf");
+            if (lua_rawequal(L, -1, -2)) {
+                lua_pop(L, 2);
+                return 2;
+            }
+            lua_pop(L, 2);
+        }
+    } else if (type == LUA_TSTRING) {
+        return 1;
+    }
+    return 0;
+}
+
 static inline int lbuf_push_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
-    size_t len;
-    const char *str = lua_tolstring(L, 2, &len);
-    if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
-    lua_settop(L, 1);
+    int argtype = is_str_or_buf(L, 2);
+    if (!argtype) return luaL_error(L, "expected string or string buffer");
+    if (argtype == 1) {
+        size_t len;
+        const char *str = lua_tolstring(L, 2, &len);
+        if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+        lua_settop(L, 1);
+    } else {
+        str_buf * arg = (str_buf *)lua_touserdata(L, 2);
+        if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
+        lua_settop(L, 1);
+    }
     return 1;
 }
 
@@ -222,24 +248,6 @@ static inline int lbuf_push_keys(lua_State *L) {
     return 1;
 }
 
-// 0 for neither, 1 for str, 2 for buf.
-static inline int is_str_or_buf(lua_State *L, int idx) {
-    int type = lua_type(L, idx);
-    if (type == LUA_TUSERDATA) {
-        if (lua_getmetatable(L, idx)) {
-            luaL_getmetatable(L, "LStrBuf");
-            if (lua_rawequal(L, -1, -2)) {
-                lua_pop(L, 2);
-                return 2;
-            }
-            lua_pop(L, 2);
-        }
-    } else if (type == LUA_TSTRING) {
-        return 1;
-    }
-    return 0;
-}
-
 typedef struct {
     size_t len;
     const char * str;
@@ -295,9 +303,6 @@ static inline int lbuf_reset(lua_State *L) {
     return 1;
 }
 
-// TODO: make some which also accept other string buffers
-// or maybe (hopefully) make all of them accept other string buffers
-// to check type: lua_isuserdata lua_getmetatable luaL_getmetatable lua_rawequal
 static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
