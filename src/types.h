@@ -324,9 +324,7 @@ static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
     size_t required_len = buf->len + len;
     if (required_len > buf->cap) {
         size_t new_capacity = buf->cap > 0 ? buf->cap : 1;
-        while (new_capacity < required_len) {
-            new_capacity *= 2;
-        }
+        while (new_capacity < required_len) new_capacity *= 2;
         char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
         if (!tmp) return false;
         buf->data = tmp;
