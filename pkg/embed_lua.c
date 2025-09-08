@@ -114,7 +114,7 @@ static int embed_run(lua_State *L) {
             return luaL_error(L, "Failed to dump Lua bytecode");
         }
         lua_pop(L, 1);
-        
+
         fprintf(out, "  {\n");
         fprintf(out, "    const unsigned char data[] = {\n      ");
         for (size_t i = 0; i < buf.len; i++) {
