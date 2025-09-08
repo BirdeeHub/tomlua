@@ -1,4 +1,5 @@
 #include <lua.h>
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include "types.h"
@@ -108,6 +109,33 @@ static inline int lbuf_push_str(lua_State *L) {
     return 1;
 }
 
+// TODO: improve this
+static inline int lbuf_push_num(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    if (!lua_isnumber(L, 2)) return luaL_error(L, "expected number");
+    lua_Number n = lua_tonumber(L, 2);
+    if (isnan(n)) {
+        if (!buf_push_str(buf, "nan", 3))
+            return luaL_error(L, "failed to push NaN");
+    } else if (isinf(n)) {
+        if (!buf_push_str(buf, n > 0 ? "+inf" : "-inf", 4))
+            return luaL_error(L, "failed to push infinity");
+    } else if (n == (lua_Number)(lua_Integer)n) {
+        lua_Integer i = (lua_Integer)n;
+        char tmp[32];
+        int len = snprintf(tmp, sizeof(tmp), "%lld", (long long)i);
+        if (len < 0 || !buf_push_str(buf, tmp, len))
+            return luaL_error(L, "failed to push integer");
+    } else {
+        char tmp[64];
+        int len = snprintf(tmp, sizeof(tmp), "%.17g", n); // high-precision float
+        if (len < 0 || !buf_push_str(buf, tmp, len))
+            return luaL_error(L, "failed to push float");
+    }
+    lua_settop(L, 1);
+    return 1;
+}
+
 static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
     if (!buf_push_str(dst, "\"\"\"", 3)) return false;
     while (iter_peek(src).ok) {
@@ -209,6 +237,8 @@ static inline int lbuf_index(lua_State *L) {
     lua_setfield(L, -2, "push_str");
     lua_pushcfunction(L, lbuf_push_multi_str);
     lua_setfield(L, -2, "push_multi_str");
+    lua_pushcfunction(L, lbuf_push_num);
+    lua_setfield(L, -2, "push_num");
     lua_pushcfunction(L, lbuf_push_keys);
     lua_setfield(L, -2, "push_keys");
     lua_pushcfunction(L, lbuf_reset);
