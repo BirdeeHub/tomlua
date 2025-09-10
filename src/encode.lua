@@ -84,8 +84,8 @@ return function(input)
     for k, v in pairs(input) do
         local vtype = type(v)
         if vtype == "table" then
-            local is_heading, is_array = lib.is_heading_array(v)
-            if is_heading then
+            local is_heading_array, is_array = lib.is_heading_array(v)
+            if is_heading_array then
                 table.insert(heading_q, { is_array = true, keys = { k }, value = v })
             elseif is_array then
                 dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
