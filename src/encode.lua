@@ -24,7 +24,7 @@ local lib = upvals[2]
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
-    ---@type ({ keys: string[], value: any })[]
+    ---@type ({ is_array: boolean, keys: string[], value: any })[]
     local heading_q = {}
     for k, v in pairs(input) do
         -- TODO: deal with headings by putting them into the heading_q and then processing after the current level is processed
