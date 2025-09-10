@@ -22,7 +22,7 @@ local lib = upvals[2]
 -- end
 
 return function(input)
-    ---@type string_buffer
+    ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
     ---@type ({ keys: string[], value: string })[]
     local heading_q = {}
