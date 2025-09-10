@@ -213,7 +213,9 @@ static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
             iter_skip(src);
             if (!buf_push(dst, '\n')) return false;
         } else {
-            if (!buf_push_toml_escaped_char(dst, iter_next(src).v, false)) return false;
+            iter_utf8_result res = iter_next_utf8(src);
+            if (!res.ok) break;
+            if (!buf_push_toml_escaped_char(dst, res.v, false)) return false;
         }
     }
     if (!buf_push_str(dst, "\"\"\"", 3)) return false;
@@ -230,8 +232,10 @@ static inline int lbuf_push_multi_str(lua_State *L) {
 
 static inline bool buf_push_esc_simple(str_buf *dst, str_iter *src) {
     if (!buf_push(dst, '"')) return false;
-    while (iter_peek(src).ok) {
-        if (!buf_push_toml_escaped_char(dst, iter_next(src).v, false)) return false;
+    while (true) {
+        iter_utf8_result res = iter_next_utf8(src);
+        if (!res.ok) break;
+        if (!buf_push_toml_escaped_char(dst, res.v, false)) return false;
     }
     if (!buf_push(dst, '"')) return false;
     return true;
