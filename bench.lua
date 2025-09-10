@@ -131,6 +131,7 @@ local testdata = {
     e = {
         f = { "1f", "2f" },
     },
+    g = { "1g", "2g", "3g", "4g" },
 }
 
 local testtoml = [=[
