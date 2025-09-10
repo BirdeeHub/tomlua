@@ -73,6 +73,7 @@ do
     end
 end
 
+-- TODO: CYCLE DETECTION
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
@@ -93,22 +94,19 @@ return function(input)
             dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
         end
     end
-    -- TODO: find a better way to do this that keeps tables together
-    -- TODO: CYCLE DETECTION
-    local i = 1
-    while i <= #heading_q do
-        local h = heading_q[i]
-        if h.is_array then
-            dst:push_heading_array(h.value, unpack(h.keys))
-        else
-            local more = dst:push_heading_table(h.value, unpack(h.keys))
-            if more then
-                for _, nh in ipairs(more) do
-                    table.insert(heading_q, nh)
-                end
+    local function flush_q(q)
+        local i = 1
+        while i <= #q do
+            local h = q[i]
+            if h.is_array then
+                dst:push_heading_array(h.value, unpack(h.keys))
+            else
+                local more = dst:push_heading_table(h.value, unpack(h.keys))
+                flush_q(more)
             end
+            i = i + 1
         end
-        i = i + 1
     end
+    flush_q(heading_q)
     return tostring(dst)
 end
