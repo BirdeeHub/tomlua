@@ -108,5 +108,5 @@ return function(input)
         end
         i = i + 1
     end
-    return dst
+    return tostring(dst)
 end
