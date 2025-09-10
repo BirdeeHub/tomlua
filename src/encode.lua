@@ -5,21 +5,15 @@
 
 ---@class Tomlua.String_buffer
 ---@field push fun(self: Tomlua.String_buffer, str: string|Tomlua.String_buffer):Tomlua.String_buffer
----@field push_sep fun(self: Tomlua.String_buffer, sep: string, ...: string|Tomlua.String_buffer):Tomlua.String_buffer
----@field push_str fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
----@field push_multi_str fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
----@field push_num fun(self: Tomlua.String_buffer, n: number):Tomlua.String_buffer
 ---@field push_inline_value fun(self: Tomlua.String_buffer, visited: table<table, any>, value: any, array_level: number?):Tomlua.String_buffer
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, ...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
----@field reset fun(self: Tomlua.String_buffer):Tomlua.String_buffer
 ---@field push_heading_array fun(self: Tomlua.String_buffer, visited: table<table, any>, value: table, ...: string):Tomlua.String_buffer
 ---@field push_heading_table fun(self: Tomlua.String_buffer, visited: table<table, any>, value: table, ...: string):Tomlua.Deferred_Heading[]
 
 ---@class Tomlua.Lib
 ---@field new_buf fun():Tomlua.String_buffer
 ---@field types table
----@field is_array fun(value: any?):boolean
 ---also checks if all items are tables, returns is_heading_array, is_array
 ---@field is_heading_array fun(value: any?):boolean, boolean
 
@@ -74,27 +68,15 @@ do
 end
 
 -- TODO: CYCLE DETECTION
+-- Also what do I even do if I have a cycle?
+-- Do I print the keys to the thing it references?
+-- Do I just throw?
 return function(input)
-    local visited = {}
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
+    local visited = {}
     ---@type Tomlua.Deferred_Heading[]
     local heading_q = {}
-    for k, v in pairs(input) do
-        local vtype = type(v)
-        if vtype == "table" then
-            local is_heading_array, is_array = lib.is_heading_array(v)
-            if is_heading_array then
-                table.insert(heading_q, { is_array = true, keys = { k }, value = v })
-            elseif is_array then
-                dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
-            else
-                table.insert(heading_q, { is_array = false, keys = { k }, value = v })
-            end
-        else
-            dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
-        end
-    end
     local function flush_q(q)
         local i = 1
         while i <= #q do
@@ -108,6 +90,28 @@ return function(input)
             i = i + 1
         end
     end
-    flush_q(heading_q)
-    return tostring(dst)
+    local ok, val = pcall(function()
+        for k, v in pairs(input) do
+            local vtype = type(v)
+            if vtype == "table" then
+                local is_heading_array, is_array = lib.is_heading_array(v)
+                if is_heading_array then
+                    table.insert(heading_q, { is_array = true, keys = { k }, value = v })
+                elseif is_array then
+                    dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+                else
+                    table.insert(heading_q, { is_array = false, keys = { k }, value = v })
+                end
+            else
+                dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+            end
+        end
+        flush_q(heading_q)
+        return tostring(dst)
+    end, input)
+    if ok then
+        return val
+    else
+        return nil, val
+    end
 end
