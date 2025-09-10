@@ -93,6 +93,7 @@ return function(input)
             dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
         end
     end
+    -- TODO: find a better way to do this that keeps tables together
     local i = 1
     while i <= #heading_q do
         local h = heading_q[i]
