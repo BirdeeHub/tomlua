@@ -35,8 +35,8 @@ do
     local buf_index = getmetatable(lib.new_buf()).__index
     --instead of pushing tables, returns the tables I need to split out
     --It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
-    ---@type fun(self: Tomlua.String_buffer, queue: Tomlua.Deferred_Heading[], value: table, ...: string):Tomlua.Deferred_Heading[]
-    buf_index.push_heading_table = function(self, queue, value, ...)
+    ---@type fun(self: Tomlua.String_buffer, value: table, ...: string):Tomlua.Deferred_Heading[]
+    buf_index.push_heading_table = function(self, value, ...)
         ---@type Tomlua.Deferred_Heading[]
         local result = {}
         self:push_heading(false, ...)
@@ -96,7 +96,20 @@ return function(input)
             dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
         end
     end
-    -- TODO: deal with headings on the heading_q using push_heading_table or push_heading_array
-    -- keep in mind that push_heading_table can return more to be put into the queue
+    local i = 1
+    while i <= #heading_q do
+        local h = heading_q[i]
+        if h.is_array then
+            dst:push_heading_array(h.value, unpack(h.keys))
+        else
+            local more = dst:push_heading_table(h.value, unpack(h.keys))
+            if more then
+                for _, nh in ipairs(more) do
+                    table.insert(heading_q, nh)
+                end
+            end
+        end
+        i = i + 1
+    end
     return dst
 end
