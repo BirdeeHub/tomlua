@@ -22,7 +22,8 @@ local lib = upvals[2]
 ---@field new_buf fun():Tomlua.String_buffer
 ---@field is_array fun(value: any?):boolean
 ---@field types table
---TODO: ---@field is_heading_array fun(value: any?):boolean which also checks if all items are tables
+--TODO:
+--@field is_heading_array fun(value: any?):boolean which also checks if all items are tables
 
 -- TODO: remove inspect eventually, just for debugging
 -- local inspect = require("inspect")
