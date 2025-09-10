@@ -8,7 +8,7 @@ local lib = upvals[2]
 ---@field push_str fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
 ---@field push_multi_str fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
 ---@field push_num fun(self: Tomlua.String_buffer, n: number):Tomlua.String_buffer
----@field push_inline_value fun(self: Tomlua.String_buffer, value: table|string|number|boolean, array_level: number):Tomlua.String_buffer
+---@field push_inline_value fun(self: Tomlua.String_buffer, value: any, array_level: number):Tomlua.String_buffer
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, ...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
 ---@field reset fun(self: Tomlua.String_buffer):Tomlua.String_buffer
@@ -24,7 +24,7 @@ local lib = upvals[2]
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
-    ---@type ({ keys: string[], value: string })[]
+    ---@type ({ keys: string[], value: any })[]
     local heading_q = {}
     for k, v in pairs(input) do
         -- TODO: deal with headings by putting them into the heading_q and then processing after the current level is processed
