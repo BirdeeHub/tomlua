@@ -30,6 +30,5 @@ return function(input)
         -- TODO: deal with headings by putting them into the heading_q and then processing after the current level is processed
         dst:push_keys(k):push(" = "):push_inline_value(v, 0):push("\n")
     end
-    print(dst)
-    return "TODO"
+    return dst
 end
