@@ -9,9 +9,7 @@
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
 ---@field reset fun(self: Tomlua.String_buffer):Tomlua.String_buffer
 ---@field push_heading_array fun(self: Tomlua.String_buffer, value: table, ...: string):Tomlua.String_buffer
-
---TODO: something like these, outlined further below
---@field push_heading_table fun(self: Tomlua.String_buffer, value: table, ...: string):{ is_array: boolean, keys: string[], value: any }[]
+---@field push_heading_table fun(self: Tomlua.String_buffer, value: table, ...: string):{ is_array: boolean, keys: string[], value: any }[]
 
 ---@class Tomlua.Lib
 ---@field new_buf fun():Tomlua.String_buffer
@@ -35,8 +33,8 @@ local lib = upvals[2]
 
 do
     local buf_index = getmetatable(lib.new_buf()).__index
---TODO: something like this which instead of pushing tables, returns the tables I need to split out
---It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
+    --instead of pushing tables, returns the tables I need to split out
+    --It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
     ---@type fun(self: Tomlua.String_buffer, queue: Tomlua.Deferred_Heading[], value: table, ...: string):Tomlua.Deferred_Heading[]
     buf_index.push_heading_table = function(self, queue, value, ...)
         ---@type Tomlua.Deferred_Heading[]
@@ -99,5 +97,6 @@ return function(input)
         end
     end
     -- TODO: deal with headings on the heading_q using push_heading_table or push_heading_array
+    -- keep in mind that push_heading_table can return more to be put into the queue
     return dst
 end
