@@ -17,7 +17,7 @@ do
             buf:push(value and "true" or "false")
         elseif vtype == "table" then
             if lib.is_array(value) then
-                if not value[1] then buf:push("[]") return end
+                if not value[1] then buf:push("[]") return buf end
                 local indent = array_level and (" "):rep((array_level + 1) * 2) or nil
                 if indent then
                     buf:push("[\n"):push(indent)
@@ -54,16 +54,21 @@ do
         else
             error(vtype .. " is not a valid type for push_value")
         end
+        return buf
     end
 end
 return function(input)
     local dst = lib.new_buf()
+    ---@type ({ keys: string[], value: string })[]
     local heading_q = {}
-    -- TODO: start outputting some toml, dealing with headings by putting them into the heading_q and then processing after the current level is processed
-    dst:push_heading(true, "mytable", "myarray")
-        :push_keys("hello", "test")
-        :push(" = ")
-        :push_inline_value({ "hello", "hi", { "hiagain", "boo" }, { haha = { "lol", "roflmao" } } }, 0)
+    for k, v in pairs(input) do
+        -- TODO: start outputting some toml, dealing with headings by putting them into the heading_q and then processing after the current level is processed
+        -- dst:push_heading(true, "mytable", "myarray")
+        --     :push_keys("hello", "test")
+        --     :push(" = ")
+        --     :push_inline_value({ "hello", "hi", { "hiagain", "boo" }, { haha = { "lol", "roflmao" } } }, 0)
+        dst:push_keys(k):push(" = "):push_inline_value(v, 0):push("\n")
+    end
     print(dst)
     return "TODO"
 end
