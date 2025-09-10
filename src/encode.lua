@@ -1,7 +1,3 @@
-local upvals = {...}
-local opts = upvals[1]
-local lib = upvals[2]
-
 ---@class Tomlua.String_buffer
 ---@field push fun(self: Tomlua.String_buffer, str: string|Tomlua.String_buffer):Tomlua.String_buffer
 ---@field push_sep fun(self: Tomlua.String_buffer, sep: string, ...: string|Tomlua.String_buffer):Tomlua.String_buffer
@@ -23,6 +19,11 @@ local lib = upvals[2]
 ---@field is_array fun(value: any?):boolean
 ---also checks if all items are tables
 ---@field is_heading_array fun(value: any?):boolean
+
+local upvals = {...}
+local opts = upvals[1]
+---@type Tomlua.Lib
+local lib = upvals[2]
 
 -- TODO: remove inspect eventually, just for debugging
 -- local inspect = require("inspect")
