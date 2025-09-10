@@ -5,8 +5,9 @@ local lib = upvals[2]
 -- TODO: remove inspect eventually, just for debugging
 local inspect = require("inspect")
 
+local dst = lib.new_buf()
 do
-    local buf_index = getmetatable(lib.new_buf()).__index
+    local buf_index = getmetatable(dst).__index
     -- -- assumes inline, and non-nil, deal with headings before this
     buf_index.push_inline_value = function(buf, value, array_level, vtype)
         vtype = vtype or type(value)
@@ -58,7 +59,7 @@ do
     end
 end
 return function(input)
-    local dst = lib.new_buf()
+    dst:reset()
     local heading_q = {}
     -- TODO: start outputting some toml, dealing with headings by putting them into the heading_q and then processing after the current level is processed
     dst:push_heading(true, "atableheading")

@@ -300,7 +300,7 @@ static inline int lbuf_push_sep(lua_State *L) {
 
 static inline int lbuf_reset(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
-    buf_soft_reset(buf);
+    buf->len = 0;
     lua_settop(L, 1);
     return 1;
 }
