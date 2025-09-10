@@ -430,6 +430,7 @@ static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
         return res;
     }
 
+    // pointer to subsection of buffer
     const unsigned char *s = (const unsigned char *)iter->buf + iter->pos;
     size_t remaining = iter->len - iter->pos;
 
