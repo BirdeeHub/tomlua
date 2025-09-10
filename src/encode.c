@@ -316,7 +316,7 @@ static inline int lbuf_push_heading(lua_State *L) {
     }
     for (int i = 3; i <= top; i++) {
         str_iter src = lua_str_to_iter(L, i);
-        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to heading", (is_array) ? "array" : "table");
+        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
         if (i != top) {
             if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
         }
