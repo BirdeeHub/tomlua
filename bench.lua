@@ -149,6 +149,4 @@ print(inspect(err))
 
 print()
 print("TODO: ENCODE")
-data, err = tomlua.decode(contents)
-local stringified = tomlua.encode(data)
-print(stringified)
+print(tomlua.encode(tomlua.decode(contents)))
