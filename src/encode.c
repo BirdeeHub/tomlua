@@ -310,9 +310,9 @@ static inline int lbuf_push_heading(lua_State *L) {
     bool is_array = lua_toboolean(L, 2);
     int top = lua_gettop(L);
     if (is_array) {
-        if (!buf_push_str(buf, "[[", 2)) return luaL_error(L, "failed to push to heading", (is_array) ? "array" : "table");
+        if (!buf_push_str(buf, "[[", 2)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     } else {
-        if (!buf_push(buf, '[')) return luaL_error(L, "failed to push to heading", (is_array) ? "array" : "table");
+        if (!buf_push(buf, '[')) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     }
     for (int i = 3; i <= top; i++) {
         str_iter src = lua_str_to_iter(L, i);
@@ -322,9 +322,9 @@ static inline int lbuf_push_heading(lua_State *L) {
         }
     }
     if (is_array) {
-        if (!buf_push_str(buf, "]]\n", 3)) return luaL_error(L, "failed to push to heading", (is_array) ? "array" : "table");
+        if (!buf_push_str(buf, "]]\n", 3)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     } else {
-        if (!buf_push_str(buf, "]\n", 2)) return luaL_error(L, "failed to push to heading", (is_array) ? "array" : "table");
+        if (!buf_push_str(buf, "]\n", 2)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     }
     lua_settop(L, 1);
     return 1;
