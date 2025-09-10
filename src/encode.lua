@@ -12,10 +12,12 @@ local lib = upvals[2]
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, ...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
 ---@field reset fun(self: Tomlua.String_buffer):Tomlua.String_buffer
+
 --TODO: something like this which instead of pushing tables, returns the tables I need to split out
 --It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
 --@field push_heading_table fun(self: Tomlua.String_buffer, value: table):({ is_array: boolean, key: string, value: any })[]
---no need to return them for heading arrays tho, all the things inside these need to be inline
+
+--TODO: no need to return them for heading arrays tho, all the things inside these need to be inline
 --@field push_heading_array fun(self: Tomlua.String_buffer, value: table):Tomlua.String_buffer
 
 ---@class Tomlua.Lib
