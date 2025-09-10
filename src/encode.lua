@@ -2,6 +2,17 @@ local upvals = {...}
 local opts = upvals[1]
 local lib = upvals[2]
 
+---@class string_buffer
+---@field push fun(self: string_buffer, str: string|string_buffer):string_buffer
+---@field push_sep fun(self: string_buffer, sep: string, ...: string|string_buffer):string_buffer
+---@field push_str fun(self: string_buffer, str: string):string_buffer
+---@field push_multi_str fun(self: string_buffer, str: string):string_buffer
+---@field push_num fun(self: string_buffer, n: number):string_buffer
+---@field push_inline_value fun(self: string_buffer, value: table|string|number|boolean, array_level: number):string_buffer
+---@field push_heading fun(self: string_buffer, is_array: boolean, ...: string):string_buffer
+---@field push_keys fun(self: string_buffer, ...: string):string_buffer
+---@field reset fun(self: string_buffer, ):string_buffer
+
 -- TODO: remove inspect eventually, just for debugging
 -- local inspect = require("inspect")
 
@@ -11,6 +22,7 @@ local lib = upvals[2]
 -- end
 
 return function(input)
+    ---@type string_buffer
     local dst = lib.new_buf()
     ---@type ({ keys: string[], value: string })[]
     local heading_q = {}
