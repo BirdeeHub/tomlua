@@ -94,6 +94,7 @@ return function(input)
         end
     end
     -- TODO: find a better way to do this that keeps tables together
+    -- TODO: CYCLE DETECTION
     local i = 1
     while i <= #heading_q do
         local h = heading_q[i]
