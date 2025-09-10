@@ -63,7 +63,9 @@ return function(input)
     local heading_q = {}
     -- TODO: start outputting some toml, dealing with headings by putting them into the heading_q and then processing after the current level is processed
     dst:push_heading(true, "atableheading")
-    dst:push_keys("hello", "test"):push(" = "):push_inline_value({ "hello", "hi", { "hiagain", "boo" }, { haha = { "lol", "roflmao" } } }, 0)
+        :push_keys("hello", "test")
+        :push(" = ")
+        :push_inline_value({ "hello", "hi", { "hiagain", "boo" }, { haha = { "lol", "roflmao" } } }, 0)
     print(dst)
     return "TODO"
 end
