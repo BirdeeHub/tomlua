@@ -57,6 +57,8 @@ do
                     table.insert(keys, k)
                     table.insert(result, { is_array = true, keys = keys, value = v })
                 end
+            else
+                self:push_keys(k):push(" = "):push_inline_value(v):push("\n")
             end
         end
         return result
