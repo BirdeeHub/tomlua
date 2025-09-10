@@ -17,8 +17,8 @@
 ---@field new_buf fun():Tomlua.String_buffer
 ---@field types table
 ---@field is_array fun(value: any?):boolean
----also checks if all items are tables
----@field is_heading_array fun(value: any?):boolean
+---also checks if all items are tables, returns is_heading_array, is_array
+---@field is_heading_array fun(value: any?):boolean, boolean
 
 local upvals = {...}
 local opts = upvals[1]
@@ -39,6 +39,27 @@ do
 --It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
     ---@type fun(self: Tomlua.String_buffer, queue: Tomlua.Deferred_Heading[], value: table, ...: string):Tomlua.Deferred_Heading[]
     buf_index.push_heading_table = function(self, queue, value, ...)
+        ---@type Tomlua.Deferred_Heading[]
+        local result = {}
+        self:push_heading(true, ...)
+        for k, v in pairs(value) do
+            local vtype = type(v)
+            if vtype == "table" then
+                local is_heading, is_array = lib.is_heading_array(v)
+                if is_heading then
+                    local keys = {...}
+                    table.insert(keys, k)
+                    table.insert(result, { is_array = true, keys = keys, value = v })
+                elseif is_array then
+                    self:push_keys(k):push(" = "):push_inline_value(v):push("\n")
+                else
+                    local keys = {...}
+                    table.insert(keys, k)
+                    table.insert(result, { is_array = true, keys = keys, value = v })
+                end
+            end
+        end
+        return result
     end
 
     --no need to return them for heading arrays tho, all the things inside these need to be inline
