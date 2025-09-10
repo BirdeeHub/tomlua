@@ -13,7 +13,7 @@ local lib = upvals[2]
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
 ---@field reset fun(self: Tomlua.String_buffer):Tomlua.String_buffer
 
---TODO: something like these
+--TODO: something like these, outlined further below
 --@field push_heading_table fun(self: Tomlua.String_buffer, value: table):{ is_array: boolean, key: string, value: any }[]
 --@field push_heading_array fun(self: Tomlua.String_buffer, value: table):Tomlua.String_buffer
 
