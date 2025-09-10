@@ -55,7 +55,7 @@ do
                 else
                     local keys = {...}
                     table.insert(keys, k)
-                    table.insert(result, { is_array = true, keys = keys, value = v })
+                    table.insert(result, { is_array = false, keys = keys, value = v })
                 end
             else
                 self:push_keys(k):push(" = "):push_inline_value(v):push("\n")
@@ -84,8 +84,20 @@ return function(input)
     ---@type Tomlua.Deferred_Heading[]
     local heading_q = {}
     for k, v in pairs(input) do
-        -- TODO: deal with headings by putting them into the heading_q and then processing after the current level is processed
-        dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
+        local vtype = type(v)
+        if vtype == "table" then
+            local is_heading, is_array = lib.is_heading_array(v)
+            if is_heading then
+                table.insert(heading_q, { is_array = true, keys = { k }, value = v })
+            elseif is_array then
+                dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
+            else
+                table.insert(heading_q, { is_array = false, keys = { k }, value = v })
+            end
+        else
+            dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
+        end
     end
+    -- TODO: deal with headings on the heading_q using push_heading_table or push_heading_array
     return dst
 end
