@@ -2,8 +2,6 @@ local upvals = {...}
 local opts = upvals[1]
 local lib = upvals[2]
 
--- TODO: remove inspect eventually, just for debugging
-local inspect = require("inspect")
 -- do
 --     local buf_index = getmetatable(lib.new_buf()).__index
 -- end
