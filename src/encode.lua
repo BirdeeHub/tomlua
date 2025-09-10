@@ -39,7 +39,7 @@ do
     buf_index.push_heading_table = function(self, queue, value, ...)
         ---@type Tomlua.Deferred_Heading[]
         local result = {}
-        self:push_heading(true, ...)
+        self:push_heading(false, ...)
         for k, v in pairs(value) do
             local vtype = type(v)
             if vtype == "table" then
