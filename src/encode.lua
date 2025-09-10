@@ -5,9 +5,11 @@ local lib = upvals[2]
 -- TODO: remove inspect eventually, just for debugging
 -- local inspect = require("inspect")
 
+-- NOTE: if needed you can add stuff to the __index of the string buffer type
 -- do
 --     local buf_index = getmetatable(lib.new_buf()).__index
 -- end
+
 return function(input)
     local dst = lib.new_buf()
     ---@type ({ keys: string[], value: string })[]
