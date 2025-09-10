@@ -366,7 +366,7 @@ static inline int lbuf_push_heading(lua_State *L) {
     return 1;
 }
 
-static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
+static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, int level) {
     int vidx = lua_gettop(L);
     int vtype = lua_type(L, vidx);
     switch (vtype) {
@@ -396,7 +396,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
                     if (!buf_push_str(buf, indent, inlen)) return luaL_error(L, "failed to push indent to array");
                     for (int i = 1; i <= len; i++) {
                         lua_rawgeti(L, vidx, i);
-                        buf_push_inline_value(L, buf, (level >= 0) ? level + 1 : -1);
+                        buf_push_inline_value(L, buf, visited_idx, (level >= 0) ? level + 1 : -1);
                         if (i != len) {
                             if (!buf_push(buf, ',')) return luaL_error(L, "failed to push array separator");
                             if (!buf_push_str(buf, indent, inlen)) return luaL_error(L, "failed to push indent to array");
@@ -426,7 +426,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
                     if (!buf_push_str(buf, " = ", 3))
                         return luaL_error(L, "failed to push table equals");
                     // pop and push value to buffer (-1 because no newlines allowed)
-                    buf_push_inline_value(L, buf, -1);
+                    buf_push_inline_value(L, buf, visited_idx, -1);
                 }
                 if (!first) {
                     if (!buf_push(buf, ' '))
@@ -444,9 +444,9 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
 
 static inline int lbuf_push_inline_value(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
-    lua_Integer level = ((lua_isnumber(L, 3)) ? lua_tonumber(L, 3) : 0);
-    lua_settop(L, 2);
-    if (!buf_push_inline_value(L, buf, level)) return luaL_error(L, "failed to push inline value");
+    lua_Integer level = ((lua_isnumber(L, 4)) ? lua_tonumber(L, 4) : 0);
+    lua_settop(L, 3);
+    if (!buf_push_inline_value(L, buf, 2, level)) return luaL_error(L, "failed to push inline value");
     lua_settop(L, 1);
     return 1;
 }
