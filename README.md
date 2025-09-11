@@ -82,6 +82,8 @@ tomlua.types = {
 -- TODO: get the type for tomlua of a lua value
 tomlua.type(value) --> value from tomlua.types
 -- TODO:
+tomlua.typename(typenumber) --> string
+-- TODO:
 tomlua.new_date(--[[???]])
 ```
 
