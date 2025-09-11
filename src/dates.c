@@ -112,7 +112,7 @@ static inline bool parse_time(str_iter *src, TomlDate *date) {
         bool precision = 8;
         iter_result cur = iter_peek(src);
         while (char_isdigit(cur.v)) {
-            if (precision) {
+            if (precision > 0) {
                 val = val * 10 + (cur.v - '0');
                 precision--;
             }
