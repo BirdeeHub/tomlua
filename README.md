@@ -59,7 +59,7 @@ local tomlua = require("tomlua")({
 
 local data, err = tomlua.decode(some_string)
 
--- or read into an existing table (always accepts fancy keys, never outputs fancy tables, currently unaffected by all other opts)
+-- or read into an existing table (always accepts fancy dates, never outputs fancy tables, currently unaffected by all other opts)
 data, err = tomlua.decode(some_string, { some = "defaults" })
 
 local str, err = tomlua.encode(some_table)
