@@ -5,6 +5,6 @@
 #include <lua.h>
 #include <stddef.h>
 
-void push_encode(lua_State *L, int opts_idx, int types_idx);
+void push_encode(lua_State *L, int opts_idx);
 
 #endif  // SRC_ENCODE_H_

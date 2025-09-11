@@ -430,18 +430,12 @@ static inline int lis_lua_heading_array(lua_State *L) {
     return 2;
 }
 
-void push_encode(lua_State *L, int opts_idx, int types_idx) {
+void push_encode(lua_State *L, int opts_idx) {
     int top = lua_gettop(L);
     opts_idx = absindex(top, opts_idx);
-    types_idx = absindex(top, types_idx);
     push_embedded_encode(L);
     lua_pushvalue(L, opts_idx);
-    lua_newtable(L);
     lua_pushcfunction(L, lis_lua_heading_array);
-    lua_setfield(L, -2, "is_heading_array");
     lua_pushcfunction(L, lbuf_new);
-    lua_setfield(L, -2, "new_buf");
-    lua_pushvalue(L, types_idx);
-    lua_setfield(L, -2, "types");
-    lua_call(L, 2, 1);
+    lua_call(L, 3, 1);
 }

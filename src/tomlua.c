@@ -41,11 +41,12 @@ static int tomlua_new(lua_State *L) {
     lua_settop(L, 1);
     lua_newtable(L); // module table
     lua_insert(L, 1);
-    lua_pushvalue(L, lua_upvalueindex(1));
-    push_encode(L, 2, 3);
+    push_encode(L, 2);
     lua_setfield(L, 1, "encode");
+    lua_pushvalue(L, lua_upvalueindex(1));
     lua_setfield(L, 1, "types");
-    lua_setfield(L, lua_upvalueindex(2), "typename");
+    lua_pushvalue(L, lua_upvalueindex(2));
+    lua_setfield(L, 1, "typename");
 
     lua_settop(L, 1);
     // upvalue 1: error object

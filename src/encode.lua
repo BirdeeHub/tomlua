@@ -9,50 +9,43 @@
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, ...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
 
----@class Tomlua.Lib
----@field new_buf fun():Tomlua.String_buffer
----@field types table
----also checks if all items are tables, returns is_heading_array, is_array
----@field is_heading_array fun(value: any?):boolean, boolean
-
 local upvals = {...}
 local opts = upvals[1]
----@type Tomlua.Lib
-local lib = upvals[2]
-
---instead of pushing tables, returns the tables I need to split out
---It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
----@type fun(dst: Tomlua.String_buffer, visited: table<table, boolean?>, value: table, ...: string):Tomlua.Deferred_Heading[]
-local function push_heading_table(dst, visited, value, ...)
-    ---@type Tomlua.Deferred_Heading[]
-    local result = {}
-    dst:push_heading(false, ...)
-    for k, v in pairs(value) do
-        if type(v) == "table" then
-            local is_heading_array, is_array = lib.is_heading_array(v)
-            if is_heading_array then
-                local keys = {...}
-                table.insert(keys, k)
-                table.insert(result, { is_array = true, keys = keys, value = v })
-            elseif is_array then
-                dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
-            else
-                local keys = {...}
-                table.insert(keys, k)
-                table.insert(result, { is_array = false, keys = keys, value = v })
-            end
-        else
-            dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
-        end
-    end
-    dst:push("\n")
-    return result
-end
+local check_heading_array = upvals[2]
+local new_buf = upvals[3]
 
 return function(input)
     ---@type Tomlua.String_buffer
-    local dst = lib.new_buf()
+    local dst = new_buf()
 
+    --instead of pushing tables, returns the tables I need to split out
+    --It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
+    ---@type fun(visited: table<table, boolean?>, value: table, ...: string):Tomlua.Deferred_Heading[]
+    local function push_heading_table(visited, value, ...)
+        ---@type Tomlua.Deferred_Heading[]
+        local result = {}
+        dst:push_heading(false, ...)
+        for k, v in pairs(value) do
+            if type(v) == "table" then
+                local is_heading_array, is_array = check_heading_array(v)
+                if is_heading_array then
+                    local keys = {...}
+                    table.insert(keys, k)
+                    table.insert(result, { is_array = true, keys = keys, value = v })
+                elseif is_array then
+                    dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+                else
+                    local keys = {...}
+                    table.insert(keys, k)
+                    table.insert(result, { is_array = false, keys = keys, value = v })
+                end
+            else
+                dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+            end
+        end
+        dst:push("\n")
+        return result
+    end
     ---@type fun(visited: table<table, boolean?>, q: Tomlua.Deferred_Heading[])
     local function flush_q(visited, q)
         for _, h in ipairs(q) do
@@ -65,7 +58,7 @@ return function(input)
                 end
                 dst:push("\n")
             else
-                flush_q(visited, push_heading_table(dst, visited, h.value, unpack(h.keys)))
+                flush_q(visited, push_heading_table(visited, h.value, unpack(h.keys)))
             end
         end
     end
@@ -78,7 +71,7 @@ return function(input)
         for k, v in pairs(input) do
             local vtype = type(v)
             if vtype == "table" then
-                local is_heading_array, is_array = lib.is_heading_array(v)
+                local is_heading_array, is_array = check_heading_array(v)
                 if is_heading_array then
                     table.insert(heading_q, { is_array = true, keys = { k }, value = v })
                 elseif is_array then
