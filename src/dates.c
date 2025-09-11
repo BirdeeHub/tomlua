@@ -359,7 +359,7 @@ bool push_new_toml_date(lua_State *L, TomlDate date) {
     return true;
 }
 
-// TODO: implement new_date function
+// TODO: implement new_date function to expose to lua as tomlua.new_date
 // which should clone if given a date as an arg
 // and should be able to read a string,
 // OR a table OR list OR varargs of integers corresponding to the TomlDate type
