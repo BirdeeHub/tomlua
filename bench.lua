@@ -154,8 +154,6 @@ print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
 data.value = testdata
 print(tomlua.encode(data))
 print()
-print("ENCODE BENCH")
-print()
 
 do
     local to_encode = tomlua.decode(contents)
@@ -175,6 +173,7 @@ do
     elapsed = os.clock() - start_time
 
     print("Last result:", last_result)
+    print("ENCODE BENCH")
     print(stats("TOML", elapsed))
 
 
