@@ -84,7 +84,7 @@ tomlua.types = {
 }
 tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 
--- TODO: get the type for tomlua of a lua value
+-- TODO: get the type tomlua thinks a lua value is
 tomlua.type(value) --> number from tomlua.types
 -- TODO:
 tomlua.new_date(--[[???]])
