@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <lua.h>
 #include <stdio.h>
 #include <string.h>
@@ -101,20 +102,19 @@ static inline bool parse_time(str_iter *src, TomlDate *date) {
     if (!expect_char(src, ':')) return false;
     if (!parse_number(src, 2, &date->second)) return false;
 
-    // TODO: improve this
     iter_result dot = iter_peek(src);
     if (dot.ok && dot.v == '.') {
         iter_skip(src);
-        int factor = 100000;
-        int micro = 0;
-        for (int i = 0; i < 6; i++) {
-            iter_result r = iter_peek(src);
-            if (!r.ok || !char_isdigit(r.v)) break;
-            micro += (r.v - '0') * factor;
+        int val = 0;
+        iter_result cur = iter_peek(src);
+        while (char_isdigit(cur.v)) {
+            if (val < INT_MAX / 10 - 10) {
+                val = val * 10 + (cur.v - '0');
+            }
             iter_skip(src);
-            factor /= 10;
+            cur = iter_peek(src);
         }
-        date->fractional = micro;
+        date->fractional = val;
     }
     return true;
 }
