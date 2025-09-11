@@ -118,4 +118,4 @@ Basic benchmarking shows decode compares at about 1.5x the speed of cjson, and a
 However the cjson in the benchmark does not need to deal with comments or empty lines, or the headings of toml.
 cjson is parsing the result of cjson.encode on the output of tomlua.decode.
 
-So I feel this is pretty good for something that doesn't use SIMD(yet?) or parallelism or other such fancy tricks.
+So I feel this is pretty good for something that doesn't use SIMD(yet?) or parallelism.
