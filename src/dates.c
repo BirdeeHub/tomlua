@@ -354,10 +354,11 @@ bool push_new_toml_date(lua_State *L, TomlDate date) {
         lua_pushcfunction(L, ldate_pairs);
         lua_setfield(L, -2, "__pairs");
         // TODO: implement __eq, __lt, and __le?
-        // TODO: implement new_date function
-        // which should clone if given a date as an arg
-        // and should be able to read a table or list or varargs of integers corresponding to the TomlDate type
     }
     lua_setmetatable(L, -2);
     return true;
 }
+
+// TODO: implement new_date function
+// which should clone if given a date as an arg
+// and should be able to read a table or list or varargs of integers corresponding to the TomlDate type
