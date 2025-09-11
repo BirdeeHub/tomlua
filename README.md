@@ -78,11 +78,10 @@ tomlua.types = {
     LOCAL_DATETIME, -- 10  -- string, or userdata with fancy_dates
     OFFSET_DATETIME, -- 11  -- string, or userdata with fancy_dates
 }
+tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 
 -- TODO: get the type for tomlua of a lua value
 tomlua.type(value) --> number from tomlua.types
--- TODO:
-tomlua.typename(typenumber) --> string
 -- TODO:
 tomlua.new_date(--[[???]])
 ```

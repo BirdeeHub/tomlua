@@ -15,6 +15,15 @@ static int tomlua_types(lua_State *L) {
     return 1;
 }
 
+static int tomlua_typename(lua_State *L) {
+    if (!lua_isnumber(L, 1)) {
+        lua_pushnil(L);
+    } else {
+        lua_pushstring(L, toml_type_to_lua_name(lua_tonumber(L, 1)));
+    }
+    return 1;
+}
+
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     TomluaUserOpts opts = {0};
@@ -36,6 +45,9 @@ static int tomlua_new(lua_State *L) {
     push_encode(L, 2, 3);
     lua_setfield(L, 1, "encode");
     lua_setfield(L, 1, "types");
+    lua_pushcfunction(L, tomlua_typename);
+    lua_setfield(L, 1, "typename");
+
     lua_settop(L, 1);
     // upvalue 1: error object
     new_TMLErr(L);
