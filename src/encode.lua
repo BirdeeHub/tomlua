@@ -51,9 +51,7 @@ end
 
 ---@type fun(dst: Tomlua.String_buffer, visited: table<table, boolean?>, q: Tomlua.Deferred_Heading[])
 local function flush_q(dst, visited, q)
-    local i = 1
-    while i <= #q do
-        local h = q[i]
+    for _, h in ipairs(q) do
         if h.is_array then
             for _, val in ipairs(h.value) do
                 dst:push_heading(true, unpack(h.keys))
@@ -65,7 +63,6 @@ local function flush_q(dst, visited, q)
         else
             flush_q(dst, visited, push_heading_table(dst, visited, h.value, unpack(h.keys)))
         end
-        i = i + 1
     end
 end
 
