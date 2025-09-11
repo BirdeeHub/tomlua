@@ -65,13 +65,13 @@ end
 -- Also what do I even do if I have a cycle?
 -- Do I print the keys to the thing it references?
 -- Do I just throw?
+-- start by just throwing and go from there.
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
-    local visited = {}
     ---@type Tomlua.Deferred_Heading[]
     local heading_q = {}
-    local function flush_q(q)
+    local function flush_q(q, visited)
         local i = 1
         while i <= #q do
             local h = q[i]
@@ -84,6 +84,8 @@ return function(input)
         end
     end
     local ok, val = pcall(function()
+        ---@type table<table, boolean?>
+        local visited = { [input] = true, }
         for k, v in pairs(input) do
             local vtype = type(v)
             if vtype == "table" then
@@ -99,7 +101,7 @@ return function(input)
                 dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
             end
         end
-        flush_q(heading_q)
+        flush_q(heading_q, visited)
         return tostring(dst)
     end, input)
     if ok then

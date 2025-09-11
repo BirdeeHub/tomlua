@@ -287,26 +287,33 @@ static inline int lbuf_push_heading(lua_State *L) {
 }
 
 static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, int level) {
-    int vidx = lua_gettop(L);
-    int vtype = lua_type(L, vidx);
+    int val_idx = lua_gettop(L);
+    int vtype = lua_type(L, val_idx);
     switch (vtype) {
         case LUA_TSTRING: {
-            str_iter src = lua_str_to_iter(L, vidx);
+            str_iter src = lua_str_to_iter(L, val_idx);
             if (!buf_push_esc_simple(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
         } break;
         case LUA_TNUMBER: {
-            if (!lua_isnumber(L, vidx)) return luaL_error(L, "expected number");
-            lua_Number n = lua_tonumber(L, vidx);
+            if (!lua_isnumber(L, val_idx)) return luaL_error(L, "expected number");
+            lua_Number n = lua_tonumber(L, val_idx);
             if (!buf_push_num(buf, n)) return luaL_error(L, "failed to push number");
         } break;
-        case LUA_TBOOLEAN: if (lua_toboolean(L, vidx)) {
+        case LUA_TBOOLEAN: if (lua_toboolean(L, val_idx)) {
                 buf_push_str(buf, "true", 4);
             } else {
                 buf_push_str(buf, "false", 5);
             } break;
         case LUA_TTABLE: {
-            if (is_lua_array(L, vidx)) {
-                int len = lua_arraylen(L, vidx);
+            lua_pushvalue(L, val_idx);
+            lua_rawget(L, visited_idx);
+            if (!lua_isnil(L, -1)) return luaL_error(L, "cyclic reference");
+            lua_pop(L, 1);
+            lua_pushvalue(L, val_idx);
+            lua_pushboolean(L, true);
+            lua_rawset(L, visited_idx);
+            if (is_lua_array(L, val_idx)) {
+                int len = lua_arraylen(L, val_idx);
                 if (!buf_push(buf, '[')) return luaL_error(L, "failed to push array start");
                 if (len > 0) {
                     int inlen = (level >= 0) ? (level + 1) * 2 + 1 : 1;
@@ -315,7 +322,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
                     for (int i = 1; i < inlen; i++) indent[i] = ' ';
                     if (!buf_push_str(buf, indent, inlen)) return luaL_error(L, "failed to push indent to array");
                     for (int i = 1; i <= len; i++) {
-                        lua_rawgeti(L, vidx, i);
+                        lua_rawgeti(L, val_idx, i);
                         buf_push_inline_value(L, buf, visited_idx, (level >= 0) ? level + 1 : -1);
                         if (i != len) {
                             if (!buf_push(buf, ',')) return luaL_error(L, "failed to push array separator");
@@ -330,7 +337,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
                 if (!buf_push(buf, '{')) return luaL_error(L, "failed to push table start");
                 lua_pushnil(L); // for lua_next
                 bool first = true;
-                while (lua_next(L, vidx) != 0) {
+                while (lua_next(L, val_idx) != 0) {
                     // stack: key value
                     if (!first) {
                         if (!buf_push(buf, ',')) return luaL_error(L, "failed to push table separator");
@@ -351,7 +358,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
         } break;
         default: return luaL_error(L, "%s is not a valid type for push_inline_value", lua_typename(L, vtype));
     }
-    lua_settop(L, vidx - 1);
+    lua_settop(L, val_idx - 1);
     return 1;
 }
 
