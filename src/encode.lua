@@ -45,6 +45,7 @@ local function push_heading_table(self, visited, value, ...)
             self:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
         end
     end
+    self:push("\n")
     return result
 end
 
@@ -60,6 +61,7 @@ local function flush_q(dst, visited, q)
                     dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
                 end
             end
+            dst:push("\n")
         else
             flush_q(dst, visited, push_heading_table(dst, visited, h.value, unpack(h.keys)))
         end
