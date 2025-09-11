@@ -14,7 +14,7 @@ EMBEDDED_LUA := $(TEMP_DIR)/embedded.h
 CFLAGS       += -fPIC -shared -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
 SRCS         := $(SRC)/src/tomlua.c \
-                $(SRC)/src/parse_str.c \
+                $(SRC)/src/decode_str.c \
                 $(SRC)/src/decode.c \
                 $(SRC)/src/encode.c \
                 $(SRC)/src/dates.c

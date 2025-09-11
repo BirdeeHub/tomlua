@@ -1,8 +1,8 @@
 // Copyright 2025 Birdee
-#ifndef SRC_PARSE_KEYS_H_
-#define SRC_PARSE_KEYS_H_
+#ifndef SRC_DECODE_KEYS_H_
+#define SRC_DECODE_KEYS_H_
 
-#include "./parse_str.h"
+#include "./decode_str.h"
 #include "./types.h"
 
 static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
@@ -81,4 +81,4 @@ static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int
     return i;
 }
 
-#endif  // SRC_PARSE_KEYS_H_
+#endif  // SRC_DECODE_KEYS_H_

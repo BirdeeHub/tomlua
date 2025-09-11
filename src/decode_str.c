@@ -1,6 +1,7 @@
 // Copyright 2025 Birdee
 #include <stdint.h>
 #include "types.h"
+#include "decode_str.h"
 
 // Convert a hex string to a codepoint
 static uint32_t hex_to_codepoint(const char src[], int len) {
