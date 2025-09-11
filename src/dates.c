@@ -353,8 +353,8 @@ bool push_new_toml_date(lua_State *L, TomlDate date) {
         lua_setfield(L, -2, "__ipairs");
         lua_pushcfunction(L, ldate_pairs);
         lua_setfield(L, -2, "__pairs");
+        // TODO: implement __eq, __lt, and __le?
     }
     lua_setmetatable(L, -2);
     return true;
 }
-
