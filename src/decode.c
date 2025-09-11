@@ -312,9 +312,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 return set_err_upval(L, false, 56, "number literals not allowed to have trailing underscores");
             }
             if (buf->len > 0) {
-                if (is_float) {
-                    lua_pushnumber(L, strtod(buf->data, NULL));
-                } else if (is_date) {
+                if (is_date) {
                     if (opts->fancy_dates) {
                         str_iter date_src = (str_iter) {
                             .len = buf->len,
@@ -329,6 +327,8 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                     } else if (!push_buf_to_lua_string(L, buf)) {
                         return set_err_upval(L, false, 53, "tomlua.decode failed to push date string to lua stack");
                     }
+                } else if (is_float) {
+                    lua_pushnumber(L, strtod(buf->data, NULL));
                 } else {
                     lua_pushinteger(L, strtoll(buf->data, NULL, 10));
                 }

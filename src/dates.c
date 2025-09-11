@@ -25,7 +25,7 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
             if (!buf_push_str(buf, tmp, (size_t)n)) return false;
 
             if (date->fractional > 0) {
-                n = snprintf(tmp, sizeof(tmp), ".%06d", date->fractional);
+                n = snprintf(tmp, sizeof(tmp), ".%d", date->fractional);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
                 if (!buf_push_str(buf, tmp, (size_t)n)) return false;
             }
@@ -39,7 +39,7 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
             if (!buf_push_str(buf, tmp, (size_t)n)) return false;
 
             if (date->fractional > 0) {
-                n = snprintf(tmp, sizeof(tmp), ".%06d", date->fractional);
+                n = snprintf(tmp, sizeof(tmp), ".%d", date->fractional);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
                 if (!buf_push_str(buf, tmp, (size_t)n)) return false;
             }
@@ -53,7 +53,7 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
             if (!buf_push_str(buf, tmp, (size_t)n)) return false;
 
             if (date->fractional > 0) {
-                n = snprintf(tmp, sizeof(tmp), ".%06d", date->fractional);
+                n = snprintf(tmp, sizeof(tmp), ".%d", date->fractional);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
                 if (!buf_push_str(buf, tmp, (size_t)n)) return false;
             }
@@ -81,10 +81,13 @@ static inline bool char_isdigit(char c) {
 
 static inline bool parse_number(str_iter *iter, int digits, int *out) {
     int val = 0;
+    iter_result cur = iter_peek(iter);
     for (int i = 0; i < digits; i++) {
-        iter_result r = iter_next(iter);
-        if (!r.ok || !char_isdigit(r.v)) return false;
-        val = val * 10 + (r.v - '0');
+        int cur = iter_peek(iter).v;
+        if (!char_isdigit(cur)) return false;
+        val = val * 10 + (cur - '0');
+        iter_skip(iter);
+        cur = iter_peek(iter).v;
     }
     *out = val;
     return true;
