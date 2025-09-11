@@ -65,7 +65,7 @@ data, err = tomlua.decode(some_string, { some = "defaults" })
 local str, err = tomlua.encode(some_table)
 
 -- TODO:
-tomlua.new_date()
+tomlua.new_date(--[[???]])
 
 tomlua.types = {
     UNTYPED, -- 0  -- Untyped TOML Item
