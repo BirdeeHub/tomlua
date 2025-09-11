@@ -64,9 +64,6 @@ data, err = tomlua.decode(some_string, { some = "defaults" })
 
 local str, err = tomlua.encode(some_table)
 
--- TODO:
-tomlua.new_date(--[[???]])
-
 tomlua.types = {
     UNTYPED, -- 0  -- Untyped TOML Item
     STRING, -- 1  -- lua string
@@ -81,6 +78,9 @@ tomlua.types = {
     LOCAL_DATETIME, -- 10  -- string, or userdata with fancy_dates
     OFFSET_DATETIME, -- 11  -- string, or userdata with fancy_dates
 }
+
+-- TODO:
+tomlua.new_date(--[[???]])
 ```
 
 ```c
