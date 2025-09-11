@@ -47,14 +47,14 @@ static inline int is_str_or_buf(lua_State *L, int idx) {
     int type = lua_type(L, idx);
     if (type == LUA_TSTRING) {
         return 1;
-    } else if (type == LUA_TUSERDATA && udata_is_of_type(L, idx, "LStrBuf")) {
+    } else if (type == LUA_TUSERDATA && udata_is_of_type(L, idx, "TomluaStrBuf")) {
         return 2;
     }
     return 0;
 }
 
 static inline int lbuf_push_str(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     switch (is_str_or_buf(L, 2)) {
         case 1: {
             size_t len;
@@ -152,7 +152,7 @@ static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
 }
 
 static inline int lbuf_push_keys(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     int top = lua_gettop(L);
     for (int i = 2; i <= top; i++) {
         str_iter src = lua_str_to_iter(L, i);
@@ -166,7 +166,7 @@ static inline int lbuf_push_keys(lua_State *L) {
 }
 
 static inline int lbuf_push_heading(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     bool is_array = lua_toboolean(L, 2);
     int top = lua_gettop(L);
     if (is_array) {
@@ -263,10 +263,10 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
             }
         } break;
         case LUA_TUSERDATA: {
-            if(udata_is_of_type(L, val_idx, "TomlDate")) {
+            if(udata_is_of_type(L, val_idx, "TomluaDate")) {
                 if (!buf_push_toml_date(buf, (TomlDate *)lua_touserdata(L, val_idx)))
                     return luaL_error(L, "failed to push date");
-            } else if (udata_is_of_type(L, val_idx, "LStrBuf")) {
+            } else if (udata_is_of_type(L, val_idx, "TomluaStrBuf")) {
                 str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
                 if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
             }
@@ -278,7 +278,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
 }
 
 static inline int lbuf_push_inline_value(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     lua_Integer level = ((lua_isnumber(L, 4)) ? lua_tonumber(L, 4) : 0);
     lua_settop(L, 3);
     if (!buf_push_inline_value(L, buf, 2, level)) return luaL_error(L, "failed to push inline value");
@@ -300,7 +300,7 @@ static inline int lbuf_index(lua_State *L) {
 }
 
 static inline int lbuf_gc(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     if (buf->data) {
         free(buf->data);
         buf->data = NULL;
@@ -310,7 +310,7 @@ static inline int lbuf_gc(lua_State *L) {
 }
 
 static inline int lbuf_tostring(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "LStrBuf");
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     if (!buf->data) lua_pushliteral(L, "");
     else lua_pushlstring(L, buf->data, buf->len);
     return 1;
@@ -319,7 +319,7 @@ static inline int lbuf_tostring(lua_State *L) {
 static inline int lbuf_new(lua_State *L) {
     str_buf *buf = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
     *buf = (str_buf){0};
-    if (luaL_newmetatable(L, "LStrBuf")) {
+    if (luaL_newmetatable(L, "TomluaStrBuf")) {
         lua_pushcfunction(L, lbuf_tostring);
         lua_setfield(L, -2, "__tostring");
         lua_pushcfunction(L, lbuf_gc);

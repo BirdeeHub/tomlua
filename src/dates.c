@@ -342,7 +342,7 @@ static int ldate_pairs(lua_State *L) {
 bool push_new_toml_date(lua_State *L, TomlDate date) {
     TomlDate *udate = (TomlDate *)lua_newuserdata(L, sizeof(TomlDate));
     *udate = date;
-    if (luaL_newmetatable(L, "TomlDate")) {
+    if (luaL_newmetatable(L, "TomluaDate")) {
         lua_pushcfunction(L, ldate_tostring);
         lua_setfield(L, -2, "__tostring");
         lua_pushcfunction(L, ldate_newindex);
