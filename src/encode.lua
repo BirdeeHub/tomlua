@@ -28,8 +28,7 @@ local function push_heading_table(self, visited, value, ...)
     local result = {}
     self:push_heading(false, ...)
     for k, v in pairs(value) do
-        local vtype = type(v)
-        if vtype == "table" then
+        if type(v) == "table" then
             local is_heading_array, is_array = lib.is_heading_array(v)
             if is_heading_array then
                 local keys = {...}
