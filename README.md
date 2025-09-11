@@ -80,7 +80,7 @@ tomlua.types = {
 }
 
 -- TODO: get the type for tomlua of a lua value
-tomlua.type(value) --> value from tomlua.types
+tomlua.type(value) --> number from tomlua.types
 -- TODO:
 tomlua.typename(typenumber) --> string
 -- TODO:
