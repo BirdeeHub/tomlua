@@ -305,6 +305,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
                 buf_push_str(buf, "false", 5);
             } break;
         case LUA_TTABLE: {
+            // cycle detection
             lua_pushvalue(L, val_idx);
             lua_rawget(L, visited_idx);
             if (!lua_isnil(L, -1)) return luaL_error(L, "cyclic reference");
@@ -312,6 +313,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
             lua_pushvalue(L, val_idx);
             lua_pushboolean(L, true);
             lua_rawset(L, visited_idx);
+
             if (is_lua_array(L, val_idx)) {
                 int len = lua_arraylen(L, val_idx);
                 if (!buf_push(buf, '[')) return luaL_error(L, "failed to push array start");
