@@ -630,6 +630,7 @@ int tomlua_decode(lua_State *L) {
     // https://www.lua.org/manual/5.1/manual.html#lua_tolstring
     // lua_pop(L, 1); // That's fine though
     if (src.buf == NULL) {
+        lua_settop(L, 0);
         lua_pushnil(L);
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
