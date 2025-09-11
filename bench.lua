@@ -156,7 +156,7 @@ print(tomlua.encode(data))
 print()
 
 do
-    tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = true }
+    tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
     local to_encode = tomlua.decode(contents)
 
     -- Benchmark
