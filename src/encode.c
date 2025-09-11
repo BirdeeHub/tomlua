@@ -346,12 +346,9 @@ static inline int lis_lua_heading_array(lua_State *L) {
     return 2;
 }
 
-void push_encode(lua_State *L, int opts_idx) {
-    int top = lua_gettop(L);
-    opts_idx = absindex(top, opts_idx);
+void push_encode(lua_State *L) {
     push_embedded_encode(L);
-    lua_pushvalue(L, opts_idx);
     lua_pushcfunction(L, lis_lua_heading_array);
     lua_pushcfunction(L, lbuf_new);
-    lua_call(L, 3, 1);
+    lua_call(L, 2, 1);
 }

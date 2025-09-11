@@ -9,10 +9,7 @@
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, ...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer
 
-local upvals = {...}
-local opts = upvals[1]
-local check_heading_array = upvals[2]
-local new_buf = upvals[3]
+local check_heading_array, new_buf = ...
 
 return function(input)
     ---@type Tomlua.String_buffer
