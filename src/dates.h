@@ -93,9 +93,9 @@ static inline bool date_field_set_by_idx(TomlDate *date, int idx, int val) {
     return true;
 }
 
+bool parse_toml_date(str_iter *src, TomlDate *date);
+// NOTE: CANNOT BE USED IN DECODE (uses luaL_error)
 bool push_new_toml_date(lua_State *L, TomlDate date);
 bool buf_push_toml_date(str_buf *buf, TomlDate *date);
-// NOTE: DECODE ONLY (uses set_err_upval)
-bool parse_toml_date(str_iter *src, TomlDate *date);
 
 #endif  // SRC_DATES_H_
