@@ -6,6 +6,7 @@
 #include <lauxlib.h>
 
 #include "types.h"
+#include "dates.h"
 #include "parse_str.h"
 #include "parse_keys.h"
 #include "output_table_lib.h"
@@ -18,22 +19,22 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
     bool last_was_comma = false;
     const bool strict = opts->strict;
     const bool int_keys = opts->int_keys;
-    const bool enhanced_tables = opts->enhanced_tables;
+    const bool fancy_tables = opts->fancy_tables;
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '}') {
             iter_skip(src);
-            if (last_was_comma && !enhanced_tables) {
+            if (last_was_comma && !fancy_tables) {
                 lua_pop(L, 1);
                 return set_err_upval(L, false, 42, "trailing comma in inline table not allowed");
             }
             return true;
         } else if (iter_peek(src).v == '\n') {
             iter_skip(src);
-            if (!enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
+            if (!fancy_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
             iter_skip_n(src, 2);
-            if (!enhanced_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
+            if (!fancy_tables) return set_err_upval(L, false, 35, "inline tables can not be multi-line");
         } else if (d == ',') {
             iter_skip(src);
             if (last_was_comma) {
@@ -67,7 +68,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
                 return false;
             }
         }
-        if (enhanced_tables) {
+        if (fancy_tables) {
             while (consume_whitespace_to_line(src)) {}
         } else if (consume_whitespace_to_line(src)) {
             return set_err_upval(L, false, 39, "toml inline tables cannot be multi-line");
@@ -314,7 +315,18 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 if (is_float) {
                     lua_pushnumber(L, strtod(buf->data, NULL));
                 } else if (is_date) {
-                    if (!push_buf_to_lua_string(L, buf)) {
+                    if (opts->fancy_dates) {
+                        str_iter date_src = (str_iter) {
+                            .len = buf->len,
+                            .pos = 0,
+                            .buf = buf->data
+                        };
+                        TomlDate date;
+                        if (!parse_toml_date(&date_src, &date))
+                            return set_err_upval(L, false, 29, "Invalid date format provided!");
+                        if (!push_new_toml_date(L, date))
+                            return set_err_upval(L, false, 51, "tomlua.decode failed to push date type to lua stack");
+                    } else if (!push_buf_to_lua_string(L, buf)) {
                         return set_err_upval(L, false, 53, "tomlua.decode failed to push date string to lua stack");
                     }
                 } else {
@@ -341,7 +353,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             lua_rawseti(L, -2, idx++);
         }
         return set_err_upval(L, false, 17, "missing closing ]");
-    // --- inline table --- does NOT support multiline or trailing comma (without enhanced_tables)
+    // --- inline table --- does NOT support multiline or trailing comma (without fancy_tables)
     } else if (curr.v == '{') {
         iter_skip(src);
         return parse_inline_table(L, src, buf, opts);
@@ -370,7 +382,9 @@ int tomlua_decode(lua_State *L) {
     push_to_output_table(L);
 
     str_iter src = lua_str_to_iter(L, 1);
-    lua_pop(L, 1);
+    // NOTE: I might actually not be allowed to pop this in case it gets GC'd?
+    // https://www.lua.org/manual/5.1/manual.html#lua_tolstring
+    // lua_pop(L, 1); // That's fine though
 
     // set top as the starting location
     push_output_table(L);

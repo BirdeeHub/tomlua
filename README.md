@@ -42,24 +42,45 @@ Yes there will eventually be better build instructions.
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
 local tomlua = require("tomlua")({
-    -- enhanced_tables allows multiline inline tables with a trailing comma
+    -- fancy_tables allows multiline inline tables with a trailing comma
     -- key = value still must be on the same line
     -- the tables, much like arrays, must still start on the same line as their key as well
-    enhanced_tables = false,
+    fancy_tables = false,
     -- adds further uniqueness checking to be fully compliant with the toml spec
     strict = false,
     -- causes keys that parse as lua integers to be interpreted as integer keys
     -- unless they were enclosed in "" or ''
     int_keys = false,
+    -- causes dates to be parsed into a userdata type
+    -- you may index, iterate with pairs or ipairs, or use tostring on them
+    -- encode will write them correctly as well
+    fancy_dates = false,
 })
 
 local data, err = tomlua.decode(some_string)
 
--- or read into an existing table
+-- or read into an existing table (always accepts fancy keys, never outputs fancy tables, currently unaffected by all other opts)
 data, err = tomlua.decode(some_string, { some = "defaults" })
 
--- TODO
-local str, err = tomlua.encode(some_table) -- with options to control some emit options via metatables on values
+local str, err = tomlua.encode(some_table)
+
+-- TODO:
+tomlua.new_date()
+
+tomlua.types = {
+    UNTYPED, -- 0  -- Untyped TOML Item
+    STRING, -- 1  -- lua string
+    STRING_MULTI, -- 2  -- lua string
+    INTEGER, -- 3  -- lua number
+    FLOAT, -- 4  -- lua number
+    BOOL, -- 5  -- lua bool
+    ARRAY, -- 6  -- lua table
+    TABLE, -- 7  -- lua table
+    LOCAL_DATE, -- 8  -- string, or userdata with fancy_dates
+    LOCAL_TIME, -- 9  -- string, or userdata with fancy_dates
+    LOCAL_DATETIME, -- 10  -- string, or userdata with fancy_dates
+    OFFSET_DATETIME, -- 11  -- string, or userdata with fancy_dates
+}
 ```
 
 ```c
@@ -72,10 +93,10 @@ enum TomlType {
     TOML_BOOL,  // lua bool
     TOML_ARRAY,  // lua table
     TOML_TABLE,  // lua table
-    TOML_LOCAL_DATE,  // string for now
-    TOML_LOCAL_TIME,  // string for now
-    TOML_LOCAL_DATETIME,  // string for now
-    TOML_OFFSET_DATETIME,  // string for now
+    TOML_LOCAL_DATE,  // string, or userdata with fancy_dates
+    TOML_LOCAL_TIME,  // string, or userdata with fancy_dates
+    TOML_LOCAL_DATETIME,  // string, or userdata with fancy_dates
+    TOML_OFFSET_DATETIME,  // string, or userdata with fancy_dates
 };
 ```
 

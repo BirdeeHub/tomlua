@@ -99,6 +99,19 @@ static inline size_t lua_arraylen(lua_State *L, int idx) {
 #endif
 }
 
+// Assumes you know it is a udata
+static inline bool udata_is_of_type(lua_State *L, int idx, const char* name) {
+    if (lua_getmetatable(L, idx)) {
+        luaL_getmetatable(L, name);
+        if (lua_rawequal(L, -1, -2)) {
+            lua_pop(L, 2);
+            return true;
+        }
+        lua_pop(L, 2);
+    }
+    return false;
+}
+
 typedef struct {
     size_t len;
     size_t cap;
@@ -121,8 +134,9 @@ typedef struct {
 
 typedef struct {
     bool strict;
-    bool enhanced_tables;
+    bool fancy_tables;
     bool int_keys;
+    bool fancy_dates;
 } TomluaUserOpts;
 
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
@@ -445,20 +459,20 @@ static inline iter_utf8_result iter_next_utf8(str_iter *iter) {
         if (remaining < 2 || (s[1] & 0xC0) != 0x80) return res;
         cp = ((c & 0x1F) << 6) | (s[1] & 0x3F);
         nbytes = 2;
-        if (cp < 0x80) return res; // overlong
+        if (cp < 0x80) return res;  // overlong
     } else if ((c & 0xF0) == 0xE0) {
         if (remaining < 3 || (s[1] & 0xC0) != 0x80 || (s[2] & 0xC0) != 0x80) return res;
         cp = ((c & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F);
         nbytes = 3;
-        if (cp < 0x800) return res; // overlong
+        if (cp < 0x800) return res;  // overlong
     } else if ((c & 0xF8) == 0xF0) {
         if (remaining < 4 || (s[1] & 0xC0) != 0x80 || (s[2] & 0xC0) != 0x80 || (s[3] & 0xC0) != 0x80) return res;
         cp = ((c & 0x07) << 18) | ((s[1] & 0x3F) << 12) |
              ((s[2] & 0x3F) << 6) | (s[3] & 0x3F);
         nbytes = 4;
-        if (cp < 0x10000 || cp > 0x10FFFF) return res; // overlong or out of range
+        if (cp < 0x10000 || cp > 0x10FFFF) return res;  // overlong or out of range
     } else {
-        return res; // invalid first byte
+        return res;  // invalid first byte
     }
 
     iter->pos += nbytes;

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
+#include "dates.h"
 #include "types.h"
 #include "encode.h"
 
@@ -125,25 +126,12 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
     }
 }
 
-// Assumes you know it is a udata
-static inline bool udata_is_str_buf(lua_State *L, int idx) {
-    if (lua_getmetatable(L, idx)) {
-        luaL_getmetatable(L, "LStrBuf");
-        if (lua_rawequal(L, -1, -2)) {
-            lua_pop(L, 2);
-            return true;
-        }
-        lua_pop(L, 2);
-    }
-    return false;
-}
-
 // 0 for neither, 1 for str, 2 for buf.
 static inline int is_str_or_buf(lua_State *L, int idx) {
     int type = lua_type(L, idx);
     if (type == LUA_TSTRING) {
         return 1;
-    } else if (type == LUA_TUSERDATA && udata_is_str_buf(L, idx)) {
+    } else if (type == LUA_TUSERDATA && udata_is_of_type(L, idx, "LStrBuf")) {
         return 2;
     }
     return 0;
@@ -356,6 +344,15 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
                     if (!buf_push(buf, ' ')) return luaL_error(L, "failed to push table trailing space");
                 }
                 if (!buf_push(buf, '}')) return luaL_error(L, "failed to push table end");
+            }
+        } break;
+        case LUA_TUSERDATA: {
+            if(udata_is_of_type(L, val_idx, "TomlDate")) {
+                if (!buf_push_toml_date(buf, (TomlDate *)lua_touserdata(L, val_idx)))
+                    return luaL_error(L, "failed to push date");
+            } else if (udata_is_of_type(L, val_idx, "LStrBuf")) {
+                str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
+                if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
             }
         } break;
         default: return luaL_error(L, "%s is not a valid type for push_inline_value", lua_typename(L, vtype));

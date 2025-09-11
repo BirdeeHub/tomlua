@@ -1,6 +1,6 @@
 package.cpath = "./lib/?.so;" .. package.cpath
-local tomlua = require("tomlua")({ enhanced_tables = false, strict = false })
-local tomlua_strict = require("tomlua")({ enhanced_tables = false, strict = true })
+local tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
+local tomlua_strict = require("tomlua") { fancy_tables = false, strict = true, fancy_dates = false }
 
 local inspect = require('inspect')
 local cjson = require("cjson.safe")
@@ -156,6 +156,7 @@ print(tomlua.encode(data))
 print()
 
 do
+    tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = true }
     local to_encode = tomlua.decode(contents)
 
     -- Benchmark
