@@ -61,11 +61,6 @@ local function push_heading_array(self, visited, value, ...)
     end
 end
 
--- TODO: CYCLE DETECTION
--- Also what do I even do if I have a cycle?
--- Do I print the keys to the thing it references?
--- Do I just throw?
--- start by just throwing and go from there.
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
