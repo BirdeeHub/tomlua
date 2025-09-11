@@ -612,11 +612,6 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
 
 int tomlua_decode(lua_State *L) {
     // process arguments and options
-    if (!lua_isstring(L, 1)) {
-        lua_pushnil(L);
-        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
-        return 2;
-    }
     TomluaUserOpts *uopts = get_opts_upval(L);
     const bool strict = uopts->strict;
     const bool int_keys = uopts->int_keys;
@@ -634,6 +629,11 @@ int tomlua_decode(lua_State *L) {
     // NOTE: I might actually not be allowed to pop this in case it gets GC'd?
     // https://www.lua.org/manual/5.1/manual.html#lua_tolstring
     // lua_pop(L, 1); // That's fine though
+    if (src.buf == NULL) {
+        lua_pushnil(L);
+        lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
+        return 2;
+    }
 
     // set top as the starting location
     push_output_table(L);
