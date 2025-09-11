@@ -22,11 +22,11 @@ local lib = upvals[2]
 
 --instead of pushing tables, returns the tables I need to split out
 --It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
----@type fun(self: Tomlua.String_buffer, visited: table<table, boolean?>, value: table, ...: string):Tomlua.Deferred_Heading[]
-local function push_heading_table(self, visited, value, ...)
+---@type fun(dst: Tomlua.String_buffer, visited: table<table, boolean?>, value: table, ...: string):Tomlua.Deferred_Heading[]
+local function push_heading_table(dst, visited, value, ...)
     ---@type Tomlua.Deferred_Heading[]
     local result = {}
-    self:push_heading(false, ...)
+    dst:push_heading(false, ...)
     for k, v in pairs(value) do
         if type(v) == "table" then
             local is_heading_array, is_array = lib.is_heading_array(v)
@@ -35,17 +35,17 @@ local function push_heading_table(self, visited, value, ...)
                 table.insert(keys, k)
                 table.insert(result, { is_array = true, keys = keys, value = v })
             elseif is_array then
-                self:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+                dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
             else
                 local keys = {...}
                 table.insert(keys, k)
                 table.insert(result, { is_array = false, keys = keys, value = v })
             end
         else
-            self:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+            dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
         end
     end
-    self:push("\n")
+    dst:push("\n")
     return result
 end
 
