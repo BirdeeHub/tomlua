@@ -47,6 +47,10 @@ local function push_heading_table(self, visited, value, ...)
     end
     return result
 end
+
+--instead of pushing tables, returns the tables I need to split out
+--It is to also return them if it is an array of ONLY TABLES, otherwise it prints the array inline
+---@type fun(dst: Tomlua.String_buffer, visited: table<table, boolean?>, q: Tomlua.Deferred_Heading[])
 local function flush_q(dst, visited, q)
     local i = 1
     while i <= #q do
