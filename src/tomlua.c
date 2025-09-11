@@ -45,8 +45,7 @@ static int tomlua_new(lua_State *L) {
     push_encode(L, 2, 3);
     lua_setfield(L, 1, "encode");
     lua_setfield(L, 1, "types");
-    lua_pushcfunction(L, tomlua_typename);
-    lua_setfield(L, 1, "typename");
+    lua_setfield(L, lua_upvalueindex(2), "typename");
 
     lua_settop(L, 1);
     // upvalue 1: error object
@@ -72,7 +71,8 @@ static int tomlua_new(lua_State *L) {
 }
 
 int luaopen_tomlua(lua_State *L) {
+    lua_pushcfunction(L, tomlua_typename);
     tomlua_types(L);
-    lua_pushcclosure(L, tomlua_new, 1);
+    lua_pushcclosure(L, tomlua_new, 2);
     return 1;
 }
