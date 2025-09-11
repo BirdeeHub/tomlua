@@ -152,6 +152,6 @@ print("TODO: ENCODE")
 print(tomlua.encode(tomlua.decode(contents)))
 
 print()
-print("THIS SHOULD RETURN ERROR AS SECOND ARG FOR CYCLE DETECTION")
+print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
 data.value = testdata
 print(tomlua.encode(data))
