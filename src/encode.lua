@@ -48,18 +48,6 @@ local function push_heading_table(self, visited, value, ...)
     return result
 end
 
---no need to return them for heading arrays tho, all the things inside these need to be inline
---only call it on things checked with is_heading_array
----@type fun(self: Tomlua.String_buffer, visited: table<table, boolean?>, value: table, ...: string)
-local function push_heading_array(self, visited, value, ...)
-    for _, val in ipairs(value) do
-        self:push_heading(true, ...)
-        for k, v in pairs(val) do
-            self:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
-        end
-    end
-end
-
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
@@ -70,7 +58,12 @@ return function(input)
         while i <= #q do
             local h = q[i]
             if h.is_array then
-                push_heading_array(dst, visited, h.value, unpack(h.keys))
+                for _, val in ipairs(h.value) do
+                    dst:push_heading(true, unpack(h.keys))
+                    for k, v in pairs(val) do
+                        dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+                    end
+                end
             else
                 flush_q(push_heading_table(dst, visited, h.value, unpack(h.keys)))
             end
