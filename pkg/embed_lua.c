@@ -145,6 +145,7 @@ static int embed_run(lua_State *L) {
         fprintf(out, "\n#endif  // %s\n", header_name);
     }
     free_embed_buf(&buf);
+    fflush(out);
     fclose(out);
     return 0;
 }
