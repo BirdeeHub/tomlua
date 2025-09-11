@@ -49,26 +49,27 @@ local function push_heading_table(dst, visited, value, ...)
     return result
 end
 
----@type fun(dst: Tomlua.String_buffer, visited: table<table, boolean?>, q: Tomlua.Deferred_Heading[])
-local function flush_q(dst, visited, q)
-    for _, h in ipairs(q) do
-        if h.is_array then
-            for _, val in ipairs(h.value) do
-                dst:push_heading(true, unpack(h.keys))
-                for k, v in pairs(val) do
-                    dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
-                end
-            end
-            dst:push("\n")
-        else
-            flush_q(dst, visited, push_heading_table(dst, visited, h.value, unpack(h.keys)))
-        end
-    end
-end
-
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = lib.new_buf()
+
+    ---@type fun(visited: table<table, boolean?>, q: Tomlua.Deferred_Heading[])
+    local function flush_q(visited, q)
+        for _, h in ipairs(q) do
+            if h.is_array then
+                for _, val in ipairs(h.value) do
+                    dst:push_heading(true, unpack(h.keys))
+                    for k, v in pairs(val) do
+                        dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
+                    end
+                end
+                dst:push("\n")
+            else
+                flush_q(visited, push_heading_table(dst, visited, h.value, unpack(h.keys)))
+            end
+        end
+    end
+
     ---@type Tomlua.Deferred_Heading[]
     local heading_q = {}
     local ok, val = pcall(function()
@@ -89,7 +90,7 @@ return function(input)
                 dst:push_keys(k):push(" = "):push_inline_value(visited, v):push("\n")
             end
         end
-        flush_q(dst, visited, heading_q)
+        flush_q(visited, heading_q)
         return tostring(dst)
     end, input)
     if ok then
