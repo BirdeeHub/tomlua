@@ -149,9 +149,48 @@ print(inspect(err))
 
 print()
 print("TODO: ENCODE")
-print(tomlua.encode(tomlua.decode(contents)))
-
 print()
 print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
 data.value = testdata
 print(tomlua.encode(data))
+print()
+print("ENCODE BENCH")
+print()
+
+do
+    local to_encode = tomlua.decode(contents)
+
+    -- Benchmark
+    start_time = os.clock()
+
+    for _ = 1, iterations do
+        local str, e = tomlua.encode(to_encode)
+        last_result = str
+        if e then
+            print("ERROR:", e)
+            break
+        end
+    end
+
+    elapsed = os.clock() - start_time
+
+    print("Last result:", last_result)
+    print(stats("TOML", elapsed))
+
+
+    -- Benchmark against cjson
+    start_time = os.clock()
+
+    for _ = 1, iterations do
+        local str, e = cjson.encode(to_encode)
+        last_result = str
+        if e then
+            print("ERROR:", e)
+            break
+        end
+    end
+
+    elapsed2 = os.clock() - start_time
+    print(stats("JSON", elapsed2))
+    print(rate_compare("tomlua/cjson", elapsed, elapsed2))
+end
