@@ -109,16 +109,12 @@ static inline bool parse_time(str_iter *src, TomlDate *date) {
     if (dot.ok && dot.v == '.') {
         iter_skip(src);
         int val = 0;
-        bool maxxed = false;
+        bool precision = 8;
         iter_result cur = iter_peek(src);
         while (char_isdigit(cur.v)) {
-            if (!maxxed) {
-                int v = cur.v - '0';
-                if (val < INT_MAX / 10 - v) {
-                    val = val * 10 + v;
-                } else {
-                    maxxed = true;
-                }
+            if (precision) {
+                val = val * 10 + (cur.v - '0');
+                precision--;
             }
             iter_skip(src);
             cur = iter_peek(src);
