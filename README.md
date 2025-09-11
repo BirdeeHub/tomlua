@@ -107,7 +107,7 @@ enum TomlType {
 
 I might have written it in rust or zig but I wanted to practice my C
 
-Error reporting is bad currently, but the infrastructure for handling them well is in place already for when I want to make them dynamic
+Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
 
 It only has a decode function and that is it so far.
 
