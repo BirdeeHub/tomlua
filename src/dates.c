@@ -361,4 +361,5 @@ bool push_new_toml_date(lua_State *L, TomlDate date) {
 
 // TODO: implement new_date function
 // which should clone if given a date as an arg
-// and should be able to read a table or list or varargs of integers corresponding to the TomlDate type
+// and should be able to read a string,
+// OR a table OR list OR varargs of integers corresponding to the TomlDate type
