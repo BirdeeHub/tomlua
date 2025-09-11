@@ -156,7 +156,7 @@ static inline int lbuf_push_keys(lua_State *L) {
     int top = lua_gettop(L);
     for (int i = 2; i <= top; i++) {
         str_iter src = lua_str_to_iter(L, i);
-        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key");
+        if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key");
         if (i != top) {
             if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key");
         }
@@ -176,7 +176,7 @@ static inline int lbuf_push_heading(lua_State *L) {
     }
     for (int i = 3; i <= top; i++) {
         str_iter src = lua_str_to_iter(L, i);
-        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
+        if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
         if (i != top) {
             if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
         }
@@ -196,7 +196,7 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
     switch (vtype) {
         case LUA_TSTRING: {
             str_iter src = lua_str_to_iter(L, val_idx);
-            if (!buf_push_esc_simple(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
+            if (src.buf == NULL || !buf_push_esc_simple(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
         } break;
         case LUA_TNUMBER: {
             if (!lua_isnumber(L, val_idx)) return luaL_error(L, "expected number");
@@ -250,8 +250,8 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
                     }
                     first = false;
                     if (!buf_push(buf, ' ')) return luaL_error(L, "failed to push table space before key");
-                    str_iter kiter = lua_str_to_iter(L, -2);
-                    if (!buf_push_esc_key(buf, &kiter)) return luaL_error(L, "failed to push table key");
+                    str_iter src = lua_str_to_iter(L, -2);
+                    if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push table key");
                     if (!buf_push_str(buf, " = ", 3)) return luaL_error(L, "failed to push table equals");
                     // pop and push value to buffer (-1 because no newlines allowed)
                     buf_push_inline_value(L, buf, visited_idx, -1);

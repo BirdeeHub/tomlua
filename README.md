@@ -109,7 +109,7 @@ I might have written it in rust or zig but I wanted to practice my C
 
 Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
 
-Basic benchmarking shows decode compares at about 1.5x cjson
+Basic benchmarking shows decode compares at about 1.5x the speed of cjson, and about 10x faster than toml_edit
 
 However the cjson in the benchmark does not need to deal with comments or empty lines, or the headings of toml.
 cjson is parsing the result of cjson.encode on the output of tomlua.decode.
