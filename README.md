@@ -79,6 +79,8 @@ tomlua.types = {
     OFFSET_DATETIME, -- 11  -- string, or userdata with fancy_dates
 }
 
+-- TODO: get the type for tomlua of a lua value
+tomlua.type(value) --> value from tomlua.types
 -- TODO:
 tomlua.new_date(--[[???]])
 ```
