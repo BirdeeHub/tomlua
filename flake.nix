@@ -4,7 +4,39 @@
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
     APPNAME = "tomlua";
   in {
-    overlays.default = import ./overlay.nix { inherit APPNAME self; };
+    overlays.default = final: prev: let
+      args = {
+        packageOverrides = luaself: luaprev: {
+          ${APPNAME} = luaself.callPackage ({buildLuarocksPackage}:
+            buildLuarocksPackage {
+              pname = APPNAME;
+              version = "scm-1";
+              knownRockspec = "${self}/${APPNAME}-scm-1.rockspec";
+              src = self;
+            }) {};
+        };
+      };
+    in {
+      lua5_1 = prev.lua5_1.override args;
+      lua51Packages = final.lua5_1.pkgs;
+      lua5_2 = prev.lua5_2.override args;
+      lua52Packages = final.lua5_2.pkgs;
+      lua5_3 = prev.lua5_3.override args;
+      lua53Packages = final.lua5_3.pkgs;
+      lua5_4 = prev.lua5_4.override args;
+      lua54Packages = final.lua5_4.pkgs;
+      luajit = prev.luajit.override args;
+      luajitPackages = final.luajit.pkgs;
+      lua = prev.lua.override args;
+      luaPackages = final.lua.pkgs;
+      vimPlugins = prev.vimPlugins // {
+        ${APPNAME} = final.neovimUtils.buildNeovimPlugin {
+          pname = APPNAME;
+          version = "dev";
+          src = self;
+        };
+      };
+    };
     packages = forAllSys (system: let
       pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
     in {
