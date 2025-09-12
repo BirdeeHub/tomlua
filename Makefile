@@ -18,7 +18,8 @@ SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/decode_str.c \
                 $(SRC)/src/decode.c \
                 $(SRC)/src/encode.c \
-                $(SRC)/src/dates.c
+                $(SRC)/src/dates.c \
+                $(SRC)/src/embed_lua.c
 
 check_lua_incdir = \
 	@if [ -z "$(LUA_INCDIR)" ]; then \

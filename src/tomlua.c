@@ -6,7 +6,6 @@
 #include "dates.h"
 #include "decode.h"
 #include "encode.h"
-#include "embed_lua.c"
 
 static int tomlua_type_of(lua_State *L) {
     switch (lua_type(L, 1)) {
