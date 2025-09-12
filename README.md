@@ -15,6 +15,12 @@ If you wish to edit existing toml, you should do that using a package more suite
 
 This is instead intended for hot-path parsing of toml files.
 
+Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
+
+Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
+
+At 15-20 microseconds per parse, speed is comparable to cjson, (1.2x-2.0x the speed depending on settings) despite parsing toml rather than json, and it is 10x faster than toml_edit
+
 ---
 
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
@@ -140,11 +146,3 @@ As a result of that, editing existing toml files, or emitting them at all, only 
 This means that it makes a lot of sense to use a simple but fast parser to parse config files on startup.
 
 And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
-
-I might have written it in rust or zig but I wanted to practice my C
-
-Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
-
-Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
-
-At 15-20 microseconds per parse, speed is comparable to cjson, (1.2x-2.0x the speed depending on settings) despite parsing toml rather than json, and it is 10x faster than toml_edit
