@@ -7,6 +7,14 @@ Parses toml files into and out of lua tables ASAP.
 
 Implemented in C
 
+This is not intended to replace packages like [toml_edit](https://github.com/nvim-neorocks/toml-edit.lua), which are slower but better for editing existing files.
+
+It will not be handling and re-emitting comments, and it will not re-output in the same format as the ingested file.
+
+If you wish to edit existing toml, you should do that using a package more suited for that.
+
+This is instead intended for hot-path parsing of toml files.
+
 ---
 
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
@@ -115,14 +123,6 @@ enum TomlType {
 ```
 
 ---
-
-This is not intended to replace packages like [toml_edit](https://github.com/nvim-neorocks/toml-edit.lua)
-
-It will not be handling and re-emitting comments, and it will not re-output in the same format as the ingested file.
-
-If you wish to edit existing toml, you should do that using a package more suited for that.
-
-This is instead intended for hot-path parsing of toml files.
 
 On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
 
