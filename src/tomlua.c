@@ -26,15 +26,16 @@ static int tomlua_type_of(lua_State *L) {
             return 1;
         case LUA_TTABLE:
             if (is_lua_array(L, 1)) {
-                lua_pushnumber(L, TOML_UNTYPED);
+                lua_pushnumber(L, TOML_ARRAY);
                 return 1;
             } else {
-                lua_pushnumber(L, TOML_UNTYPED);
+                lua_pushnumber(L, TOML_TABLE);
                 return 1;
             }
         case LUA_TUSERDATA:
             if(udata_is_of_type(L, 1, "TomluaDate")) {
-                lua_pushnumber(L, TOML_UNTYPED);
+                TomlDate *date = (TomlDate *)lua_touserdata(L, 1);
+                lua_pushnumber(L, date->toml_type);
                 return 1;
             }
         default:
