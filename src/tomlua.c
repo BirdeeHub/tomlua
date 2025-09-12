@@ -32,7 +32,7 @@ static int tomlua_typename(lua_State *L) {
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     TomluaUserOpts opts = {0};
-    if (lua_istable(L, 1)) {
+    if (lua_istable(L, 2)) {
         lua_getfield(L, 1, "strict");
         opts.strict = lua_toboolean(L, -1);
         lua_getfield(L, 1, "fancy_tables");
