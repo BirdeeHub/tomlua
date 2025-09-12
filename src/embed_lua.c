@@ -196,10 +196,10 @@ static int embed_run(lua_State *L) {
 }
 
 static int embed_add(lua_State *L) {
-    static const char *EMBED_USEAGE_MESSAGE = "invalid %s argument to embed.add!\n"
+    static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d to embed.add!\n"
         "Expected add(name: string, path: string, loader?: fun(name, path) -> function)\n";
-    if (!lua_isstring(L, 1)) return luaL_error(L, EMBED_USEAGE_MESSAGE, "first");
-    if (!lua_isstring(L, 2)) return luaL_error(L, EMBED_USEAGE_MESSAGE, "second");
+    if (!lua_isstring(L, 1)) return luaL_error(L, EMBED_USEAGE_MESSAGE, 1);
+    if (!lua_isstring(L, 2)) return luaL_error(L, EMBED_USEAGE_MESSAGE, 2);
 #if LUA_VERSION_NUM == 501
     size_t len = lua_objlen(L, lua_upvalueindex(1));
 #else
