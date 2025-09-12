@@ -59,14 +59,14 @@ static void free_embed_buf(struct embed_buf *buf) {
     }
 }
 
-static void embed_buf_soft_reset(struct embed_buf *buf) {
+static inline void embed_buf_soft_reset(struct embed_buf *buf) {
     if (buf) {
         buf->data[0] = '\0';
         buf->len = 0;
     }
 }
 
-static struct embed_buf new_embed_buf() {
+static inline struct embed_buf new_embed_buf() {
     return ((struct embed_buf) {
         .len = 0,
         .cap = 16,
@@ -74,7 +74,7 @@ static struct embed_buf new_embed_buf() {
     });
 }
 
-static int embed_buf_push_str(struct embed_buf *buf, const unsigned char *str, size_t len) {
+static inline int embed_buf_push_str(struct embed_buf *buf, const unsigned char *str, size_t len) {
     if (!buf || !str) return 0;
     size_t required_len = buf->len + len;
     if (required_len > buf->cap) {
@@ -94,13 +94,13 @@ static int embed_buf_push_str(struct embed_buf *buf, const unsigned char *str, s
     return 1;
 }
 
-static int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
+static inline int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
     struct embed_buf *buf = (struct embed_buf*)ud;
     embed_buf_push_str(buf, (const unsigned char *)p, sz);
     return 0;
 }
 
-static int embed_run(lua_State *L) {
+static inline int embed_run(lua_State *L) {
     const int output_to_stack = lua_toboolean(L, 1);
     const char *output_file = lua_tostring(L, lua_upvalueindex(1));
     const char *c_func_name = lua_tostring(L, lua_upvalueindex(2));
@@ -195,7 +195,7 @@ static int embed_run(lua_State *L) {
     return 0;
 }
 
-static int embed_add(lua_State *L) {
+static inline int embed_add(lua_State *L) {
     static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d to embed.add!\n"
         "Expected add(name: string, path: string, loader?: fun(name, path) -> function)\n";
     if (!lua_isstring(L, 1)) return luaL_error(L, EMBED_USEAGE_MESSAGE, 1);
@@ -219,7 +219,7 @@ static int embed_add(lua_State *L) {
     return 0;
 }
 
-static int embed_new(lua_State *L) {
+static inline int embed_new(lua_State *L) {
     static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d, expected %s.\nUseage:\n"
         "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
         "-- if header_name is nil, it will not be made into a header file\n"

@@ -6,7 +6,7 @@ CC           ?= gcc
 LUA          ?= lua
 BEAR         ?= bear
 GREP         ?= grep
-CFLAGS       ?= -x c -O3 -flto -finline-functions -Wl,-s
+CFLAGS       ?= -x c -O3 -flto -Wl,-s
 
 EMBEDDER_SRC := $(SRC)/src/embed_lua.c
 EMBEDDER     := $(TEMP_DIR)/embed_lua.so
