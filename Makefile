@@ -8,8 +8,8 @@ BEAR         ?= bear
 GREP         ?= grep
 CFLAGS       ?= -x c -O3 -flto -Wl,-s -Winline
 
-EMBEDDER_SRC := $(SRC)/src/embed_lua.c
-EMBEDDER     := $(TEMP_DIR)/embed_lua.so
+EMBEDDER_SRC := $(SRC)/src/luaembed.c
+EMBEDDER     := $(TEMP_DIR)/luaembed.so
 EMBED_SCRIPT := $(SRC)/src/embed.lua
 EMBEDDED_LUA := $(TEMP_DIR)/embedded.h
 CFLAGS       += -fPIC -shared -I"$(LUA_INCDIR)"
@@ -64,13 +64,9 @@ test: $(SRC)/src/* $(TESTDIR)/*
 install:
 ifdef LIBDIR
 	$(check_so_was_built)
-	@if [ -d "$(LIBDIR)" ]; then \
-		cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/"; \
-		echo "Installed to $(LIBDIR)"; \
-	else \
-		echo "LIBDIR set but does not exist: $(LIBDIR)"; \
-		false; \
-	fi
+	@mkdir -p "$(LIBDIR)";
+	cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/";
+	@echo "Installed to $(LIBDIR)";
 else
 	@echo "LIBDIR not set, skipping install"
 endif

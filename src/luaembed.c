@@ -221,7 +221,7 @@ static inline int embed_add(lua_State *L) {
 
 static inline int embed_new(lua_State *L) {
     static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d, expected %s.\nUseage:\n"
-        "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+        "local embed = require('tomlua.luaembed')(output_header_file, c_func_name, header_name?)\n"
         "-- if header_name is nil, it will not be made into a header file\n"
         "embed.add('file1', './file1.lua')\n"
         "embed.add('dir.file2', './dir/file2.lua')\n"
@@ -256,7 +256,7 @@ static inline int embed_new(lua_State *L) {
     return 1;
 }
 
-int luaopen_embed_lua(lua_State *L) {
+int luaopen_tomlua_luaembed(lua_State *L) {
     lua_newuserdata(L, 0);
     if (luaL_newmetatable(L, "C_LUA_EMBEDDER")) {
         lua_pushcfunction(L, env__index);
@@ -270,7 +270,7 @@ int luaopen_embed_lua(lua_State *L) {
     return 1;
 }
 
-int luaopen_env(lua_State *L) {
+int luaopen_tomlua_env(lua_State *L) {
     lua_newuserdata(L, 0);
     if (luaL_newmetatable(L, "LUA_ENV_VAR_HELPER")) {
         lua_pushcfunction(L, env__index);
@@ -281,3 +281,6 @@ int luaopen_env(lua_State *L) {
     lua_setmetatable(L, -2);
     return 1;
 }
+
+int luaopen_luaembed(lua_State *L) __attribute__((alias("luaopen_tomlua_luaembed")));
+int luaopen_env(lua_State *L) __attribute__((alias("luaopen_tomlua_env")));
