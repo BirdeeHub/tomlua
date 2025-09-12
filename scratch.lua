@@ -123,4 +123,5 @@ local timestamp = date() -- call with no args to get timestamp
 local date2 = tomlua.new_date(timestamp)
 date(timestamp + 12345) -- set value from timestamp (__call takes same arg as new_date)
 print(date > date2) -- true
+print(date < date2) -- false
 print(date) -- print as toml date string
