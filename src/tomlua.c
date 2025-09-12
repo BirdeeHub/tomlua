@@ -46,14 +46,16 @@ static int tomlua_new(lua_State *L) {
     lua_settop(L, 0);
     lua_newtable(L); // module table with decode
     lua_pushvalue(L, lua_upvalueindex(1));
-    lua_setfield(L, 1, "encode");
+    lua_setmetatable(L, 1);
     lua_pushvalue(L, lua_upvalueindex(2));
-    lua_setfield(L, 1, "types");
+    lua_setfield(L, 1, "encode");
     lua_pushvalue(L, lua_upvalueindex(3));
-    lua_setfield(L, 1, "typename");
+    lua_setfield(L, 1, "types");
     lua_pushvalue(L, lua_upvalueindex(4));
-    lua_setfield(L, 1, "new_date");
+    lua_setfield(L, 1, "typename");
     lua_pushvalue(L, lua_upvalueindex(5));
+    lua_setfield(L, 1, "new_date");
+    lua_pushvalue(L, lua_upvalueindex(6));
     lua_setfield(L, 1, "type");
 
     lua_settop(L, 1);
@@ -84,6 +86,7 @@ int luaopen_tomlua(lua_State *L) {
     lua_settop(L, 0);
     lua_newtable(L); // module table
     lua_newtable(L); // meta table
+    lua_pushvalue(L, -1);
     push_encode(L);
     lua_pushvalue(L, -1);
     lua_setfield(L, 1, "encode");
@@ -99,7 +102,7 @@ int luaopen_tomlua(lua_State *L) {
     lua_pushcfunction(L, tomlua_type_of);
     lua_pushvalue(L, -1);
     lua_setfield(L, 1, "type");
-    lua_pushcclosure(L, tomlua_new, 5);
+    lua_pushcclosure(L, tomlua_new, 6);
     lua_setfield(L, 2, "__call");
     lua_setmetatable(L, 1);
     return 1;

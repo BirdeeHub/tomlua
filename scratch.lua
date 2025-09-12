@@ -125,3 +125,6 @@ date(timestamp + 12345) -- set value from timestamp (__call takes same arg as ne
 print(date > date2) -- true
 print(date < date2) -- false
 print(date) -- print as toml date string
+
+print(inspect(require("tomlua")))
+print(inspect(tomlua))
