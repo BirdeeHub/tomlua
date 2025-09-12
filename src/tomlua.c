@@ -85,6 +85,6 @@ int luaopen_tomlua(lua_State *L) {
     lua_pushcfunction(L, tomlua_typename);
     lua_pushcfunction(L, lnew_date);
     lua_pushcfunction(L, tomlua_type_of);
-    lua_pushcclosure(L, tomlua_new, 3);
+    lua_pushcclosure(L, tomlua_new, 4);
     return 1;
 }
