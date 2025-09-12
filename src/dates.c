@@ -544,6 +544,7 @@ static int ldate_call(lua_State *L) {
         } break;
         case LUA_TTABLE: {
             *date = (TomlDate){0};
+            date->toml_type = TOML_OFFSET_DATETIME;
             lua_pushnil(L);
             while (lua_next(L, 2) != 0) {
                 int key_idx = -1;
