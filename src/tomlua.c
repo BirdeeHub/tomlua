@@ -88,8 +88,6 @@ int luaopen_tomlua(lua_State *L) {
     lua_newtable(L); // meta table
     lua_pushvalue(L, -1);
     push_encode(L);
-    lua_pushvalue(L, -1);
-    lua_setfield(L, 1, "encode");
     tomlua_types(L);
     lua_pushvalue(L, -1);
     lua_setfield(L, 1, "types");
