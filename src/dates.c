@@ -436,7 +436,7 @@ static inline uint64_t tomldate_to_utc_timestamp(const TomlDate *d) {
 static inline void utc_timestamp_to_tomldate(uint64_t timestamp, TomlDate *date) {
     // Reset the date
     *date = (TomlDate){0};
-    date->toml_type = TOML_LOCAL_DATETIME; // or TOML_LOCAL_DATE if only date needed
+    date->toml_type = TOML_OFFSET_DATETIME;
 
     // Split timestamp into seconds and microseconds
     uint64_t total_seconds = timestamp / 1000000ULL;
