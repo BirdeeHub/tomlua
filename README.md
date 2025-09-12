@@ -65,7 +65,8 @@ data, err = tomlua.decode(some_string, { some = "defaults" })
 -- encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
 -- instead you may customize dates by replacing them with tomlua date types
 -- and you may make arrays appear as tables, or empty tables appear as arrays,
--- by setmetatable(theval).__tomlua_type = tomlua.types.ARRAY
+-- by getmetatable({}).__tomlua_type = tomlua.types.ARRAY
+-- by getmetatable({ "a", "table", "with", "integer", "keys" }).__tomlua_type = tomlua.types.TABLE
 local str, err = tomlua.encode(some_table)
 
 tomlua.types = {
