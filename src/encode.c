@@ -92,6 +92,7 @@ static inline bool buf_push_num(str_buf *buf, lua_Number n) {
 }
 
 // TODO: use this in push_inline_value for something
+// when you do, remember to update tomlua.type to reflect however you detect that
 static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
     if (!buf_push_str(dst, "\"\"\"", 3)) return false;
     while (iter_peek(src).ok) {
