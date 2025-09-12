@@ -142,7 +142,7 @@ I might have written it in rust or zig but I wanted to practice my C
 
 Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
 
-Basic benchmarking shows (repeatedly parsing [tests/example.toml](./tests/example.toml) file:
+Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows:
 
 1_000_000 iterations:
 ```
