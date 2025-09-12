@@ -142,10 +142,10 @@ static int embed_run(lua_State *L) {
                 const char *err = lua_tostring(L, -1);
                 free_embed_buf(&buf);
                 fclose(out);
-                return luaL_error(L, "failed to call function for %s at %s\nERROR: %s", f_name, input_file, err);
+                return luaL_error(L, "Error calling loader for %s at %s\n%s", f_name, input_file, err);
             }
             if (!lua_isfunction(L, -1)) {
-                return luaL_error(L, "replacement function for loading %s at %s did not return a function (loaded chunk)", f_name, input_file);
+                return luaL_error(L, "Loader for %s at %s did not return a function (loaded chunk)", f_name, input_file);
             }
         } else {
             // load Lua chunk as a function
@@ -153,7 +153,7 @@ static int embed_run(lua_State *L) {
                 const char *err = lua_tostring(L, -1);
                 free_embed_buf(&buf);
                 fclose(out);
-                return luaL_error(L, "failed to load Lua file %s at %s\nERROR: %s", f_name, input_file, err);
+                return luaL_error(L, "failed to load Lua file %s at %s\n%s", f_name, input_file, err);
             }
         }
 
@@ -176,7 +176,7 @@ static int embed_run(lua_State *L) {
         fprintf(out, "    if (luaL_loadbuffer(L, (const char *)data, len, \"%s\")) {\n", f_name);
         fprintf(out, "        const char *err = lua_tostring(L, -1);\n");
         fprintf(out, "        lua_pop(L, 1);\n");
-        fprintf(out, "        return luaL_error(L, \"Error loading embedded Lua code for %s from function %s: %%s\", err);\n", f_name, c_func_name);
+        fprintf(out, "        return luaL_error(L, \"Error loading embedded Lua for %s from function %s: %%s\", err);\n", f_name, c_func_name);
         fprintf(out, "    }\n");
         if (!output_to_stack) {
             fprintf(out, "    lua_setfield(L, out_table_idx, \"%s\");\n", f_name);
@@ -184,11 +184,7 @@ static int embed_run(lua_State *L) {
         fprintf(out, "  }\n");
     }
 
-    if (output_to_stack) {
-        fprintf(out, "  return %zu;\n", num_inputs);
-    } else {
-        fprintf(out, "  return 1;\n");
-    }
+    fprintf(out, "  return %zu;\n", (output_to_stack) ? num_inputs : 1);
     fprintf(out, "}\n");
     if (header_name) {
         fprintf(out, "\n#endif  // %s\n", header_name);
@@ -200,11 +196,10 @@ static int embed_run(lua_State *L) {
 }
 
 static int embed_add(lua_State *L) {
-    if (!lua_isstring(L, 1)) return luaL_error(L,
-        "invalid first argument to embed.add!\n"
-        "Expected string `name` (used for output table and for debug info when calling luaL_loadbuffer)"
-    );
-    if (!lua_isstring(L, 2)) return luaL_error(L, "invalid second argument to embed.add!\nExpected string `input_path`");
+    static const char *EMBED_USEAGE_MESSAGE = "invalid %s argument to embed.add!\n"
+        "Expected add(name: string, path: string, loader?: fun(name, path) -> function)\n";
+    if (!lua_isstring(L, 1)) return luaL_error(L, EMBED_USEAGE_MESSAGE, "first");
+    if (!lua_isstring(L, 2)) return luaL_error(L, EMBED_USEAGE_MESSAGE, "second");
 #if LUA_VERSION_NUM == 501
     size_t len = lua_objlen(L, lua_upvalueindex(1));
 #else
@@ -225,20 +220,20 @@ static int embed_add(lua_State *L) {
 }
 
 static int embed_new(lua_State *L) {
-    static const char *EMBED_USEAGE_MESSAGE = "Useage:\n"
+    static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d, expected %s.\nUseage:\n"
         "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
         "-- if header_name is nil, it will not be made into a header file\n"
-        "embed.add('file1', 'path/to/file1.lua')\n"
-        "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
+        "embed.add('file1', './file1.lua')\n"
+        "embed.add('dir.file2', './dir/file2.lua')\n"
         "embed.run()\n"
         "-- or run(true) for returning directly on the stack instead of table, first on top\n";
     lua_remove(L, 1);
     for (int i = 1; i <= 3; i++) {
         int type = lua_type(L, i);
         if (i == 3 && type != LUA_TNIL && type != LUA_TSTRING) {
-            return luaL_error(L, "invalid argument #%d, expected string or nil.\n%s", i, EMBED_USEAGE_MESSAGE);
+            return luaL_error(L, EMBED_USEAGE_MESSAGE, i, "string or nil");
         } else if (type != LUA_TSTRING) {
-            return luaL_error(L, "invalid argument #%d, expected string.\n%s", i, EMBED_USEAGE_MESSAGE);
+            return luaL_error(L, EMBED_USEAGE_MESSAGE, i, "string");
         };
     }
     lua_newtable(L);
