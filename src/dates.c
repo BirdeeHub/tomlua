@@ -100,7 +100,7 @@ static inline bool char_isdigit(char c) {
     return '0' <= c && c <= '9';
 }
 
-static inline bool parse_number(str_iter *iter, int digits, int *out) {
+static bool parse_number(str_iter *iter, int digits, int *out) {
     int val = 0;
     iter_result cur = iter_peek(iter);
     for (int i = 0; i < digits; i++) {

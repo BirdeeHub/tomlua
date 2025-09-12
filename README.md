@@ -142,7 +142,27 @@ I might have written it in rust or zig but I wanted to practice my C
 
 Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
 
-Basic benchmarking shows decode compares at about 1.5x the speed of cjson, and about 10x faster than toml_edit
+Basic benchmarking shows (repeatedly parsing [tests/example.toml](./tests/example.toml) file:
+
+1_000_000 iterations:
+```
+Parsed TOML 1000000 times in 17.560145 seconds, avg. 56947.137965 iterations per second, avg. 17.56 µs/iteration
+Parsed TOML 1000000 times in 17.629497 seconds, avg. 56723.115810 iterations per second, avg. 17.63 µs/iteration
+speed tomlua/tomlua_strict: 100.39%, duration tomlua/tomlua_strict: 99.61%
+Parsed JSON 1000000 times in 14.536301 seconds, avg. 68793.292049 iterations per second, avg. 14.54 µs/iteration
+speed tomlua/cjson: 82.78%, duration tomlua/cjson: 120.80%
+```
+
+100_000 iterations with toml_edit as well:
+```
+Parsed TOML 100000 times in 1.831128 seconds, avg. 54611.146790 iterations per second, avg. 18.31 µs/iteration
+Parsed TOML 100000 times in 1.510966 seconds, avg. 66182.826086 iterations per second, avg. 15.11 µs/iteration
+speed tomlua/tomlua_strict: 82.52%, duration tomlua/tomlua_strict: 121.19%
+Parsed JSON 100000 times in 1.184362 seconds, avg. 84433.644443 iterations per second, avg. 11.84 µs/iteration
+speed tomlua/cjson: 64.68%, duration tomlua/cjson: 154.61%
+Parsed TOML 100000 times in 15.064943 seconds, avg. 6637.927538 iterations per second, avg. 150.65 µs/iteration
+speed tomlua/toml_edit: 822.71%, duration tomlua/toml_edit: 12.15%
+```
 
 However the cjson in the benchmark does not need to deal with comments or empty lines, or the headings of toml.
 cjson is parsing the result of cjson.encode on the output of tomlua.decode.

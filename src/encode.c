@@ -117,7 +117,7 @@ static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
     return true;
 }
 
-static inline bool buf_push_esc_simple(str_buf *dst, str_iter *src) {
+static bool buf_push_esc_simple(str_buf *dst, str_iter *src) {
     if (!buf_push(dst, '"')) return false;
     while (true) {
         iter_utf8_result res = iter_next_utf8(src);
@@ -190,7 +190,7 @@ static inline int lbuf_push_heading(lua_State *L) {
     return 1;
 }
 
-static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, int level) {
+static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, int level) {
     int val_idx = lua_gettop(L);
     int vtype = lua_type(L, val_idx);
     switch (vtype) {

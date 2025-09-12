@@ -218,7 +218,7 @@ static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_typ
 // NOTE: FOR STRICT MODE ONLY!!
 // pops value and keys, leaves root on top
 // returns ok == false if it sets an existing value directly, or into an inline table
-static inline bool set_kv_strict(lua_State *L, int keys_len) {
+static bool set_kv_strict(lua_State *L, int keys_len) {
     if (keys_len <= 0) return set_err_upval(L, false, 22, "no key provided to set");
     int value_idx = lua_gettop(L) - keys_len;
     int keys_start = value_idx + 1;
@@ -260,7 +260,7 @@ static inline bool set_kv_strict(lua_State *L, int keys_len) {
 }
 
 
-static inline bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
+static bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts);
 
 // adds a table to the lua stack and return NULL or error
 static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {

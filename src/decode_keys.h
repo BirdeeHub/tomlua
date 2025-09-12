@@ -50,7 +50,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
     return true;
 }
 
-static inline int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
+static int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
     int i = 0;
     while (iter_peek(src).ok) {
         i++;

@@ -189,7 +189,7 @@ static int new_TMLErr(lua_State *L) {
     return 1;
 }
 
-static inline bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
+static bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
     TMLErr *err = get_err_upval(L);
     if (err->heap) free(err->msg);  // clears previous message if heap allocated
     err->heap = heap_size;
@@ -320,7 +320,7 @@ static inline str_buf new_buf_from_str(const char *str, size_t len) {
     });
 }
 
-static inline bool buf_push(str_buf *buf, char c) {
+static bool buf_push(str_buf *buf, char c) {
     if (!buf) return false;
     if (buf->len >= buf->cap) {
         size_t new_capacity = buf->cap > 0 ? buf->cap * 2 : 1;
