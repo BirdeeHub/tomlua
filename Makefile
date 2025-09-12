@@ -21,7 +21,7 @@ SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/dates.c
 
 ifndef EXCLUDE_EMBEDDER
-SRCS += $(SRC)/src/embed_lua.c
+SRCS += $(EMBEDDER_SRC)
 endif
 
 check_lua_incdir = \
