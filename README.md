@@ -86,8 +86,24 @@ tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 
 -- TODO: get the type tomlua thinks a lua value is
 tomlua.type(value) --> number from tomlua.types
--- TODO:
-tomlua.new_date(--[[???]])
+
+-- accepts utc_timestamp,
+-- toml date string,
+-- a table or array with the same fields as date,
+-- or another date
+---@type fun(string|number|table|userdata?): userdata
+tomlua.new_date({
+    toml_type = tomlua.types.OFFSET_DATETIME,
+    year = 3333,
+    month = 3,
+    day = 3,
+    hour = 3,
+    minute = 3,
+    second = 3,
+    fractional_second = 333333,
+    offset_hour = 3,
+    offset_minute = 3,
+})
 ```
 
 ```c
