@@ -262,15 +262,14 @@ static inline int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_
                 if (!buf_push(buf, '}')) return luaL_error(L, "failed to push table end");
             }
         } break;
-        case LUA_TUSERDATA: {
+        case LUA_TUSERDATA:
             if(udata_is_of_type(L, val_idx, "TomluaDate")) {
                 if (!buf_push_toml_date(buf, (TomlDate *)lua_touserdata(L, val_idx)))
                     return luaL_error(L, "failed to push date");
             } else if (udata_is_of_type(L, val_idx, "TomluaStrBuf")) {
                 str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
                 if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
-            }
-        } break;
+            } break;
         default: return luaL_error(L, "%s is not a valid type for push_inline_value", lua_typename(L, vtype));
     }
     lua_settop(L, val_idx - 1);

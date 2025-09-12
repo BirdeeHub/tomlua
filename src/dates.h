@@ -97,5 +97,7 @@ bool parse_toml_date(str_iter *src, TomlDate *date);
 // NOTE: CANNOT BE USED IN DECODE (uses luaL_error)
 bool push_new_toml_date(lua_State *L, TomlDate date);
 bool buf_push_toml_date(str_buf *buf, TomlDate *date);
+// NOTE: for lua
+int lnew_date(lua_State *L);
 
 #endif  // SRC_DATES_H_

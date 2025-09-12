@@ -102,95 +102,40 @@ if run_toml_edit then
     print(stats("TOML", elapsed3))
     print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
 end
+tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
+local to_encode = tomlua.decode(contents)
 
-print()
-print("TODO remove junk test output")
+-- Benchmark
+start_time = os.clock()
 
-print()
-print("will this error (sorta)")
-local data, err = tomlua.decode({ bleh = "haha", })
-print(inspect(data), "  :  ", inspect(err))
-print("will this error (no)")
-data, err = tomlua.decode("hehe = 'haha'", "Im the wrong type and will be ignored!")
-print(inspect(data), "  :  ", inspect(err))
-print("will this error (sorta)")
-data, err = tomlua.decode()
-print(inspect(data), "  :  ", inspect(err))
-print("will this error (no)")
-data, err = tomlua.decode("hehe = 'haha'", { bleh = "haha", }, "does it ignore extra args?")
-print(inspect(data), "  :  ", inspect(err))
-
-print()
-print("OVERLAY DEFAULTS TEST")
-
-local testdata = {
-    a = {
-        b = { "1b", "2b" },
-    },
-    c = "hello",
-    e = {
-        f = { "1f", "2f" },
-    },
-    g = { "1g", "2g", "3g", "4g" },
-}
-
-local testtoml = [=[
-a.b = [ "3b", "4b" ]
-d = "hahaha"
-[[e.f]]
-testtable.value = true
-[a]
-newval = "nope"
-]=]
-
-data, err = tomlua.decode(testtoml, testdata)
-print(inspect(data))
-print(inspect(err))
-
-print()
-print("TODO: ENCODE")
-print()
-print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
-data.value = testdata
-print(tomlua.encode(data))
-print()
-
-do
-    tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
-    local to_encode = tomlua.decode(contents)
-
-    -- Benchmark
-    start_time = os.clock()
-
-    for _ = 1, iterations do
-        local str, e = tomlua.encode(to_encode)
-        last_result = str
-        if e then
-            print("ERROR:", e)
-            break
-        end
+for _ = 1, iterations do
+    local str, e = tomlua.encode(to_encode)
+    last_result = str
+    if e then
+        print("ERROR:", e)
+        break
     end
-
-    elapsed = os.clock() - start_time
-
-    print("Last result:", last_result)
-    print("ENCODE BENCH")
-    print(stats("TOML", elapsed))
-
-
-    -- Benchmark against cjson
-    start_time = os.clock()
-
-    for _ = 1, iterations do
-        local str, e = cjson.encode(to_encode)
-        last_result = str
-        if e then
-            print("ERROR:", e)
-            break
-        end
-    end
-
-    elapsed2 = os.clock() - start_time
-    print(stats("JSON", elapsed2))
-    print(rate_compare("tomlua/cjson", elapsed, elapsed2))
 end
+
+elapsed = os.clock() - start_time
+
+print("Last result:", last_result)
+print("ENCODE BENCH")
+print(stats("TOML", elapsed))
+
+
+-- Benchmark against cjson
+start_time = os.clock()
+
+for _ = 1, iterations do
+    local str, e = cjson.encode(to_encode)
+    last_result = str
+    if e then
+        print("ERROR:", e)
+        break
+    end
+end
+
+elapsed2 = os.clock() - start_time
+print(stats("JSON", elapsed2))
+print(rate_compare("tomlua/cjson", elapsed, elapsed2))

@@ -3,6 +3,7 @@
 #include <lauxlib.h>
 #include <stddef.h>
 #include "types.h"
+#include "dates.h"
 #include "decode.h"
 #include "encode.h"
 
@@ -46,6 +47,8 @@ static int tomlua_new(lua_State *L) {
     lua_setfield(L, 1, "types");
     lua_pushvalue(L, lua_upvalueindex(2));
     lua_setfield(L, 1, "typename");
+    lua_pushvalue(L, lua_upvalueindex(3));
+    lua_setfield(L, 1, "new_date");
 
     // upvalue 1: error object
     new_TMLErr(L);
@@ -70,8 +73,9 @@ static int tomlua_new(lua_State *L) {
 }
 
 int luaopen_tomlua(lua_State *L) {
+    lua_pushcfunction(L, lnew_date);
     lua_pushcfunction(L, tomlua_typename);
     tomlua_types(L);
-    lua_pushcclosure(L, tomlua_new, 2);
+    lua_pushcclosure(L, tomlua_new, 3);
     return 1;
 }

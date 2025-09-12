@@ -9,6 +9,7 @@ testoctnumber = 0o755
 testbinnumber = 0b11010110
 
 release_date = 2022-08-24T12:00:00.666969696969696969Z
+next_release = 2028-08-24T12:00:00.666Z
 last_backup = 2025-08-23T23:45:12-07:00
 last_modified = 2025-08-24 12:00:00Z
 
