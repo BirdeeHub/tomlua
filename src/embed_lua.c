@@ -45,21 +45,13 @@ static int env__index(lua_State *L) {
     return 1;
 }
 
-static inline size_t lua_arraylen(lua_State *L, int idx) {
-#if LUA_VERSION_NUM == 501
-    return lua_objlen(L, idx);
-#else
-    return lua_rawlen(L, idx);
-#endif
-}
-
-typedef struct {
+struct embed_buf {
     size_t len;
     size_t cap;
     unsigned char *data;
-} embed_buf;
+};
 
-static inline void free_embed_buf(embed_buf *buf) {
+static void free_embed_buf(struct embed_buf *buf) {
     if (buf) {
         if (buf->data) free(buf->data);
         buf->data = NULL;
@@ -67,22 +59,22 @@ static inline void free_embed_buf(embed_buf *buf) {
     }
 }
 
-static inline void buf_soft_reset(embed_buf *buf) {
+static void embed_buf_soft_reset(struct embed_buf *buf) {
     if (buf) {
         buf->data[0] = '\0';
         buf->len = 0;
     }
 }
 
-static inline embed_buf new_embed_buf() {
-    return ((embed_buf) {
+static struct embed_buf new_embed_buf() {
+    return ((struct embed_buf) {
         .len = 0,
         .cap = 16,
         .data = (unsigned char *)malloc(16 * sizeof(char))
     });
 }
 
-static inline int embed_buf_push_str(embed_buf *buf, const unsigned char *str, size_t len) {
+static int embed_buf_push_str(struct embed_buf *buf, const unsigned char *str, size_t len) {
     if (!buf || !str) return 0;
     size_t required_len = buf->len + len;
     if (required_len > buf->cap) {
@@ -102,9 +94,9 @@ static inline int embed_buf_push_str(embed_buf *buf, const unsigned char *str, s
     return 1;
 }
 
-static int writer(lua_State *L, const void *p, size_t sz, void *ud) {
-    embed_buf *buf = (embed_buf*)ud;
-    embed_buf_push_str(buf, p, sz);
+static int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
+    struct embed_buf *buf = (struct embed_buf*)ud;
+    embed_buf_push_str(buf, (const unsigned char *)p, sz);
     return 0;
 }
 
@@ -114,9 +106,13 @@ static int embed_run(lua_State *L) {
     const char *c_func_name = lua_tostring(L, lua_upvalueindex(2));
     const char *header_name = lua_tostring(L, lua_upvalueindex(3));
 
-    size_t num_inputs = lua_arraylen(L, lua_upvalueindex(4));
+#if LUA_VERSION_NUM == 501
+    size_t num_inputs = lua_objlen(L, lua_upvalueindex(4));
+#else
+    size_t num_inputs = lua_rawlen(L, lua_upvalueindex(4));
+#endif
 
-    embed_buf buf = new_embed_buf();
+    struct embed_buf buf = new_embed_buf();
     FILE *out = fopen(output_file, "wb");
     if (!out) return luaL_error(L, "failed to open output");
 
@@ -147,8 +143,8 @@ static int embed_run(lua_State *L) {
             return luaL_error(L, "failed to load Lua file: %s", err);
         }
 
-        buf_soft_reset(&buf);
-        if (lua_dump(L, writer, &buf)) {
+        embed_buf_soft_reset(&buf);
+        if (lua_dump(L, embed_writer, &buf)) {
             free_embed_buf(&buf);
             fclose(out);
             return luaL_error(L, "Failed to dump Lua bytecode");
@@ -196,7 +192,11 @@ static int embed_add(lua_State *L) {
         "Expected string `name` (used for output table and for debug info when calling luaL_loadbuffer)"
     );
     if (!lua_isstring(L, 2)) return luaL_error(L, "invalid second argument to embed.add!\nExpected string `input_path`");
-    size_t len = lua_arraylen(L, lua_upvalueindex(1));
+#if LUA_VERSION_NUM == 501
+    size_t len = lua_objlen(L, lua_upvalueindex(1));
+#else
+    size_t len = lua_rawlen(L, lua_upvalueindex(1));
+#endif
     lua_newtable(L);
     lua_pushvalue(L, 1);
     lua_rawseti(L, -2, 1);
@@ -207,22 +207,21 @@ static int embed_add(lua_State *L) {
     return 0;
 }
 
-static const char *USEAGE_MESSAGE = "Useage:\n"
-    "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
-    "-- if header_name is nil, it will not be made into a header file\n"
-    "embed.add('file1', 'path/to/file1.lua')\n"
-    "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
-    "embed.run()\n"
-    "-- or run(true) for returning directly on the stack instead of table, first on top\n";
-
 static int embed_new(lua_State *L) {
+    static const char *EMBED_USEAGE_MESSAGE = "Useage:\n"
+        "local embed = require('embed_lua')(output_header_file, c_func_name, header_name?)\n"
+        "-- if header_name is nil, it will not be made into a header file\n"
+        "embed.add('file1', 'path/to/file1.lua')\n"
+        "embed.add('dir.file2', 'path/to/dir/file2.lua')\n"
+        "embed.run()\n"
+        "-- or run(true) for returning directly on the stack instead of table, first on top\n";
     lua_remove(L, 1);
     for (int i = 1; i <= 3; i++) {
         int type = lua_type(L, i);
         if (i == 3 && type != LUA_TNIL && type != LUA_TSTRING) {
-            return luaL_error(L, "invalid argument #%d, expected string or nil.\n%s", i, USEAGE_MESSAGE);
+            return luaL_error(L, "invalid argument #%d, expected string or nil.\n%s", i, EMBED_USEAGE_MESSAGE);
         } else if (type != LUA_TSTRING) {
-            return luaL_error(L, "invalid argument #%d, expected string.\n%s", i, USEAGE_MESSAGE);
+            return luaL_error(L, "invalid argument #%d, expected string.\n%s", i, EMBED_USEAGE_MESSAGE);
         };
     }
     lua_newtable(L);
@@ -241,7 +240,7 @@ static int embed_new(lua_State *L) {
         lua_pushcfunction(L, embed_new);
         lua_setfield(L, -2, "__call");
     }
-    lua_setmetatable(L, 1); // setmetatable(t, mt)
+    lua_setmetatable(L, 1);
     return 1;
 }
 
@@ -255,7 +254,7 @@ int luaopen_embed_lua(lua_State *L) {
         lua_pushcfunction(L, embed_new);
         lua_setfield(L, -2, "__call");
     }
-    lua_setmetatable(L, -2); // setmetatable(t, mt)
+    lua_setmetatable(L, -2);
     return 1;
 }
 
@@ -267,6 +266,6 @@ int luaopen_env(lua_State *L) {
         lua_pushcfunction(L, env__newindex);
         lua_setfield(L, -2, "__newindex");
     }
-    lua_setmetatable(L, -2); // setmetatable(t, mt)
-    return 1; // return env table
+    lua_setmetatable(L, -2);
+    return 1;
 }

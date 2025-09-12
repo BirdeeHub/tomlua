@@ -8,8 +8,9 @@ BEAR         ?= bear
 GREP         ?= grep
 CFLAGS       ?= -x c -O3 -flto -finline-functions -Wl,-s
 
-EMBEDDER_SRC := $(SRC)/pkg/embed_lua.c
+EMBEDDER_SRC := $(SRC)/src/embed_lua.c
 EMBEDDER     := $(TEMP_DIR)/embed_lua.so
+EMBED_SCRIPT := $(SRC)/src/embed.lua
 EMBEDDED_LUA := $(TEMP_DIR)/embedded.h
 CFLAGS       += -fPIC -shared -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
@@ -38,9 +39,9 @@ embedder: $(EMBEDDER_SRC)
 	@mkdir -p $(TEMP_DIR)
 	$(CC) $(CFLAGS) -o "$(EMBEDDER)" "$(EMBEDDER_SRC)"
 
-embed: embedder $(SRC)/src/encode.lua $(SRC)/pkg/embed.lua
+embed: embedder $(SRC)/src/encode.lua $(EMBED_SCRIPT)
 	@mkdir -p $(TEMP_DIR)
-	$(LUA) $(SRC)/pkg/embed.lua "$(EMBEDDER)" "$(SRC)/src" "$(EMBEDDED_LUA)"
+	$(LUA) "$(EMBED_SCRIPT)" "$(EMBEDDER)" "$(SRC)/src" "$(EMBEDDED_LUA)"
 
 build: $(SRC)/src/* embed
 	$(check_lua_incdir)
@@ -52,7 +53,7 @@ bear:
 	$(BEAR) -- $(CC) -### $(CFLAGS) -DEMBEDDED_LUA="$(EMBEDDED_LUA)" -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
-test: $(SRC)/src/* $(SRC)/pkg/* $(TESTDIR)/*
+test: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
 	$(LUA) "$(TESTDIR)/init.lua" -- "$(TESTDIR)" "$(DESTDIR)"
 
