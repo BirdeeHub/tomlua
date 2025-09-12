@@ -147,4 +147,4 @@ Error reporting is bad currently, but the plumbing is there, just lazy messages 
 
 Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
 
-Speed is comparable to cjson, despite parsing toml rather than json, and it is about 10x faster than toml_edit
+Speed is comparable to cjson, (1.2x-2.0x the speed depending on settings) despite parsing toml rather than json, and it is 10x faster than toml_edit
