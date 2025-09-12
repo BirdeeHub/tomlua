@@ -52,7 +52,6 @@ local tomlua = require("tomlua")({
     -- unless they were enclosed in "" or ''
     int_keys = false,
     -- causes dates to be parsed into a userdata type
-    -- you may index, iterate with pairs or ipairs, or use tostring on them
     -- encode will write them correctly as well
     fancy_dates = false,
 })
