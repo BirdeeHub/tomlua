@@ -282,5 +282,6 @@ int luaopen_tomlua_env(lua_State *L) {
     return 1;
 }
 
+int luaopen_tomlua_embed(lua_State *L) __attribute__((alias("luaopen_tomlua_luaembed")));
 int luaopen_luaembed(lua_State *L) __attribute__((alias("luaopen_tomlua_luaembed")));
 int luaopen_env(lua_State *L) __attribute__((alias("luaopen_tomlua_env")));
