@@ -128,3 +128,5 @@ print(date) -- print as toml date string
 
 print(inspect(require("tomlua")))
 print(inspect(tomlua))
+
+print(tomlua.typename(tomlua.type(date)))

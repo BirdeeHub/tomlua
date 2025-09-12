@@ -88,7 +88,7 @@ tomlua.types = {
 }
 tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 
--- TODO: get the type tomlua thinks a lua value is
+-- get the type tomlua thinks a lua value is
 tomlua.type(value) --> number from tomlua.types
 
 -- accepts utc_timestamp,
