@@ -50,6 +50,8 @@ static int tomlua_new(lua_State *L) {
     lua_pushvalue(L, lua_upvalueindex(3));
     lua_setfield(L, 1, "new_date");
 
+    lua_settop(L, 1);
+
     // upvalue 1: error object
     new_TMLErr(L);
     // upvalue 2: options
@@ -73,9 +75,9 @@ static int tomlua_new(lua_State *L) {
 }
 
 int luaopen_tomlua(lua_State *L) {
-    lua_pushcfunction(L, lnew_date);
-    lua_pushcfunction(L, tomlua_typename);
     tomlua_types(L);
+    lua_pushcfunction(L, tomlua_typename);
+    lua_pushcfunction(L, lnew_date);
     lua_pushcclosure(L, tomlua_new, 3);
     return 1;
 }

@@ -92,7 +92,7 @@ tomlua.type(value) --> number from tomlua.types
 -- a table or array with the same fields as date,
 -- or another date
 ---@type fun(string|number|table|userdata?): userdata
-tomlua.new_date({
+local date = tomlua.new_date({
     toml_type = tomlua.types.OFFSET_DATETIME,
     year = 3333,
     month = 3,
@@ -104,6 +104,17 @@ tomlua.new_date({
     offset_hour = 3,
     offset_minute = 3,
 })
+date.year = 2222 -- set values
+for k, v in getmetatable(date).__pairs(date) do
+    print(k, v)
+end
+local timestamp = date() -- call with no args to get timestamp
+local date2 = tomlua.new_date(timestamp)
+print(date == date2) -- true
+date(timestamp + 12345) -- set value from timestamp (__call takes same arg as new_date)
+print(date == date2) -- false
+print(date > date2) -- true
+print(date) -- print as toml date string
 ```
 
 ```c
