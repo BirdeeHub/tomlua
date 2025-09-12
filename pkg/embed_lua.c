@@ -260,7 +260,7 @@ int luaopen_embed_lua(lua_State *L) {
 }
 
 int luaopen_env(lua_State *L) {
-    lua_newtable(L);
+    lua_newuserdata(L, 0);
     if (luaL_newmetatable(L, "LUA_ENV_VAR_HELPER")) {
         lua_pushcfunction(L, env__index);
         lua_setfield(L, -2, "__index");
