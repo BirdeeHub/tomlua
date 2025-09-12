@@ -59,44 +59,23 @@ static void free_embed_buf(struct embed_buf *buf) {
     }
 }
 
-static inline void embed_buf_soft_reset(struct embed_buf *buf) {
-    if (buf) {
-        buf->data[0] = '\0';
-        buf->len = 0;
-    }
-}
-
-static inline struct embed_buf new_embed_buf() {
-    return ((struct embed_buf) {
-        .len = 0,
-        .cap = 16,
-        .data = (unsigned char *)malloc(16 * sizeof(char))
-    });
-}
-
-static inline int embed_buf_push_str(struct embed_buf *buf, const unsigned char *str, size_t len) {
-    if (!buf || !str) return 0;
-    size_t required_len = buf->len + len;
+static inline int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
+    struct embed_buf *buf = (struct embed_buf*)ud;
+    const unsigned char *str = (const unsigned char *)p;
+    if (!buf || !str) return LUA_ERRERR;
+    size_t required_len = buf->len + sz;
     if (required_len > buf->cap) {
         size_t new_capacity = buf->cap > 0 ? buf->cap : 1;
         while (new_capacity < required_len) {
             new_capacity *= 2;
         }
         unsigned char *tmp = (unsigned char *)realloc(buf->data, new_capacity * sizeof(unsigned char));
-        if (!tmp) return 0;
+        if (!tmp) return LUA_ERRMEM;
         buf->data = tmp;
         buf->cap = new_capacity;
     }
-
-    memcpy(buf->data + buf->len, str, len);
-    buf->len += len;
-
-    return 1;
-}
-
-static inline int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
-    struct embed_buf *buf = (struct embed_buf*)ud;
-    embed_buf_push_str(buf, (const unsigned char *)p, sz);
+    memcpy(buf->data + buf->len, str, sz);
+    buf->len += sz;
     return 0;
 }
 
@@ -112,7 +91,11 @@ static inline int embed_run(lua_State *L) {
     size_t num_inputs = lua_rawlen(L, lua_upvalueindex(4));
 #endif
 
-    struct embed_buf buf = new_embed_buf();
+    struct embed_buf buf = {
+        .len = 0,
+        .cap = 16,
+        .data = (unsigned char *)malloc(16 * sizeof(char))
+    };
     FILE *out = fopen(output_file, "wb");
     if (!out) return luaL_error(L, "failed to open output");
 
@@ -157,7 +140,8 @@ static inline int embed_run(lua_State *L) {
             }
         }
 
-        embed_buf_soft_reset(&buf);
+        // Soft Reset
+        buf.len = 0;
         if (lua_dump(L, embed_writer, &buf)) {
             free_embed_buf(&buf);
             fclose(out);

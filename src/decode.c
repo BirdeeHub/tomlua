@@ -351,8 +351,18 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         if (!parse_multi_basic_string(L, buf, src)) {
             return false;
         }
-        if (!push_buf_to_lua_string(L, buf)) {
-            return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
+        if (opts->multi_strings) {
+            str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
+            if (!s || !buf || !buf->data) {
+                return set_err_upval(L, false, 59, "tomlua.decode failed to push multi-line string to lua stack");
+            }
+            *s = new_buf_from_str(buf->data, buf->len);
+            push_multi_string_mt(L);
+            lua_setmetatable(L, -2);
+        } else {
+            if (!push_buf_to_lua_string(L, buf)) {
+                return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
+            }
         }
         return true;
     } else if (curr.v == '"') {
@@ -371,8 +381,18 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         if (!parse_multi_literal_string(L, buf, src)) {
             return false;
         }
-        if (!push_buf_to_lua_string(L, buf)) {
-            return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
+        if (opts->multi_strings) {
+            str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
+            if (!s || !buf || !buf->data) {
+                return set_err_upval(L, false, 59, "tomlua.decode failed to push multi-line string to lua stack");
+            }
+            *s = new_buf_from_str(buf->data, buf->len);
+            push_multi_string_mt(L);
+            lua_setmetatable(L, -2);
+        } else {
+            if (!push_buf_to_lua_string(L, buf)) {
+                return set_err_upval(L, false, 48, "tomlua.decode failed to push string to lua stack");
+            }
         }
         return true;
     } else if (curr.v == '\'') {

@@ -37,6 +37,9 @@ static int tomlua_type_of(lua_State *L) {
                 TomlDate *date = (TomlDate *)lua_touserdata(L, 1);
                 lua_pushnumber(L, date->toml_type);
                 return 1;
+            } else if (udata_is_of_type(L, 1, "TomluaMultiStr")) {
+                lua_pushnumber(L, TOML_STRING_MULTI);
+                return 1;
             }
         default:
             lua_pushnumber(L, TOML_UNTYPED);
@@ -62,18 +65,36 @@ static int tomlua_typename(lua_State *L) {
     return 1;
 }
 
+int luaopen_tomlua_date(lua_State *L) {
+    lua_pushcfunction(L, lnew_date);
+    return 1;
+}
+
+static inline int str_2_mul(lua_State *L) {
+    size_t len = 0;
+    const char *data = lua_tolstring(L, 1, &len);
+    if (data == NULL) return luaL_error(L, "tomlua.str_2_mul takes a string as its only argument!");
+    str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
+    *s = new_buf_from_str(data, len);
+    push_multi_string_mt(L);
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
 static int tomlua_new(lua_State *L) {
     // arg 1 = options or nil
     TomluaUserOpts opts = {0};
     if (lua_istable(L, 2)) {
-        lua_getfield(L, 1, "strict");
+        lua_getfield(L, 2, "strict");
         opts.strict = lua_toboolean(L, -1);
-        lua_getfield(L, 1, "fancy_tables");
+        lua_getfield(L, 2, "fancy_tables");
         opts.fancy_tables = lua_toboolean(L, -1);
-        lua_getfield(L, 1, "int_keys");
+        lua_getfield(L, 2, "int_keys");
         opts.int_keys = lua_toboolean(L, -1);
-        lua_getfield(L, 1, "fancy_dates");
+        lua_getfield(L, 2, "fancy_dates");
         opts.fancy_dates = lua_toboolean(L, -1);
+        lua_getfield(L, 2, "multi_strings");
+        opts.multi_strings = lua_toboolean(L, -1);
     }
 
     lua_settop(L, 0);
@@ -90,6 +111,8 @@ static int tomlua_new(lua_State *L) {
     lua_setfield(L, 1, "new_date");
     lua_pushvalue(L, lua_upvalueindex(6));
     lua_setfield(L, 1, "type");
+    lua_pushvalue(L, lua_upvalueindex(7));
+    lua_setfield(L, 1, "str_2_mul");
 
     lua_settop(L, 1);
 
@@ -133,7 +156,10 @@ int luaopen_tomlua(lua_State *L) {
     lua_pushcfunction(L, tomlua_type_of);
     lua_pushvalue(L, -1);
     lua_setfield(L, 1, "type");
-    lua_pushcclosure(L, tomlua_new, 6);
+    lua_pushcfunction(L, str_2_mul);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, 1, "str_2_mul");
+    lua_pushcclosure(L, tomlua_new, 7);
     lua_setfield(L, 2, "__call");
     lua_setmetatable(L, 1);
     return 1;

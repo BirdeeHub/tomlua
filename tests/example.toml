@@ -39,6 +39,11 @@ And this should be on the same line!
 """
 multi-line-single = '''
 leading newline should be stripped! """ ' '' '
+
+trailing should not!
+
+
+
 '''
 
 # should fail on strict mode later at database heading

@@ -91,8 +91,6 @@ static inline bool buf_push_num(str_buf *buf, lua_Number n) {
     return true;
 }
 
-// TODO: use this in push_inline_value for something
-// when you do, remember to update tomlua.type to reflect however you detect that
 static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
     if (!buf_push_str(dst, "\"\"\"", 3)) return false;
     while (iter_peek(src).ok) {
@@ -265,9 +263,17 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
             }
         } break;
         case LUA_TUSERDATA:
-            if(udata_is_of_type(L, val_idx, "TomluaDate")) {
+            if (udata_is_of_type(L, val_idx, "TomluaDate")) {
                 if (!buf_push_toml_date(buf, (TomlDate *)lua_touserdata(L, val_idx)))
                     return luaL_error(L, "failed to push date");
+            } else if (udata_is_of_type(L, val_idx, "TomluaMultiStr")) {
+                str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
+                str_iter argiter = {
+                    .buf = arg->data,
+                    .len = arg->len,
+                    .pos = 0
+                };
+                if (!buf_push_esc_multi(buf, &argiter)) return luaL_error(L, "failed to push string");
             } else if (udata_is_of_type(L, val_idx, "TomluaStrBuf")) {
                 str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
                 if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
@@ -297,23 +303,6 @@ static inline int lbuf_index(lua_State *L) {
     lua_setfield(L, -2, "push_heading");
     lua_pushcfunction(L, lbuf_push_keys);
     lua_setfield(L, -2, "push_keys");
-    return 1;
-}
-
-static inline int lbuf_gc(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    if (buf->data) {
-        free(buf->data);
-        buf->data = NULL;
-    }
-    buf->cap = buf->len = 0;
-    return 0;
-}
-
-static inline int lbuf_tostring(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    if (!buf->data) lua_pushliteral(L, "");
-    else lua_pushlstring(L, buf->data, buf->len);
     return 1;
 }
 

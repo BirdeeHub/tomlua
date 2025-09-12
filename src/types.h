@@ -134,13 +134,41 @@ typedef struct {
 
 typedef struct {
     bool strict;
-    bool fancy_tables;
     bool int_keys;
     bool fancy_dates;
+    bool fancy_tables;
+    bool multi_strings;
 } TomluaUserOpts;
 
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
     return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(2));
+}
+
+static int lbuf_gc(lua_State *L) {
+    str_buf *buf = (str_buf *)lua_touserdata(L, 1);
+    if (buf && buf->data) {
+        free(buf->data);
+        buf->data = NULL;
+    }
+    buf->cap = buf->len = 0;
+    return 0;
+}
+
+static int lbuf_tostring(lua_State *L) {
+    str_buf *buf = (str_buf *)lua_touserdata(L, 1);
+    if (!buf || !buf->data) lua_pushliteral(L, "");
+    else lua_pushlstring(L, buf->data, buf->len);
+    return 1;
+}
+
+static inline int push_multi_string_mt(lua_State *L) {
+    if (luaL_newmetatable(L, "TomluaMultiStr")) {
+        lua_pushcfunction(L, lbuf_tostring);
+        lua_setfield(L, -2, "__tostring");
+        lua_pushcfunction(L, lbuf_gc);
+        lua_setfield(L, -2, "__gc");
+    }
+    return 1;
 }
 
 typedef struct {
@@ -288,10 +316,7 @@ static inline void free_str_buf(str_buf *buf) {
 }
 
 static inline void buf_soft_reset(str_buf *buf) {
-    if (buf) {
-        buf->data[0] = '\0';
-        buf->len = 0;
-    }
+    buf->len = 0;
 }
 
 static inline str_buf new_str_buf() {
@@ -333,7 +358,7 @@ static bool buf_push(str_buf *buf, char c) {
     return true;
 }
 
-static inline bool buf_push_str(str_buf *buf, const char *str, size_t len) {
+static bool buf_push_str(str_buf *buf, const char *str, size_t len) {
     if (!buf || !str) return false;
     size_t required_len = buf->len + len;
     if (required_len > buf->cap) {
