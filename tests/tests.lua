@@ -1,5 +1,7 @@
 return function(define, test_dir)
 
+-- TODO: A lot more tests
+
 define("decode example.toml", function()
     local tomlua_s = require("tomlua")({ fancy_tables = false, strict = true })
     local f = io.open(("%s/example.toml"):format(test_dir), "r")
