@@ -11,7 +11,7 @@
 static inline int digits_in_int(int value) {
     int digits;
     if (value == 0) {
-        digits = 0;
+        digits = 1;
     } else {
         // Use log10 to get number of decimal digits
         digits = (int)floor(log10((double)value)) + 1;
