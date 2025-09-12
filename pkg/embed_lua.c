@@ -4,6 +4,46 @@
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+static int env__newindex(lua_State *L) {
+    const char *key = luaL_checkstring(L, 2);
+#ifdef _WIN32
+    if (lua_isnil(L, 3)) {
+        if (SetEnvironmentVariable(key, NULL) == 0) {
+            return luaL_error(L, "failed to unset env var");
+        }
+    } else if (lua_type(L, 3) == LUA_TSTRING) {
+        if (SetEnvironmentVariable(key, lua_tostring(L, 3)) == 0) {
+            return luaL_error(L, "failed to set env var");
+        }
+#else
+    if (lua_isnil(L, 3)) {
+        if (unsetenv(key) != 0) {
+            return luaL_error(L, "failed to unset env var");
+        }
+    } else if (lua_type(L, 3) == LUA_TSTRING) {
+        if (setenv(key, lua_tostring(L, 3), 1) != 0) {
+            return luaL_error(L, "failed to set env var");
+        }
+#endif
+    } else {
+        return luaL_error(L, "env values must be strings or nil");
+    }
+    return 0;
+}
+
+static int env__index(lua_State *L) {
+    const char *key = luaL_checkstring(L, 2);
+    const char *val = getenv(key);
+    if (val)
+        lua_pushstring(L, val);
+    else
+        lua_pushnil(L);
+    return 1;
+}
 
 static inline size_t lua_arraylen(lua_State *L, int idx) {
 #if LUA_VERSION_NUM == 501
@@ -176,6 +216,7 @@ static const char *USEAGE_MESSAGE = "Useage:\n"
     "-- or run(true) for returning directly on the stack instead of table, first on top\n";
 
 static int embed_new(lua_State *L) {
+    lua_remove(L, 1);
     for (int i = 1; i <= 3; i++) {
         int type = lua_type(L, i);
         if (i == 3 && type != LUA_TNIL && type != LUA_TSTRING) {
@@ -192,10 +233,40 @@ static int embed_new(lua_State *L) {
     lua_setfield(L, 1, "add");
     lua_pushcclosure(L, embed_run, 4);
     lua_setfield(L, 1, "run");
+    if (luaL_newmetatable(L, "C_LUA_EMBEDDER")) {
+        lua_pushcfunction(L, env__index);
+        lua_setfield(L, -2, "__index");
+        lua_pushcfunction(L, env__newindex);
+        lua_setfield(L, -2, "__newindex");
+        lua_pushcfunction(L, embed_new);
+        lua_setfield(L, -2, "__call");
+    }
+    lua_setmetatable(L, 1); // setmetatable(t, mt)
     return 1;
 }
 
 int luaopen_embed_lua(lua_State *L) {
-    lua_pushcfunction(L, embed_new);
+    lua_newuserdata(L, 0);
+    if (luaL_newmetatable(L, "C_LUA_EMBEDDER")) {
+        lua_pushcfunction(L, env__index);
+        lua_setfield(L, -2, "__index");
+        lua_pushcfunction(L, env__newindex);
+        lua_setfield(L, -2, "__newindex");
+        lua_pushcfunction(L, embed_new);
+        lua_setfield(L, -2, "__call");
+    }
+    lua_setmetatable(L, -2); // setmetatable(t, mt)
     return 1;
+}
+
+int luaopen_env(lua_State *L) {
+    lua_newtable(L);
+    if (luaL_newmetatable(L, "LUA_ENV_VAR_HELPER")) {
+        lua_pushcfunction(L, env__index);
+        lua_setfield(L, -2, "__index");
+        lua_pushcfunction(L, env__newindex);
+        lua_setfield(L, -2, "__newindex");
+    }
+    lua_setmetatable(L, -2); // setmetatable(t, mt)
+    return 1; // return env table
 }
