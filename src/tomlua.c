@@ -7,6 +7,10 @@
 #include "decode.h"
 #include "encode.h"
 
+static int tomlua_type_of(lua_State *L) {
+    return luaL_error(L, "ERROR(TODO): tomlua.type NOT YET IMPLEMENTED");
+}
+
 static int tomlua_types(lua_State *L) {
     lua_newtable(L);
     for (int i = 0; i < TOML_MAX_TYPES; i++) {
@@ -49,6 +53,8 @@ static int tomlua_new(lua_State *L) {
     lua_setfield(L, 1, "typename");
     lua_pushvalue(L, lua_upvalueindex(3));
     lua_setfield(L, 1, "new_date");
+    lua_pushvalue(L, lua_upvalueindex(4));
+    lua_setfield(L, 1, "type");
 
     lua_settop(L, 1);
 
@@ -78,6 +84,7 @@ int luaopen_tomlua(lua_State *L) {
     tomlua_types(L);
     lua_pushcfunction(L, tomlua_typename);
     lua_pushcfunction(L, lnew_date);
+    lua_pushcfunction(L, tomlua_type_of);
     lua_pushcclosure(L, tomlua_new, 3);
     return 1;
 }
