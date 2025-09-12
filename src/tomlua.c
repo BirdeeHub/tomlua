@@ -118,7 +118,7 @@ static int tomlua_new(lua_State *L) {
 int luaopen_tomlua(lua_State *L) {
     lua_settop(L, 0);
     lua_newtable(L); // module table
-    lua_newtable(L); // meta table
+    lua_newtable(L); // meta table (and upvalue 1)
     lua_pushvalue(L, -1);
     push_encode(L);
     tomlua_types(L);
