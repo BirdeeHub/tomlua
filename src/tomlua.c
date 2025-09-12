@@ -8,7 +8,39 @@
 #include "encode.h"
 
 static int tomlua_type_of(lua_State *L) {
-    return luaL_error(L, "ERROR(TODO): tomlua.type NOT YET IMPLEMENTED");
+    switch (lua_type(L, 1)) {
+        case LUA_TSTRING:
+            lua_pushnumber(L, TOML_STRING);
+            return 1;
+        case LUA_TNUMBER: {
+            lua_Number num = lua_tonumber(L, 1);
+            if (num == (lua_Number)(lua_Integer)num) {
+                lua_pushnumber(L, TOML_INTEGER);
+            } else {
+                lua_pushnumber(L, TOML_FLOAT);
+            }
+            return 1;
+        }
+        case LUA_TBOOLEAN:
+            lua_pushnumber(L, TOML_BOOL);
+            return 1;
+        case LUA_TTABLE:
+            if (is_lua_array(L, 1)) {
+                lua_pushnumber(L, TOML_UNTYPED);
+                return 1;
+            } else {
+                lua_pushnumber(L, TOML_UNTYPED);
+                return 1;
+            }
+        case LUA_TUSERDATA:
+            if(udata_is_of_type(L, 1, "TomluaDate")) {
+                lua_pushnumber(L, TOML_UNTYPED);
+                return 1;
+            }
+        default:
+            lua_pushnumber(L, TOML_UNTYPED);
+            return 1;
+    }
 }
 
 static int tomlua_types(lua_State *L) {
@@ -44,7 +76,7 @@ static int tomlua_new(lua_State *L) {
     }
 
     lua_settop(L, 0);
-    lua_newtable(L); // module table with decode
+    lua_newtable(L); // module table with encode and decode
     lua_pushvalue(L, lua_upvalueindex(1));
     lua_setmetatable(L, 1);
     lua_pushvalue(L, lua_upvalueindex(2));
