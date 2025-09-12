@@ -91,6 +91,9 @@ tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 -- get the type tomlua thinks a lua value is
 tomlua.type(value) --> number from tomlua.types
 
+local toml_multiline_str = tomlua.str_2_mul("hello\nworld")
+local regular_str = tostring(toml_multiline_str)
+
 -- accepts utc_timestamp,
 -- toml date string,
 -- a table or array with the same fields as date,
