@@ -155,16 +155,24 @@ speed tomlua/cjson: 82.78%, duration tomlua/cjson: 120.80%
 
 100_000 iterations with toml_edit as well:
 ```
-Parsed TOML 100000 times in 1.831128 seconds, avg. 54611.146790 iterations per second, avg. 18.31 µs/iteration
-Parsed TOML 100000 times in 1.510966 seconds, avg. 66182.826086 iterations per second, avg. 15.11 µs/iteration
-speed tomlua/tomlua_strict: 82.52%, duration tomlua/tomlua_strict: 121.19%
-Parsed JSON 100000 times in 1.184362 seconds, avg. 84433.644443 iterations per second, avg. 11.84 µs/iteration
-speed tomlua/cjson: 64.68%, duration tomlua/cjson: 154.61%
-Parsed TOML 100000 times in 15.064943 seconds, avg. 6637.927538 iterations per second, avg. 150.65 µs/iteration
-speed tomlua/toml_edit: 822.71%, duration tomlua/toml_edit: 12.15%
+Parsed TOML 100000 times in 1.494447 seconds, avg. 66914.383715 iterations per second, avg. 14.94 µs/iteration
+Parsed TOML 100000 times in 1.471788 seconds, avg. 67944.568104 iterations per second, avg. 14.72 µs/iteration
+speed tomlua/tomlua_strict: 98.48%, duration tomlua/tomlua_strict: 101.54%
+Parsed JSON 100000 times in 1.273493 seconds, avg. 78524.185056 iterations per second, avg. 12.73 µs/iteration
+speed tomlua/cjson: 85.21%, duration tomlua/cjson: 117.35%
+Parsed TOML 100000 times in 14.931057 seconds, avg. 6697.449484 iterations per second, avg. 149.31 µs/iteration
+speed tomlua/toml_edit: 999.10%, duration tomlua/toml_edit: 10.01%
 ```
 
 However the cjson in the benchmark does not need to deal with comments or empty lines, or the headings of toml.
 cjson is parsing the result of cjson.encode on the output of tomlua.decode.
 
 So I feel this is pretty good for something that doesn't use parallelism or SIMD(yet?).
+
+also, tomlua.encode vs cjson.encode for 100_000 iterations
+```
+ENCODE BENCH
+Encoded TOML 100000 times in 3.588918 seconds, avg. 27863.551076 iterations per second, avg. 35.89 µs/iteration
+Encoded JSON 100000 times in 1.290357 seconds, avg. 77497.932743 iterations per second, avg. 12.90 µs/iteration
+speed tomlua/cjson: 35.95%, duration tomlua/cjson: 278.13%
+```
