@@ -1,8 +1,8 @@
 package.cpath = "./lib/?.so;" .. package.cpath
+local inspect = require('inspect')
+
 local tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
 local tomlua_strict = require("tomlua") { fancy_tables = false, strict = true, fancy_dates = false }
-
-local inspect = require('inspect')
 
 local f = io.open("./tests/example.toml", "r")
 local contents
