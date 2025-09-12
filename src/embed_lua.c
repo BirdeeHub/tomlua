@@ -120,27 +120,41 @@ static int embed_run(lua_State *L) {
         fprintf(out, "#ifndef %s\n#define %s\n\n", header_name, header_name);
     }
     fprintf(out, "#include <lua.h>\n#include <lauxlib.h>\n\n");
-    fprintf(out, "static inline int %s(lua_State *L) {\n", c_func_name);
+    fprintf(out, "static int %s(lua_State *L) {\n", c_func_name);
     if (!output_to_stack) {
         fprintf(out, "  lua_newtable(L);\n");
         fprintf(out, "  int out_table_idx = lua_gettop(L);\n");
     }
 
     for (size_t cidx = num_inputs; cidx > 0; cidx--) {
+        lua_settop(L, 0);
         lua_rawgeti(L, lua_upvalueindex(4), cidx);
-        lua_rawgeti(L, -1, 1);
+        lua_pushnil(L);
+        lua_rawseti(L, lua_upvalueindex(4), cidx);
+        lua_rawgeti(L, 1, 3);
+        lua_rawgeti(L, 1, 1);
         const char *f_name = lua_tostring(L, -1);
-        lua_pop(L, 1);
-        lua_rawgeti(L, -1, 2);
+        lua_rawgeti(L, 1, 2);
         const char *input_file = lua_tostring(L, -1);
-        lua_pop(L, 2);
 
-        // load Lua chunk as a function
-        if (luaL_loadfile(L, input_file) != 0) {
-            const char *err = lua_tostring(L, -1);
-            free_embed_buf(&buf);
-            fclose(out);
-            return luaL_error(L, "failed to load Lua file: %s", err);
+        if (lua_isfunction(L, 2)) {
+            if (lua_pcall(L, 2, 1, 0)) {
+                const char *err = lua_tostring(L, -1);
+                free_embed_buf(&buf);
+                fclose(out);
+                return luaL_error(L, "failed to call function for %s at %s\nERROR: %s", f_name, input_file, err);
+            }
+            if (!lua_isfunction(L, -1)) {
+                return luaL_error(L, "replacement function for loading %s at %s did not return a function (loaded chunk)", f_name, input_file);
+            }
+        } else {
+            // load Lua chunk as a function
+            if (luaL_loadfile(L, input_file) != 0) {
+                const char *err = lua_tostring(L, -1);
+                free_embed_buf(&buf);
+                fclose(out);
+                return luaL_error(L, "failed to load Lua file %s at %s\nERROR: %s", f_name, input_file, err);
+            }
         }
 
         embed_buf_soft_reset(&buf);
@@ -149,7 +163,6 @@ static int embed_run(lua_State *L) {
             fclose(out);
             return luaL_error(L, "Failed to dump Lua bytecode");
         }
-        lua_pop(L, 1);
 
         fprintf(out, "  {\n");
         fprintf(out, "    const unsigned char data[] = {\n      ");
@@ -165,9 +178,9 @@ static int embed_run(lua_State *L) {
         fprintf(out, "        lua_pop(L, 1);\n");
         fprintf(out, "        return luaL_error(L, \"Error loading embedded Lua code for %s from function %s: %%s\", err);\n", f_name, c_func_name);
         fprintf(out, "    }\n");
-    if (!output_to_stack) {
-        fprintf(out, "    lua_setfield(L, out_table_idx, \"%s\");\n", f_name);
-    }
+        if (!output_to_stack) {
+            fprintf(out, "    lua_setfield(L, out_table_idx, \"%s\");\n", f_name);
+        }
         fprintf(out, "  }\n");
     }
 
@@ -202,6 +215,10 @@ static int embed_add(lua_State *L) {
     lua_rawseti(L, -2, 1);
     lua_pushvalue(L, 2);
     lua_rawseti(L, -2, 2);
+    if (lua_isfunction(L, 3)) {
+        lua_pushvalue(L, 3);
+        lua_rawseti(L, -2, 3);
+    }
     lua_rawseti(L, lua_upvalueindex(1), len + 1);
     lua_settop(L, 0);
     return 0;
