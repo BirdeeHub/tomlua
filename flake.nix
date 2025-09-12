@@ -3,8 +3,7 @@
   outputs = {self, nixpkgs}: let
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
     APPNAME = "tomlua";
-  in {
-    overlays.default = final: prev: let
+    overlay = final: prev: let
       args = {
         packageOverrides = luaself: luaprev: {
           ${APPNAME} = luaself.callPackage ({buildLuarocksPackage}:
@@ -37,14 +36,16 @@
         };
       };
     };
+  in {
+    overlays.default = overlay;
     packages = forAllSys (system: let
-      pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
+      pkgs = import (nixpkgs.path or nixpkgs) { inherit system; overlays = [ overlay ]; };
     in {
       default = pkgs.vimPlugins.${APPNAME};
       ${APPNAME} = self.outputs.default;
     });
     devShells = forAllSys (system: let
-      pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
+      pkgs = import (nixpkgs.path or nixpkgs) { inherit system; overlays = [ overlay ]; };
       lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson lp.toml-edit]);
     in {
       default = pkgs.mkShell {
