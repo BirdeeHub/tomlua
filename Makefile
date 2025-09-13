@@ -9,8 +9,8 @@ GREP         ?= grep
 CFLAGS       ?= -O3 -flto -Wl,-s -Winline
 
 EMBED_SCRIPT := $(SRC)/embed.lua
-EMBEDDER_SRC := $(SRC)/src/luaembed.c
-EMBEDDER     := $(TEMP_DIR)/luaembed.so
+EMBEDDER_SRC := $(SRC)/src/embed.c
+EMBEDDER     := $(TEMP_DIR)/embed.so
 EMBEDDED_LUA := $(TEMP_DIR)/embedded.h
 CFLAGS       += -x c -fPIC -shared -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
