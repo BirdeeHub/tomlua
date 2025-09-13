@@ -57,6 +57,9 @@ static inline int embed_run(lua_State *L) {
     const int to_append = lua_toboolean(L, 2);
     // 3: header_name?: string
     const char *header_name = lua_tostring(L, 3);
+    // if this is true, instead of 1 table meaning the whole c function is table
+    // this means the contents are returned on the stack if 1 is stack instead
+    int prefers_stack = lua_toboolean(L, lua_upvalueindex(2));
 #if LUA_VERSION_NUM == 501
     size_t num_inputs = lua_objlen(L, lua_upvalueindex(1));
 #else
@@ -165,8 +168,8 @@ static inline int embed_add(lua_State *L) {
         }
     }
 
-    if (lua_isfunction(L, lua_upvalueindex(2))) {
-        lua_pushvalue(L, lua_upvalueindex(2));
+    if (lua_isfunction(L, lua_upvalueindex(3))) {
+        lua_pushvalue(L, lua_upvalueindex(3));
         lua_pushvalue(L, 1);
         lua_pushvalue(L, 2);
         lua_pushvalue(L, 3);
@@ -195,26 +198,27 @@ static inline int embed_add(lua_State *L) {
 
     // push value for run
 #if LUA_VERSION_NUM == 501
-    size_t len = lua_objlen(L, lua_upvalueindex(3));
+    size_t len = lua_objlen(L, lua_upvalueindex(4));
 #else
-    size_t len = lua_rawlen(L, lua_upvalueindex(3));
+    size_t len = lua_rawlen(L, lua_upvalueindex(4));
 #endif
     lua_settop(L, residx);
-    lua_rawseti(L, lua_upvalueindex(3), len + 1);
+    lua_rawseti(L, lua_upvalueindex(4), len + 1);
     lua_settop(L, 0);
     return 0;
 }
 
 static inline int embed_new(lua_State *L) {
     static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d, expected %s.\nUseage:\n"
-        "local embed = require('tomlua.luaembed')(c_func_name?: string|string[1], loader?: fun(name, path) -> function)\n"
+        "local embed = require('tomlua.luaembed')(c_func_name?: string|string[1], prefers_stack?: bool, loader?: fun(name, path) -> function)\n"
         "embed.add(modname: string, path: string, c_func_name?: string|string[1])\n"
         "embed.run(output_file: string, to_append?: bool, header_name?: string)\n";
     int type = lua_type(L, 2);
     if (type != LUA_TNIL && type != LUA_TNONE && type != LUA_TSTRING && type != LUA_TTABLE)
         return luaL_error(L, EMBED_USEAGE_MESSAGE, 1, "string|string[1]?");
     else if (type == LUA_TNONE) lua_pushnil(L);
-    type = lua_type(L, 3);
+    if (lua_type(L, 3) == LUA_TNONE) lua_pushnil(L);
+    type = lua_type(L, 4);
     if (type != LUA_TNIL && type != LUA_TNONE && type != LUA_TFUNCTION)
         return luaL_error(L, EMBED_USEAGE_MESSAGE, 2, "function or nil");
     else if (type == LUA_TNONE) lua_pushnil(L);
@@ -226,10 +230,11 @@ static inline int embed_new(lua_State *L) {
     lua_newtable(L); // keeps the values from add for run
 
     lua_pushvalue(L, -1); // duplicate the table for run
-    lua_pushcclosure(L, embed_run, 1);
+    lua_pushvalue(L, 3);
+    lua_pushcclosure(L, embed_run, 2);
     lua_setfield(L, 1, "run");
 
-    lua_pushcclosure(L, embed_add, 3);
+    lua_pushcclosure(L, embed_add, 4);
     lua_setfield(L, 1, "add");
 
     if (luaL_newmetatable(L, "C_LUA_EMBEDDER")) {
