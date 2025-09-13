@@ -138,7 +138,7 @@ On startup you may have many toml files to parse in some situations, if you used
 
 This is a tiny c library designed to chew through those as if you were using cjson for parsing json.
 
-It will be able to emit toml eventually as well, but this is mostly for completeness. It will not be taking into account the format or comments of the original ingested file.
+It is able to emit toml as well, but this is mostly for completeness.
 
 Usually, toml is used as a config format, and not a serialization format.
 
