@@ -19,6 +19,7 @@ SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/decode.c \
                 $(SRC)/src/encode.c \
                 $(SRC)/src/dates.c
+
 ifndef EXCLUDE_EMBEDDER
 SRCS += $(EMBEDDER_SRC)
 endif
