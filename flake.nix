@@ -2,7 +2,16 @@
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   outputs = {self, nixpkgs}: let
     forAllSys = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.all;
+    inherit (nixpkgs) lib;
     APPNAME = "tomlua";
+    l_pkg_enum = {
+      lua5_1 = "lua51Packages";
+      lua5_2 = "lua52Packages";
+      lua5_3 = "lua53Packages";
+      lua5_4 = "lua54Packages";
+      luajit = "luajitPackages";
+      lua = "luaPackages";
+    };
     overlay = final: prev: let
       args = {
         packageOverrides = luaself: luaprev: {
@@ -15,19 +24,17 @@
             }) {};
         };
       };
-    in {
-      lua5_1 = prev.lua5_1.override args;
-      lua51Packages = final.lua5_1.pkgs;
-      lua5_2 = prev.lua5_2.override args;
-      lua52Packages = final.lua5_2.pkgs;
-      lua5_3 = prev.lua5_3.override args;
-      lua53Packages = final.lua5_3.pkgs;
-      lua5_4 = prev.lua5_4.override args;
-      lua54Packages = final.lua5_4.pkgs;
-      luajit = prev.luajit.override args;
-      luajitPackages = final.luajit.pkgs;
-      lua = prev.lua.override args;
-      luaPackages = final.lua.pkgs;
+      # lua5_1 = prev.lua5_1.override args;
+      l_pkg_main = builtins.mapAttrs (n: _: (lib.attrByPath [ n "override" ] null prev) args) l_pkg_enum;
+      # lua51Packages = final.lua5_1.pkgs;
+      l_pkg_sets = with builtins; lib.pipe l_pkg_enum [
+        (lib.mapAttrsToList (n: v: {
+          name = v;
+          value = lib.attrByPath [ n "pkgs" ] null final;
+        }))
+        listToAttrs
+      ];
+    in l_pkg_main // l_pkg_sets // {
       vimPlugins = prev.vimPlugins // {
         ${APPNAME} = final.neovimUtils.buildNeovimPlugin {
           pname = APPNAME;
@@ -40,9 +47,16 @@
     overlays.default = overlay;
     packages = forAllSys (system: let
       pkgs = import (nixpkgs.path or nixpkgs) { inherit system; overlays = [ overlay ]; };
-    in {
+    in (lib.pipe l_pkg_enum [
+      builtins.attrNames
+      (builtins.map (n: {
+        name = "${n}-${APPNAME}";
+        value = lib.attrByPath [ n "pkgs" APPNAME ] null pkgs;
+      }))
+      builtins.listToAttrs
+    ]) // {
       default = pkgs.vimPlugins.${APPNAME};
-      ${APPNAME} = self.outputs.default;
+      "vimPlugins-${APPNAME}" = pkgs.vimPlugins.${APPNAME};
     });
     devShells = forAllSys (system: let
       pkgs = import (nixpkgs.path or nixpkgs) { inherit system; overlays = [ overlay ]; };

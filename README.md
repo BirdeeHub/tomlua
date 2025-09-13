@@ -25,11 +25,17 @@ At 15-30 microseconds per parse (depending on settings), speed is comparable to 
 
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
 
-make requires that LUA_INCDIR be set to the path of your lua headers, and (without further configuration) you should also have lua in your path and be in the root of the repository.
+make requires that LUA_INCDIR be set to the path of your lua headers,
+and (without further configuration) you should also have lua in your path and be in the root of the repository.
 
 If you do not have gcc, install it, or set CC to clang or some other c compiler.
 
 Yes there will eventually be better build instructions.
+
+It is also packaged via nix (flake or flakeless)!
+It offers an overlay to add it to any of the package sets,
+packages for all versions of lua 5.1+,
+and has a dev shell you can use to build it via make as well.
 
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
