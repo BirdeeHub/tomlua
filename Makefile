@@ -6,13 +6,13 @@ CC           ?= gcc
 LUA          ?= lua
 BEAR         ?= bear
 GREP         ?= grep
-CFLAGS       ?= -x c -O3 -flto -Wl,-s -Winline
+CFLAGS       ?= -O3 -flto -Wl,-s -Winline
 
+EMBED_SCRIPT := $(SRC)/embed.lua
 EMBEDDER_SRC := $(SRC)/src/luaembed.c
 EMBEDDER     := $(TEMP_DIR)/luaembed.so
-EMBED_SCRIPT := $(SRC)/src/embed.lua
 EMBEDDED_LUA := $(TEMP_DIR)/embedded.h
-CFLAGS       += -fPIC -shared -I"$(LUA_INCDIR)"
+CFLAGS       += -x c -fPIC -shared -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
 SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/decode_str.c \
