@@ -4,7 +4,7 @@
 ---@field value any
 
 ---@class Tomlua.String_buffer
----@field push fun(self: Tomlua.String_buffer, str: string|Tomlua.String_buffer):Tomlua.String_buffer
+---@field push fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
 ---@field push_inline_value fun(self: Tomlua.String_buffer, visited: table<table, boolean?>, value: any, array_level: number?):Tomlua.String_buffer
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, ...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, ...: string):Tomlua.String_buffer

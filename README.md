@@ -19,7 +19,7 @@ Error reporting is bad currently, but the plumbing is there, just lazy messages 
 
 Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
 
-At 15-20 microseconds per parse, speed is comparable to cjson, (1.2x-2.0x the speed depending on settings) despite parsing toml rather than json, and it is 10x faster than toml_edit
+At 15-30 microseconds per parse (depending on settings), speed is comparable to cjson despite parsing toml rather than json, and it is 10x faster than toml_edit
 
 ---
 
@@ -47,6 +47,9 @@ local tomlua = require("tomlua")({
     -- causes dates to be parsed into a userdata type
     -- encode will write them correctly as well
     fancy_dates = false,
+    -- causes multiline strings to be parsed into a userdata type
+    -- which can be converted to a lua string with tostring
+    multi_strings = false,
 })
 
 local data, err = tomlua.decode(some_string)

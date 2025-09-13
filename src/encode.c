@@ -42,33 +42,13 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
     }
 }
 
-// 0 for neither, 1 for str, 2 for buf.
-static inline int is_str_or_buf(lua_State *L, int idx) {
-    int type = lua_type(L, idx);
-    if (type == LUA_TSTRING) {
-        return 1;
-    } else if (type == LUA_TUSERDATA && udata_is_of_type(L, idx, "TomluaStrBuf")) {
-        return 2;
-    }
-    return 0;
-}
-
 static inline int lbuf_push_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    switch (is_str_or_buf(L, 2)) {
-        case 1: {
-            size_t len;
-            const char *str = lua_tolstring(L, 2, &len);
-            if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
-            lua_settop(L, 1);
-        } break;
-        case 2: {
-            str_buf * arg = (str_buf *)lua_touserdata(L, 2);
-            if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
-            lua_settop(L, 1);
-        } break;
-        default: return luaL_error(L, "expected string or string buffer");
-    }
+    size_t len;
+    const char *str = lua_tolstring(L, 2, &len);
+    if (!str) return luaL_error(L, "expected string or string buffer");
+    if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
+    lua_settop(L, 1);
     return 1;
 }
 
@@ -266,6 +246,7 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
             if (udata_is_of_type(L, val_idx, "TomluaDate")) {
                 if (!buf_push_toml_date(buf, (TomlDate *)lua_touserdata(L, val_idx)))
                     return luaL_error(L, "failed to push date");
+                break;
             } else if (udata_is_of_type(L, val_idx, "TomluaMultiStr")) {
                 str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
                 str_iter argiter = {
@@ -274,10 +255,8 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
                     .pos = 0
                 };
                 if (!buf_push_esc_multi(buf, &argiter)) return luaL_error(L, "failed to push string");
-            } else if (udata_is_of_type(L, val_idx, "TomluaStrBuf")) {
-                str_buf * arg = (str_buf *)lua_touserdata(L, val_idx);
-                if (!buf_push_str(buf, arg->data, arg->len)) return luaL_error(L, "failed to push string");
-            } break;
+                break;
+            }
         default: return luaL_error(L, "%s is not a valid type for push_inline_value", lua_typename(L, vtype));
     }
     lua_settop(L, val_idx - 1);
