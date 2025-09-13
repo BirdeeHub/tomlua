@@ -25,7 +25,9 @@ At 15-20 microseconds per parse, speed is comparable to cjson, (1.2x-2.0x the sp
 
 build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
 
-You will need to set LUA_INCDIR and be in the root of the repository (unless you set SRC)
+make requires that LUA_INCDIR be set to the path of your lua headers, and (without further configuration) you should also have lua in your path and be in the root of the repository.
+
+If you do not have gcc, install it, or set CC to clang or some other c compiler.
 
 Yes there will eventually be better build instructions.
 
