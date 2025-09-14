@@ -41,7 +41,6 @@ print("Last error:", last_error)
 do
     local toml = tomlua { fancy_tables = false, strict = false, fancy_dates = true, multi_strings = true }
     print()
-    print("TODO remove junk test output")
 
     print()
     print("will this error (sorta)")
