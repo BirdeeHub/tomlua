@@ -25,7 +25,7 @@ static inline TMLErr *get_err_upval(lua_State *L) {
     return (TMLErr *)lua_touserdata(L, lua_upvalueindex(1));
 }
 
-static inline void tmlerr_free(TMLErr *err) {
+static inline void free_tmlerr(TMLErr *err) {
     if (err) {
         if (err->heap) {
             free(err->msg);
@@ -45,7 +45,7 @@ static inline int push_tmlerr_string(lua_State *L, TMLErr *err) {
 }
 
 static int tmlerr_gc(lua_State *L) {
-    tmlerr_free((TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
+    free_tmlerr((TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
     return 0;
 }
 static int tmlerr_tostring_meta(lua_State *L) {
