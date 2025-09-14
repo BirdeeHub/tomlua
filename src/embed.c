@@ -30,7 +30,7 @@ static int env__index(lua_State *L) {
     else lua_pushnil(L);
     return 1;
 }
-int luaopen_tomlua_env(lua_State *L) {
+int luaopen_env(lua_State *L) {
     lua_newuserdata(L, 0);
     if (luaL_newmetatable(L, "LUA_ENV_VAR_HELPER")) {
         lua_pushcfunction(L, env__index);
