@@ -127,9 +127,7 @@ static inline int embed_run(lua_State *L) {
 
     FILE *out = fopen(output_file, to_append ? "ab" : "wb");
     if (!out) return luaL_error(L, "failed to open output");
-    if (header_name) {
-        fprintf(out, "#ifndef %s\n#define %s\n\n", header_name, header_name);
-    }
+    if (header_name) fprintf(out, "#ifndef %s\n#define %s\n\n", header_name, header_name);
     fprintf(out, "#include <lua.h>\n#include <lauxlib.h>\n\n");
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
     while (lua_next(L, todoidx) != 0) {
@@ -170,9 +168,7 @@ static inline int embed_run(lua_State *L) {
             fprintf(out, "        lua_pop(L, 1);\n");
             fprintf(out, "        return luaL_error(L, \"Error loading embedded Lua for %s from function %s: %%s\", err);\n", modname, c_func_name);
             fprintf(out, "    }\n");
-            if (make_table) {
-                fprintf(out, "    lua_setfield(L, out_table_idx, \"%s\");\n", modname);
-            }
+            if (make_table) fprintf(out, "    lua_setfield(L, out_table_idx, \"%s\");\n", modname);
             fprintf(out, "  }\n");
         }
         // pop items table and the table for the function
@@ -184,9 +180,7 @@ static inline int embed_run(lua_State *L) {
         lua_setfield(L, todoidx, c_func_name);
     }
 
-    if (header_name) {
-        fprintf(out, "\n#endif  // %s\n", header_name);
-    }
+    if (header_name) fprintf(out, "\n#endif  // %s\n", header_name);
     fflush(out);
     fclose(out);
     return 0;
@@ -326,3 +320,4 @@ int luaopen_tomlua_embed(lua_State *L) {
     lua_setmetatable(L, -2);
     return 1;
 }
+int luaopen_embed(lua_State *L) { return luaopen_tomlua_embed(L); }
