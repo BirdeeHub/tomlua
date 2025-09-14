@@ -41,6 +41,7 @@ int luaopen_env(lua_State *L) {
     lua_setmetatable(L, -2);
     return 1;
 }
+int luaopen_embed_env(lua_State *L) { return luaopen_env(L); }
 
 static size_t lembed_arrlen(lua_State *L, int idx) {
 #if LUA_VERSION_NUM == 501
@@ -311,3 +312,4 @@ int luaopen_tomlua_embed(lua_State *L) {
     return 1;
 }
 int luaopen_embed(lua_State *L) { return luaopen_tomlua_embed(L); }
+int luaopen_env_embed(lua_State *L) { return luaopen_tomlua_embed(L); }
