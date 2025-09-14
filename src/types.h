@@ -15,7 +15,7 @@ typedef uint8_t bool;
 #define false 0
 #endif
 
-// TODO: delete this, just for debugging
+// NOTE: just for debugging
 #include <stdio.h>
 static void print_lua_stack(lua_State *L, const char *label) {
     int top = lua_gettop(L);
@@ -144,13 +144,16 @@ static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
     return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(2));
 }
 
-static int lbuf_gc(lua_State *L) {
-    str_buf *buf = (str_buf *)lua_touserdata(L, 1);
-    if (buf && buf->data) {
-        free(buf->data);
+static inline void free_str_buf(str_buf *buf) {
+    if (buf) {
+        if (buf->data) free(buf->data);
         buf->data = NULL;
+        buf->len = buf->cap = 0;
     }
-    buf->cap = buf->len = 0;
+}
+
+static int lbuf_gc(lua_State *L) {
+    free_str_buf((str_buf *)lua_touserdata(L, 1));
     return 0;
 }
 
@@ -306,14 +309,6 @@ static inline bool err_push_buf(lua_State *L, const str_buf *buf) {
 }
 
 // NOTE: misc str buf and iter functions
-
-static inline void free_str_buf(str_buf *buf) {
-    if (buf) {
-        if (buf->data) free(buf->data);
-        buf->data = NULL;
-        buf->len = buf->cap = 0;
-    }
-}
 
 static inline void buf_soft_reset(str_buf *buf) {
     buf->len = 0;
