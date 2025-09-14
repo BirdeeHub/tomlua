@@ -41,8 +41,6 @@ print("Last error:", last_error)
 do
     local toml = tomlua { fancy_tables = false, strict = false, fancy_dates = true, multi_strings = true }
     print()
-
-    print()
     print("will this error (sorta)")
     local data, err = toml.decode({ bleh = "haha", })
     print(inspect(data), "  :  ", inspect(err))
