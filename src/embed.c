@@ -42,14 +42,14 @@ int luaopen_tomlua_env(lua_State *L) {
     return 1;
 }
 
-static inline size_t lembed_arrlen(lua_State *L, int idx) {
+static size_t lembed_arrlen(lua_State *L, int idx) {
 #if LUA_VERSION_NUM == 501
     return lua_objlen(L, idx);
 #else
     return lua_rawlen(L, idx);
 #endif
 }
-static inline int embed_run(lua_State *L) {
+static int embed_run(lua_State *L) {
     // 1: output_file: string
     const char *output_file = luaL_checkstring(L, 1);
     // 2: header_name_or_to_append?: bool|string
@@ -178,12 +178,12 @@ static inline int embed_run(lua_State *L) {
     return 0;
 }
 
-static inline int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
+static int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
     if (!p || !ud) return LUA_ERRERR;
     luaL_addlstring((luaL_Buffer *)ud, (const char *)p, sz);
     return 0;
 }
-static inline int embed_add(lua_State *L) {
+static int embed_add(lua_State *L) {
     static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d to embed.add!\n"
         "Expected add(modname: string, path: string, c_func_name?: string, make_table?: bool)\n";
     // constructs this, appends it to table in last upvalue
@@ -256,7 +256,7 @@ static inline int embed_add(lua_State *L) {
     return 0;
 }
 
-static inline int embed_new(lua_State *L) {
+static int embed_new(lua_State *L) {
     static const char *EMBED_USEAGE_MESSAGE = "invalid argument #%d, expected %s.\nUseage:\n"
         "local embed = require('tomlua.luaembed')(c_func_name?: string, loader?: fun(name, path) -> function, table_by_default?: bool)\n"
         "embed.add(modname: string, path: string, c_func_name?: string, make_table?: bool)\n"
