@@ -124,10 +124,10 @@ static int embed_run(lua_State *L) {
         // [-1]: { items: ({ modname: string, chunk: string })[], make_table: bool }
         // [-2]: c_func_name
         const char *c_func_name = lua_tostring(L, -2);
-        lua_getfield(L, -1, "make_table"); // get make_table
+        lua_getfield(L, -1, "make_table");
         const int make_table = lua_toboolean(L, -1);
         lua_pop(L, 1);
-        lua_getfield(L, -1, "items"); // get items table
+        lua_getfield(L, -1, "items");
         int itemsidx = lua_gettop(L);
 
         fprintf(out, "%sint %s(lua_State *L) {\n", header_name ? "static " : "", c_func_name);
