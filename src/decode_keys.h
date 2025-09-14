@@ -4,6 +4,7 @@
 
 #include "./decode_str.h"
 #include "./types.h"
+#include "./error_context.h"
 
 static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
     buf_soft_reset(buf);

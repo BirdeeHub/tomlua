@@ -9,6 +9,7 @@
 #include "dates.h"
 #include "decode_str.h"
 #include "decode_keys.h"
+#include "error_context.h"
 
 static inline void push_to_output_table(lua_State *L) {
     return lua_replace(L, lua_upvalueindex(3));
