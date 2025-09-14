@@ -24,12 +24,12 @@ return function(input)
         dst:push_heading(false, ...)
         for k, v in pairs(value) do
             if type(v) == "table" then
-                local is_heading_array, is_array = check_heading_array(v)
-                if is_heading_array then
+                local table_type = check_heading_array(v)
+                if table_type == 2 then
                     local keys = {...}
                     table.insert(keys, k)
                     table.insert(result, { is_array = true, keys = keys, value = v })
-                elseif is_array then
+                elseif table_type == 1 then
                     dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
                 else
                     local keys = {...}
@@ -66,10 +66,10 @@ return function(input)
         for k, v in pairs(input) do
             local vtype = type(v)
             if vtype == "table" then
-                local is_heading_array, is_array = check_heading_array(v)
-                if is_heading_array then
+                local table_type = check_heading_array(v)
+                if table_type == 2 then
                     table.insert(heading_q, { is_array = true, keys = { k }, value = v })
-                elseif is_array then
+                elseif table_type == 1 then
                     dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
                 else
                     table.insert(heading_q, { is_array = false, keys = { k }, value = v })

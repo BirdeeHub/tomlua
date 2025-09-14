@@ -305,18 +305,8 @@ static inline int lbuf_new(lua_State *L) {
 }
 
 static inline int lis_lua_heading_array(lua_State *L) {
-    int type = is_lua_heading_array(L, 1);
-    if (type == 2) {
-        lua_pushboolean(L, true);
-        lua_pushboolean(L, true);
-    } else if (type == 1) {
-        lua_pushboolean(L, false);
-        lua_pushboolean(L, true);
-    } else {
-        lua_pushboolean(L, false);
-        lua_pushboolean(L, false);
-    }
-    return 2;
+    lua_pushinteger(L, is_lua_heading_array(L, 1));
+    return 1;
 }
 
 void push_encode(lua_State *L) {
