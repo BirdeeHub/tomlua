@@ -9,7 +9,7 @@
 #include <windows.h>
 #endif
 
-static int set_env(lua_State *L, const char *key, const char *val) {
+static inline int set_env(lua_State *L, const char *key, const char *val) {
 #ifdef _WIN32
     return SetEnvironmentVariable(key, val) != 0;
 #else
