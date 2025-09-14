@@ -752,6 +752,6 @@ fail:
     push_to_output_table(L);
     push_err_upval(L);
     lua_pushnil(L);
-    tmlerr_tostr(L, -2);
+    tmlerr_tostring(L, -2);
     return 2;
 }
