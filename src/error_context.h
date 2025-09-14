@@ -44,16 +44,12 @@ static inline int push_tmlerr_string(lua_State *L, TMLErr *err) {
     return 1;
 }
 
-static inline int tmlerr_tostring(lua_State *L, int idx) {
-    return push_tmlerr_string(L, (TMLErr *)luaL_checkudata(L, idx, "TomluaError"));
-}
-
 static int tmlerr_gc(lua_State *L) {
     tmlerr_free((TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
     return 0;
 }
 static int tmlerr_tostring_meta(lua_State *L) {
-    return tmlerr_tostring(L, 1);
+    return push_tmlerr_string(L, (TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
 }
 static int new_TMLErr(lua_State *L) {
     TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));

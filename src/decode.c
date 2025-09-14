@@ -750,8 +750,7 @@ fail:
     free_str_buf(&scratch);
     lua_pushnil(L);
     push_to_output_table(L);
-    push_err_upval(L);
     lua_pushnil(L);
-    tmlerr_tostring(L, -2);
+    push_tmlerr_string(L, get_err_upval(L));
     return 2;
 }
