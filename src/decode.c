@@ -130,7 +130,7 @@ static inline void add_inline(lua_State *L, int idx) {
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
-// does not pop table, adds defined table to stack
+// does not pop table, adds defined table if not defined already
 // returns err == true if inline or already defined
 // 1 for already defined 2 for inline
 static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
