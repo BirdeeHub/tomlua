@@ -2,7 +2,7 @@
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   outputs = { self, nixpkgs, ... }@inputs: let
     genAttrs = names: f: builtins.listToAttrs (map (n: { name = n; value = (f n); }) names);
-    forAllSys = genAttrs nixpkgs.lib.platforms.all or inputs.systems or [ inputs.system or builtins.throw "No systems list provided!" ];
+    forAllSys = genAttrs inputs.systems or nixpkgs.lib.platforms.all or [ inputs.system or builtins.throw "No systems list provided!" ];
     getpkgs = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "system" "extend" ]
       then nixpkgs.extend overlay else import nixpkgs { inherit system; overlays = [ overlay ]; };
     APPNAME = "tomlua";
