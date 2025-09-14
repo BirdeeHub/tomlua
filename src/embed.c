@@ -106,11 +106,11 @@ static int embed_run(lua_State *L) {
         lua_setfield(L, func_table_idx, "make_table");
 
         // append vidx { modname, chunk } to items
-        lua_getfield(L, func_table_idx, "items"); // get items table
+        lua_getfield(L, func_table_idx, "items");
         int items_idx = lua_gettop(L);
         size_t items_len = lembed_arrlen(L, items_idx);
         lua_pushvalue(L, vidx);
-        lua_rawseti(L, items_idx, items_len + 1); // sets items[items_len+1] = vidx
+        lua_rawseti(L, items_idx, items_len + 1);
     }
     lua_settop(L, todoidx);
 
