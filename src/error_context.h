@@ -25,25 +25,33 @@ static inline TMLErr *get_err_upval(lua_State *L) {
     return (TMLErr *)lua_touserdata(L, lua_upvalueindex(1));
 }
 
-static int tmlerr_gc(lua_State *L) {
-    TMLErr *errorval = (TMLErr *)luaL_checkudata(L, 1, "TomluaError");
-    if (errorval->heap) {
-        free(errorval->msg);
-        errorval->msg = NULL;
+static inline void tmlerr_free(TMLErr *err) {
+    if (err) {
+        if (err->heap) {
+            free(err->msg);
+            err->msg = NULL;
+        }
+        err->heap = err->len = 0;
     }
-    errorval->heap = errorval->len = 0;
+}
+
+static int tmlerr_gc(lua_State *L) {
+    TMLErr *err = (TMLErr *)luaL_checkudata(L, 1, "TomluaError");
+    tmlerr_free(err);
     return 0;
 }
-static int tmlerr_tostr(lua_State *L, int idx) {
-    TMLErr *errorval = (TMLErr *)luaL_checkudata(L, idx, "TomluaError");
-    if (!errorval->msg) {
+static inline int push_tmlerr_string(lua_State *L, TMLErr *err) {
+    if (!err || !err->msg) {
         lua_pushliteral(L, "Error: (no message)");
     } else {
-        lua_pushlstring(L, errorval->msg, errorval->len);
+        lua_pushlstring(L, err->msg, err->len);
     }
     return 1;
 }
-static int tmlerr_tostring(lua_State *L) {
+static inline int tmlerr_tostr(lua_State *L, int idx) {
+    return push_tmlerr_string(L, (TMLErr *)luaL_checkudata(L, idx, "TomluaError"));
+}
+static int tmlerr_tostring_lua(lua_State *L) {
     return tmlerr_tostr(L, 1);
 }
 
@@ -51,7 +59,7 @@ static int new_TMLErr(lua_State *L) {
     TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));
     *lasterr = (TMLErr){0};
     if (luaL_newmetatable(L, "TomluaError")) {
-        lua_pushcfunction(L, tmlerr_tostring);
+        lua_pushcfunction(L, tmlerr_tostring_lua);
         lua_setfield(L, -2, "__tostring");
         lua_pushcfunction(L, tmlerr_gc);
         lua_setfield(L, -2, "__gc");
