@@ -135,7 +135,8 @@ static int embed_run(lua_State *L) {
             fprintf(out, "  lua_newtable(L);\n");
             fprintf(out, "  int out_table_idx = lua_gettop(L);\n");
         }
-        for (size_t i = lembed_arrlen(L, itemsidx); i > 0; i--) {
+        size_t items_len = lembed_arrlen(L, itemsidx);
+        for (size_t i = items_len; i > 0; i--) {
             lua_settop(L, itemsidx);
             lua_rawgeti(L, itemsidx, i);
             lua_getfield(L, -1, "modname");
@@ -163,7 +164,7 @@ static int embed_run(lua_State *L) {
         // pop items table and the table for the function
         // leave key for lua_next
         lua_settop(L, itemsidx - 2);
-        fprintf(out, "  return %zu;\n", make_table ? 1 : num_inputs);
+        fprintf(out, "  return %zu;\n", make_table ? 1 : items_len);
         fprintf(out, "}\n");
         lua_pushnil(L);
         lua_setfield(L, todoidx, c_func_name);
