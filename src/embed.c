@@ -9,27 +9,19 @@
 #include <windows.h>
 #endif
 
+static int set_env(lua_State *L, const char *key, const char *val) {
+#ifdef _WIN32
+    return SetEnvironmentVariable(key, val) != 0;
+#else
+    if (!val) return unsetenv(key) == 0;
+    return setenv(key, val, 1) == 0;
+#endif
+}
 static int env__newindex(lua_State *L) {
     const char *key = luaL_checkstring(L, 2);
-    switch (lua_type(L, 3)) {
-        case LUA_TNIL:
-#ifdef _WIN32
-            if (SetEnvironmentVariable(key, NULL) == 0)
-#else
-            if (unsetenv(key) != 0)
-#endif
-                return luaL_error(L, "failed to unset env var");
-            break;
-        case LUA_TSTRING:
-#ifdef _WIN32
-            if (SetEnvironmentVariable(key, lua_tostring(L, 3)) == 0)
-#else
-            if (setenv(key, lua_tostring(L, 3), 1) != 0)
-#endif
-                return luaL_error(L, "failed to set env var");
-            break;
-        default: return luaL_error(L, "env values must be strings or nil");
-    }
+    const char *val = lua_isnil(L, 3) ? NULL : luaL_checkstring(L, 3);
+    if (!set_env(L, key, val))
+        return luaL_error(L, "failed to set/unset env var %s", key);
     return 0;
 }
 static int env__index(lua_State *L) {
