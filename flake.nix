@@ -3,8 +3,8 @@
   outputs = { self, nixpkgs, ... }@inputs: let
     genAttrs = names: f: builtins.listToAttrs (map (n: { name = n; value = (f n); }) names);
     forAllSys = genAttrs inputs.systems or nixpkgs.lib.platforms.all or [ inputs.system or builtins.throw "No systems list provided!" ];
-    getpkgs = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "system" "extend" ]
-      then nixpkgs.extend overlay else import nixpkgs { inherit system; overlays = [ overlay ]; };
+    getpkgs = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "system" "appendOverlays" ]
+      then nixpkgs.appendOverlays [ overlay ] else import nixpkgs { inherit system; overlays = [ overlay ]; };
     APPNAME = "tomlua";
     l_pkg_enum = {
       lua5_1 = "lua51Packages";
