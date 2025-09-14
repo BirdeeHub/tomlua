@@ -87,9 +87,9 @@ static int embed_run(lua_State *L) {
             // not present yet → create { items = {}, make_table = make_table_vote }
             lua_pop(L, 1); // remove nil
             lua_newtable(L); // the table for this c_func_name
-            lua_newtable(L); // items = {}
+            lua_newtable(L);
             lua_setfield(L, -2, "items");
-            lua_pushboolean(L, make_table_vote); // initial make_table
+            lua_pushboolean(L, make_table_vote);
             lua_setfield(L, -2, "make_table");
             // store it in todoidx[c_func_name]
             lua_pushvalue(L, -1);
