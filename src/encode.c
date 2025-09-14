@@ -45,8 +45,7 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
 static inline int lbuf_push_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     size_t len;
-    const char *str = lua_tolstring(L, 2, &len);
-    if (!str) return luaL_error(L, "expected string or string buffer");
+    const char *str = luaL_checklstring(L, 2, &len);
     if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push string");
     lua_settop(L, 1);
     return 1;
@@ -134,8 +133,9 @@ static inline int lbuf_push_keys(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     int top = lua_gettop(L);
     for (int i = 2; i <= top; i++) {
-        str_iter src = lua_str_to_iter(L, i);
-        if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key");
+        str_iter src = {0};
+        src.buf = luaL_checklstring(L, i, &src.len);
+        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key");
         if (i != top) {
             if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key");
         }
@@ -154,8 +154,9 @@ static inline int lbuf_push_heading(lua_State *L) {
         if (!buf_push(buf, '[')) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     }
     for (int i = 3; i <= top; i++) {
-        str_iter src = lua_str_to_iter(L, i);
-        if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
+        str_iter src = {0};
+        src.buf = luaL_checklstring(L, i, &src.len);
+        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
         if (i != top) {
             if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
         }
@@ -178,7 +179,6 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
             if (src.buf == NULL || !buf_push_esc_simple(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
         } break;
         case LUA_TNUMBER: {
-            if (!lua_isnumber(L, val_idx)) return luaL_error(L, "expected number");
             lua_Number n = lua_tonumber(L, val_idx);
             if (!buf_push_num(buf, n)) return luaL_error(L, "failed to push number");
         } break;
