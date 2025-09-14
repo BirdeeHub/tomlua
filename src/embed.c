@@ -64,9 +64,6 @@ static int embed_run(lua_State *L) {
     int todoidx = lua_gettop(L);
     for (size_t i = 1; i <= num_inputs; i++) {
         lua_settop(L, todoidx);
-        // NOTE: is this bad? iterating forwards, and pushing nil?
-        // Im using rawset and rawget with the numbers directly, so it should not matter.
-        // Keep this for now, it allows us to add to the items arrays in order
         lua_rawgeti(L, lua_upvalueindex(2), i);
         lua_pushnil(L);
         lua_rawseti(L, lua_upvalueindex(2), i);
