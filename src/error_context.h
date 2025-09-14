@@ -7,6 +7,9 @@
 
 #include "./types.h"
 
+// TODO: make a nice feature that allows us to give string and position and get start and end of surrounding X lines or something
+// That way we can give errors on decode that include source context
+
 typedef struct {
     size_t len;
     size_t heap;
