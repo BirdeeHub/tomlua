@@ -26,13 +26,10 @@
         };
       }) l_pkg_enum;
       # lua51Packages = final.lua5_1.pkgs;
-      l_pkg_sets = with builtins; lib.pipe l_pkg_enum [
-        (lib.mapAttrsToList (n: v: {
-          name = v;
-          value = lib.attrByPath [ n "pkgs" ] null final;
-        }))
-        listToAttrs
-      ];
+      l_pkg_sets = builtins.listToAttrs (lib.mapAttrsToList (n: v: {
+        name = v;
+        value = lib.attrByPath [ n "pkgs" ] null final;
+      }) l_pkg_enum);
     in l_pkg_main // l_pkg_sets // {
       vimPlugins = prev.vimPlugins // {
         ${APPNAME} = final.neovimUtils.buildNeovimPlugin {
