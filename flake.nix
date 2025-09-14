@@ -47,13 +47,13 @@
     overlays.default = overlay;
     packages = forAllSys (system: let
       pkgs = import (nixpkgs.path or nixpkgs) { inherit system; overlays = [ overlay ]; };
-    in (lib.pipe l_pkg_enum [
-      builtins.attrNames
-      (builtins.map (n: {
+    in (with builtins; lib.pipe l_pkg_enum [
+      attrNames
+      (map (n: {
         name = "${n}-${APPNAME}";
         value = lib.attrByPath [ n "pkgs" APPNAME ] null pkgs;
       }))
-      builtins.listToAttrs
+      listToAttrs
     ]) // {
       default = pkgs.vimPlugins.${APPNAME};
       "vimPlugins-${APPNAME}" = pkgs.vimPlugins.${APPNAME};
