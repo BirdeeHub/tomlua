@@ -30,7 +30,7 @@ static int env__index(lua_State *L) {
     else lua_pushnil(L);
     return 1;
 }
-int luaopen_env(lua_State *L) {
+int luaopen_tomlua_env(lua_State *L) {
     lua_newuserdata(L, 0);
     if (luaL_newmetatable(L, "LUA_ENV_VAR_HELPER")) {
         lua_pushcfunction(L, env__index);
@@ -41,7 +41,8 @@ int luaopen_env(lua_State *L) {
     lua_setmetatable(L, -2);
     return 1;
 }
-int luaopen_embed_env(lua_State *L) { return luaopen_env(L); }
+int luaopen_embed_env(lua_State *L) { return luaopen_tomlua_env(L); }
+int luaopen_env(lua_State *L) { return luaopen_tomlua_env(L); }
 
 static size_t lembed_arrlen(lua_State *L, int idx) {
 #if LUA_VERSION_NUM == 501

@@ -164,3 +164,5 @@ int luaopen_tomlua(lua_State *L) {
     lua_setmetatable(L, 1);
     return 1;
 }
+int luaopen_embed_tomlua(lua_State *L) { return luaopen_tomlua(L); }
+int luaopen_env_tomlua(lua_State *L) { return luaopen_tomlua(L); }
