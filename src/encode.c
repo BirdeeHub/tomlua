@@ -267,11 +267,10 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
 
 static inline int lbuf_push_inline_value(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    lua_Integer level = ((lua_isnumber(L, 3)) ? lua_tonumber(L, 3) : 0);
     lua_settop(L, 2);
     lua_newtable(L);
     lua_insert(L, 2);
-    if (!buf_push_inline_value(L, buf, 2, level)) return luaL_error(L, "failed to push inline value");
+    if (!buf_push_inline_value(L, buf, 2, 0)) return luaL_error(L, "failed to push inline value");
     lua_settop(L, 1);
     return 1;
 }
