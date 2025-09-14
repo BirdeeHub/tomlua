@@ -52,7 +52,6 @@ static inline int lbuf_push_str(lua_State *L) {
     return 1;
 }
 
-// TODO: improve this
 static inline bool buf_push_num(str_buf *buf, lua_Number n) {
     if (isnan(n)) {
         if (!buf_push_str(buf, "nan", 3)) return false;
