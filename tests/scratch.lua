@@ -85,7 +85,7 @@ do
     print(inspect(err))
 
     print()
-    print("TODO: ENCODE")
+    print("ENCODE")
     print()
     print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
     data.value = testdata
