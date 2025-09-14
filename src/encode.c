@@ -240,6 +240,9 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
                 }
                 if (!buf_push(buf, '}')) return luaL_error(L, "failed to push table end");
             }
+            lua_settop(L, val_idx);
+            lua_pushnil(L);
+            lua_rawset(L, visited_idx);
         } break;
         case LUA_TUSERDATA:
             if (udata_is_of_type(L, val_idx, "TomluaDate")) {
@@ -264,8 +267,10 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
 
 static inline int lbuf_push_inline_value(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    lua_Integer level = ((lua_isnumber(L, 4)) ? lua_tonumber(L, 4) : 0);
-    lua_settop(L, 3);
+    lua_Integer level = ((lua_isnumber(L, 3)) ? lua_tonumber(L, 3) : 0);
+    lua_settop(L, 2);
+    lua_newtable(L);
+    lua_insert(L, 2);
     if (!buf_push_inline_value(L, buf, 2, level)) return luaL_error(L, "failed to push inline value");
     lua_settop(L, 1);
     return 1;

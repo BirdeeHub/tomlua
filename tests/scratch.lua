@@ -85,7 +85,14 @@ do
     print("ENCODE")
     print()
     print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
-    data.value = testdata
+    data = {
+        g = { "1g", "2g", "3g", "4g" },
+    }
+    table.insert(data.g, data)
+    print(toml.encode(data))
+    print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR STACK OVERFLOW")
+    data = {}
+    data.value = data
     print(toml.encode(data))
     print()
 end
