@@ -63,7 +63,7 @@ static inline bool buf_push_num(str_buf *buf, lua_Number n) {
         int len = snprintf(tmp, sizeof(tmp), "%lld", (long long)i);
         if (len < 0 || !buf_push_str(buf, tmp, len)) return false;
     } else {
-        char tmp[64];
+        char tmp[32];
         int len = snprintf(tmp, sizeof(tmp), "%.17g", n); // high-precision float
         if (len < 0 || !buf_push_str(buf, tmp, len)) return false;
     }
