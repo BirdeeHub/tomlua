@@ -63,7 +63,6 @@ return function(input)
     ---@type Tomlua.Deferred_Heading[]
     local heading_q = {}
     local ok, val = pcall(function()
-        ---@type table<table, boolean?>
         for k, v in pairs(input) do
             local vtype = type(v)
             if vtype == "table" then
