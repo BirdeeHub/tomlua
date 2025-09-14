@@ -64,8 +64,7 @@ static int new_TMLErr(lua_State *L) {
     return 1;
 }
 
-static bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
-    TMLErr *err = get_err_upval(L);
+static inline bool set_tmlerr(TMLErr *err, size_t heap_size, size_t len, char *msg) {
     if (err->heap) free(err->msg);  // clears previous message if heap allocated
     err->heap = heap_size;
     err->msg = msg;
@@ -73,8 +72,11 @@ static bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg)
     return false;  // returns `not ok` as a convenience
 }
 
-static inline bool err_push(lua_State *L, char c) {
-    TMLErr *err = get_err_upval(L);
+static bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
+    return set_tmlerr(get_err_upval(L), heap_size, len, msg);
+}
+
+static inline bool tmlerr_push(TMLErr *err, char c) {
     if (!err) return false;
     if (!err->heap) {
         if (err->len == 0) {
@@ -107,8 +109,11 @@ static inline bool err_push(lua_State *L, char c) {
     return true;
 }
 
-static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
-    TMLErr *err = get_err_upval(L);
+static inline bool err_push(lua_State *L, char c) {
+    return tmlerr_push(get_err_upval(L), c);
+}
+
+static inline bool tmlerr_push_str(TMLErr *err, const char *str, size_t len) {
     if (!err || !str) return false;
 
     if (!err->heap) {
@@ -145,6 +150,14 @@ static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
     err->len += len;
 
     return true;
+}
+static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
+    return tmlerr_push_str(get_err_upval(L), str, len);
+}
+
+static inline bool tmlerr_push_buf(TMLErr *err, const str_buf *buf) {
+    if (!buf || !buf->data) return false;
+    return tmlerr_push_str(err, buf->data, buf->len);
 }
 
 static inline bool err_push_buf(lua_State *L, const str_buf *buf) {
