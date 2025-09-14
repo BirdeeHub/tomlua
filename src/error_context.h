@@ -9,7 +9,7 @@
 
 // TODO: make a nice feature that allows us to give string and position and get start and end of surrounding X lines or something
 // That way we can give errors on decode that include source context
-// make the context stuff separate from the TMLErr type so that we might be able to use it elsewhere
+// make the context stuff separate from anything which grabs an upvalue so that we can use it everywhere in the codebase
 
 typedef struct {
     size_t len;
