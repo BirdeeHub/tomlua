@@ -109,7 +109,7 @@ local date = tomlua.new_date({
     hour = 3,
     minute = 3,
     second = 3,
-    fractional_second = 333333,
+    fractional = 333333,
     offset_hour = 3,
     offset_minute = 3,
 })

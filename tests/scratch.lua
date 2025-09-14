@@ -117,10 +117,11 @@ local date = tomlua.new_date({
     hour = 3,
     minute = 3,
     second = 3,
-    fractional_second = 333333,
+    fractional = 333333,
     offset_hour = 3,
     offset_minute = 3,
 })
+print("date1", date)
 date.year = 2222 -- set values
 for k, v in getmetatable(date).__pairs(date) do
     print(k, v)
