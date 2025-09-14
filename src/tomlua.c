@@ -69,6 +69,8 @@ int luaopen_tomlua_date(lua_State *L) {
     lua_pushcfunction(L, lnew_date);
     return 1;
 }
+int luaopen_embed_date(lua_State *L) { return luaopen_tomlua_date(L); }
+int luaopen_env_date(lua_State *L) { return luaopen_tomlua_date(L); }
 
 static inline int str_2_mul(lua_State *L) {
     size_t len = 0;
