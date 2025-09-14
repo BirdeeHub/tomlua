@@ -104,19 +104,19 @@ return setmetatable({
 
 			env.eq = deepeq
 			env.spy = spy
-			env.it = function(cond, msg)
+			env.it = function(cond, msg, should_fail)
 				if not msg then
 					msg = debug.getinfo(2, 'S').short_src .. ":" .. debug.getinfo(2, 'l')
 					.currentline
 				end
 				if type(cond) == 'function' then
 					local control, value = pcall(cond)
-					if control then
+					if should_fail and not control or not should_fail and control then
 						handler(self, 'pass', name, msg)
 					else
-						handler(self, 'fail', name, msg, tostring(value))
+						handler(self, 'fail', name, msg, not should_fail and tostring(value) or "Task failed successfully. No error, that is the problem.")
 					end
-				elseif cond then
+				elseif should_fail and not cond or not should_fail and cond then
 					handler(self, 'pass', name, msg)
 				else
 					handler(self, 'fail', name, msg)
