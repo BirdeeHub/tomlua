@@ -13,7 +13,8 @@
       lua = "luaPackages";
     };
     overlay = final: prev: let
-      args = {
+      # lua5_1 = prev.lua5_1.override { packageOverrides };
+      l_pkg_main = builtins.mapAttrs (n: _: (lib.attrByPath [ n "override" ] null prev) {
         packageOverrides = luaself: luaprev: {
           ${APPNAME} = luaself.callPackage ({buildLuarocksPackage}:
             buildLuarocksPackage {
@@ -23,9 +24,7 @@
               src = self;
             }) {};
         };
-      };
-      # lua5_1 = prev.lua5_1.override args;
-      l_pkg_main = builtins.mapAttrs (n: _: (lib.attrByPath [ n "override" ] null prev) args) l_pkg_enum;
+      }) l_pkg_enum;
       # lua51Packages = final.lua5_1.pkgs;
       l_pkg_sets = with builtins; lib.pipe l_pkg_enum [
         (lib.mapAttrsToList (n: v: {
