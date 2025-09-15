@@ -184,7 +184,7 @@ static int embed_run(lua_State *L) {
 #include "types.h"
 static int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
     if (!p || !ud) return LUA_ERRERR;
-    buf_push_str((str_buf *)ud, (const char *)p, sz);
+    if (!buf_push_str((str_buf *)ud, (const char *)p, sz)) return LUA_ERRMEM;
     return 0;
 }
 static int embed_add(lua_State *L) {
