@@ -9,7 +9,7 @@ Implemented in C
 
 This is not intended to replace packages like [toml_edit](https://github.com/nvim-neorocks/toml-edit.lua), which are slower but better for editing existing files.
 
-It will not be handling and re-emitting comments, and it will not re-output in the same format as the ingested file.
+It will not be re-emitting comments, and it will not re-output in the same format as the ingested file.
 
 If you wish to edit existing toml, you should do that using a package more suited for that.
 
