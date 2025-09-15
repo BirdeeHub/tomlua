@@ -17,7 +17,7 @@ This is instead intended for hot-path parsing of toml files.
 
 Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
 
-Speed is slightly slower but comparable to cjson (cjson is 1.2x - 2.0x faster) despite parsing toml rather than json, and it is 10x faster than toml_edit
+Speed is slightly slower than cjson but comparable despite parsing toml rather than json (cjson is 1.2x - 2.0x faster), and it is 10x faster than toml_edit
 
 ---
 
