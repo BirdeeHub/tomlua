@@ -1,6 +1,8 @@
 return function(define, test_dir)
 
 -- TODO: A lot more tests
+-- TODO: also better error messages. Some of them could have a slightly more dynamic original message.
+-- I know, unrelated, but I put it with the other TODO that will probably be around for a while
 
 define("decode example.toml", function()
     local tomlua_s = require("tomlua")({ fancy_tables = false, strict = true })
