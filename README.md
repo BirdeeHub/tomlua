@@ -1,7 +1,8 @@
 # TOMLUA
 
 > [!WARNING]
-> This is not finished software yet! But the pieces are all there! Needs polish. Tests/CI, better docs, push to luarocks and nixpkgs, etc.
+> This is not finished software yet! But the pieces are all there! Needs polish.
+> Tests/CI, better docs, error descriptions which are less lazy, push to luarocks and nixpkgs, etc.
 
 Parses toml files into and out of lua tables ASAP.
 
