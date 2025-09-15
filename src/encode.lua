@@ -11,6 +11,11 @@
 
 local check_heading_array, new_buf = ...
 
+-- NOTE: this is probably faster in lua
+-- I'd have to make basically all of these lua api calls anyway
+-- and this way, I don't need to do any cycle detection here.
+-- lua pcall catches stack overflows.
+-- plus, I precompile this and embed it in the binary.
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = new_buf()
