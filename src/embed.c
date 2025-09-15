@@ -218,7 +218,7 @@ static int embed_add(lua_State *L) {
             lua_setfield(L, 1, "c_fn_name");
         } else {
             // calculate luaopen_mod_path from arg 1 mod.path
-            buf.len = 0;
+            buf_soft_reset(&buf);
             buf_push_str(&buf, "luaopen_", 8);
             for (const char *p = lua_tostring(L, 2); *p; p++)
                 buf_push(&buf, (*p == '.') ? '_' : *p);
@@ -244,7 +244,7 @@ static int embed_add(lua_State *L) {
             return luaL_error(L, "failed to load Lua file %s at %s\n%s", err);
         }
     }
-    buf.len = 0;
+    buf_soft_reset(&buf);
 #if LUA_VERSION_NUM < 503
     if (lua_dump(L, embed_writer, &buf)) {
 #else
