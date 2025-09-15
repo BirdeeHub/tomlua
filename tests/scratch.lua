@@ -2,6 +2,7 @@ package.cpath = "./lib/?.so;" .. package.cpath
 local inspect = require('inspect')
 local tomlua = require("tomlua")
 
+print(inspect(tomlua))
 
 local f = io.open("./tests/example.toml", "r")
 local contents
