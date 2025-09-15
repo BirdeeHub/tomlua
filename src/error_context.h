@@ -2,7 +2,12 @@
 #ifndef SRC_ERROR_CONTEXT_H_
 #define SRC_ERROR_CONTEXT_H_
 
-#include "./types.h"
+#include <string.h>
+#include <stddef.h>
+#include <stdlib.h>
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 
 typedef struct {
     size_t len;
@@ -100,11 +105,6 @@ static bool tmlerr_push_str(TMLErr *err, const char *str, size_t len) {
     return true;
 }
 
-static bool tmlerr_push_buf(TMLErr *err, const str_buf *buf) {
-    if (!buf || !buf->data) return false;
-    return tmlerr_push_str(err, buf->data, buf->len);
-}
-
 // position 0 is the start, and otherwise, ends of lines
 // if it reaches the end of src, final position is src_len
 // thus, it is best to always read FROM the current position up UNTIL the next position.
@@ -171,6 +171,7 @@ static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t
     return true;
 }
 
+#include "./types.h"
 static bool tmlerr_push_ctx_from_iter(TMLErr *err, int max_lines, const str_iter *src) {
     // this is an error helper. max_lines will always be known at compile time
     // and will always be small, so this warning is not relevant
@@ -184,6 +185,11 @@ static bool tmlerr_push_ctx_from_iter(TMLErr *err, int max_lines, const str_iter
         src->buf,
         src->len
     );
+}
+
+static bool tmlerr_push_buf(TMLErr *err, const str_buf *buf) {
+    if (!buf || !buf->data) return false;
+    return tmlerr_push_str(err, buf->data, buf->len);
 }
 
 #include <lua.h>

@@ -7,11 +7,8 @@
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
-
 #ifndef __cplusplus
-typedef uint8_t bool;
-#define true 1
-#define false 0
+#include <stdbool.h>
 #endif
 
 // NOTE: just for debugging

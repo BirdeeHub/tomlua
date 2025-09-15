@@ -5,11 +5,14 @@
 #include <stdlib.h>
 #include <lua.h>
 #include <lauxlib.h>
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-static int set_env(lua_State *L, const char *key, const char *val) {
+static bool set_env(lua_State *L, const char *key, const char *val) {
 #ifdef _WIN32
     return SetEnvironmentVariable(key, val) != 0;
 #else
@@ -55,10 +58,10 @@ static int embed_run(lua_State *L) {
     // 1: output_file: string
     const char *output_file = luaL_checkstring(L, 1);
     // 2: header_name_or_to_append?: bool|string
-    int to_append = lua_toboolean(L, 2);
+    bool to_append = lua_toboolean(L, 2);
     const char *header_name = lua_tostring(L, 2);
     if (header_name) to_append = 0;
-    int table_by_default = lua_toboolean(L, lua_upvalueindex(1));
+    bool table_by_default = lua_toboolean(L, lua_upvalueindex(1));
     size_t num_inputs = lembed_arrlen(L, lua_upvalueindex(2));
     lua_settop(L, 2);
     // @type table<c_func_name, { items: ({ modname: string, chunk: string })[], make_table: bool }>
@@ -73,10 +76,10 @@ static int embed_run(lua_State *L) {
         lua_getfield(L, vidx, "c_fn_name");
         const char *c_func_name = lua_tostring(L, -1);
         lua_getfield(L, vidx, "make_table");
-        int make_table_vote;
-        int make_table_was_null = 0;
+        bool make_table_vote;
+        bool make_table_was_null = false;
         if (lua_isnil(L, -1)) {
-            make_table_was_null = 1;
+            make_table_was_null = true;
             make_table_vote = table_by_default;
         } else {
             make_table_vote = lua_toboolean(L, -1);
@@ -127,7 +130,7 @@ static int embed_run(lua_State *L) {
         // [-2]: c_func_name
         const char *c_func_name = lua_tostring(L, -2);
         lua_getfield(L, -1, "make_table");
-        const int make_table = lua_toboolean(L, -1);
+        const bool make_table = lua_toboolean(L, -1);
         lua_pop(L, 1);
         lua_getfield(L, -1, "items");
         int itemsidx = lua_gettop(L);
