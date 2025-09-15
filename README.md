@@ -59,7 +59,7 @@ local tomlua2 = tomlua {
     multi_strings = false,
 }
 
--- or you can set them directly!
+-- or you can set them directly on the current object
 tomlua.opts.fancy_dates = true
 
 local data, err = tomlua.decode(some_string)
