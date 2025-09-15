@@ -15,7 +15,7 @@ If you wish to edit existing toml, you should do that using a package more suite
 
 This is instead intended for hot-path parsing of toml files.
 
-Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
+Basic benchmarking shows promising results.
 
 Speed is slightly slower than cjson but comparable despite parsing toml rather than json (cjson is 1.2x - 2.0x faster, depending on the file and settings)
 
