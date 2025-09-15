@@ -11,19 +11,11 @@
 #include "decode_keys.h"
 #include "error_context.h"
 
-static inline void push_to_output_table(lua_State *L) {
-    return lua_replace(L, lua_upvalueindex(3));
-}
-
-static inline void push_output_table(lua_State *L) {
-    return lua_pushvalue(L, lua_upvalueindex(3));
-}
-
 // pops keys, leaves new root on top
 static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_tmlerr(get_err_upval(L), false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
-    push_output_table(L);
+    lua_pushvalue(L, DECODE_RESULT_IDX);
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
         int parent_idx = lua_gettop(L);
         lua_pushvalue(L, key_idx);
@@ -95,29 +87,17 @@ static inline bool set_kv(lua_State *L, int keys_len) {
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
-static inline void create_defined_table(lua_State *L) {
-    lua_newtable(L);
-    lua_replace(L, lua_upvalueindex(4));
-}
-
-// NOTE: FOR STRICT MODE ONLY!!
-static inline void reset_defined_table(lua_State *L) {
-    lua_pushnil(L);
-    lua_replace(L, lua_upvalueindex(4));
-}
-
-// NOTE: FOR STRICT MODE ONLY!!
 // does not remove table added
 // returns false for already defined
 static inline bool add_defined(lua_State *L, int idx) {
     lua_pushvalue(L, idx);
-    lua_rawget(L, lua_upvalueindex(4));  // use table as key for lookup
+    lua_rawget(L, DECODE_DEFINED_IDX);  // use table as key for lookup
     bool was = !lua_isnil(L, -1);
     lua_pop(L, 1);
     if (was) return false;
     lua_pushvalue(L, idx);
     lua_newtable(L);
-    lua_rawset(L, lua_upvalueindex(4));  // register this heading as created
+    lua_rawset(L, DECODE_DEFINED_IDX);  // register this heading as created
     return true;
 }
 
@@ -126,7 +106,7 @@ static inline bool add_defined(lua_State *L, int idx) {
 static inline void add_inline(lua_State *L, int idx) {
     lua_pushvalue(L, idx);
     lua_pushboolean(L, true);
-    lua_rawset(L, lua_upvalueindex(4));  // register this heading as created
+    lua_rawset(L, DECODE_DEFINED_IDX);  // register this heading as created
 }
 
 // NOTE: FOR STRICT MODE ONLY!!
@@ -137,7 +117,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
     t_idx = absindex(lua_gettop(L), t_idx);
     k_idx = absindex(lua_gettop(L), k_idx);
     lua_pushvalue(L, t_idx);
-    lua_rawget(L, lua_upvalueindex(4));  // use table as key for lookup
+    lua_rawget(L, DECODE_DEFINED_IDX);  // use table as key for lookup
     int vtype = lua_type(L, -1);
     if (vtype == LUA_TBOOLEAN && lua_toboolean(L, -1)) {
         lua_pop(L, 1);
@@ -147,7 +127,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
         lua_newtable(L);
         lua_pushvalue(L, t_idx);
         lua_pushvalue(L, -2);
-        lua_rawset(L, lua_upvalueindex(4));
+        lua_rawset(L, DECODE_DEFINED_IDX);
         lua_pushvalue(L, k_idx);
         lua_pushboolean(L, true);
         lua_rawset(L, -3);
@@ -174,7 +154,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
 static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_tmlerr(get_err_upval(L), false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
-    push_output_table(L);
+    lua_pushvalue(L, DECODE_RESULT_IDX);
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
         int parent_idx = lua_gettop(L);
         lua_pushvalue(L, key_idx);
@@ -633,18 +613,16 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
 
 int tomlua_decode(lua_State *L) {
     // process arguments and options
-    TomluaUserOpts *uopts = get_opts_upval(L);
-    const bool strict = uopts->strict;
-    const bool int_keys = uopts->int_keys;
-    if (strict) create_defined_table(L);
+    TomluaUserOpts uopts = toml_user_opts_copy(get_opts_upval(L));
+    const bool strict = uopts.strict;
+    const bool int_keys = uopts.int_keys;
+    // top. this will be our result at the end
     if (lua_istable(L, 2)) {
         lua_settop(L, 2);
     } else {
         lua_settop(L, 1);
         lua_newtable(L);
     }
-    // pop and store top, this will be our result at the end
-    push_to_output_table(L);
 
     str_iter src = lua_str_to_iter(L, 1);
     // NOTE: I might actually not be allowed to pop this in case it gets GC'd?
@@ -656,9 +634,12 @@ int tomlua_decode(lua_State *L) {
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     }
+    new_TMLErr(L);
+    // Table we will use to hold defined stuff for uniqueness book-keeping
+    if (strict) lua_newtable(L);
 
     // set top as the starting location
-    push_output_table(L);
+    lua_pushvalue(L, 2);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
     while (iter_peek(&src).ok) {
@@ -718,7 +699,7 @@ int tomlua_decode(lua_State *L) {
                 set_tmlerr(get_err_upval(L), false, 76, "the value in key = value expressions must begin on the same line as the key!");
                 goto fail;
             }
-            if (!parse_value(L, &src, &scratch, uopts)) goto fail;
+            if (!parse_value(L, &src, &scratch, &uopts)) goto fail;
             lua_insert(L, lua_gettop(L) - keys_len);
             // [-1?] keys
             // [-?] value
@@ -736,22 +717,15 @@ int tomlua_decode(lua_State *L) {
         }
     }
 
-    lua_settop(L, 0);
-    if (strict) reset_defined_table(L);
+    lua_settop(L, DECODE_RESULT_IDX);
     free_str_buf(&scratch);
-    push_output_table(L);
-    lua_pushnil(L);
-    push_to_output_table(L);
     return 1;
 
 fail:
-    lua_settop(L, 0);
-    if (strict) reset_defined_table(L);
+    lua_settop(L, DECODE_ERR_IDX);
+    tmlerr_push_ctx_from_iter(get_err_upval(L), 7, &src);
     free_str_buf(&scratch);
     lua_pushnil(L);
-    push_to_output_table(L);
-    lua_pushnil(L);
-    tmlerr_push_ctx_from_iter(get_err_upval(L), 7, &src);
     push_tmlerr_string(L, get_err_upval(L));
     return 2;
 }

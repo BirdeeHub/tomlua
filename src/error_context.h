@@ -203,10 +203,10 @@ static int push_tmlerr_string(lua_State *L, TMLErr *err) {
     return 1;
 }
 static void push_err_upval(lua_State *L) {
-    lua_pushvalue(L, lua_upvalueindex(1));
+    lua_pushvalue(L, DECODE_ERR_IDX);
 }
 static TMLErr *get_err_upval(lua_State *L) {
-    return (TMLErr *)lua_touserdata(L, lua_upvalueindex(1));
+    return (TMLErr *)lua_touserdata(L, DECODE_ERR_IDX);
 }
 static int tmlerr_gc(lua_State *L) {
     free_tmlerr((TMLErr *)luaL_checkudata(L, 1, "TomluaError"));

@@ -118,26 +118,12 @@ static int tomlua_new(lua_State *L) {
     lua_setfield(L, 1, "str_2_mul");
 
     lua_settop(L, 1);
-
-    // upvalue 1: error object
-    new_TMLErr(L);
-    // upvalue 2: options
     {
         TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
         *uopts = opts;
     }
-    // upvalue 3: for storing output until it is returned
-    lua_pushnil(L);
-
-    if (opts.strict) {
-        // upvalue 4: for uniquness bookkeeping
-        lua_pushnil(L);
-        lua_pushcclosure(L, tomlua_decode, 4);
-        lua_setfield(L, 1, "decode");
-    } else {
-        lua_pushcclosure(L, tomlua_decode, 3);
-        lua_setfield(L, 1, "decode");
-    }
+    lua_pushcclosure(L, tomlua_decode, 1);
+    lua_setfield(L, 1, "decode");
     return 1;
 }
 

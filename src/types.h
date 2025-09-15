@@ -11,6 +11,10 @@
 #include <stdbool.h>
 #endif
 
+#define DECODE_RESULT_IDX 2
+#define DECODE_ERR_IDX 3
+#define DECODE_DEFINED_IDX 4
+
 // NOTE: just for debugging
 #include <stdio.h>
 static void print_lua_stack(lua_State *L, const char *label) {
@@ -135,9 +139,17 @@ typedef struct {
     bool fancy_tables;
     bool multi_strings;
 } TomluaUserOpts;
-
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
-    return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(2));
+    return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
+}
+static inline TomluaUserOpts toml_user_opts_copy(TomluaUserOpts *opts) {
+    return ((TomluaUserOpts) {
+            .strict = opts->strict,
+            .int_keys = opts->int_keys,
+            .fancy_dates = opts->fancy_dates,
+            .fancy_tables = opts->fancy_tables,
+            .multi_strings = opts->multi_strings
+    });
 }
 
 static inline void free_str_buf(str_buf *buf) {
