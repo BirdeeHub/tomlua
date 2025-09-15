@@ -15,7 +15,7 @@ If you wish to edit existing toml, you should do that using a package more suite
 
 This is instead intended for hot-path parsing of toml files.
 
-Error reporting is bad currently, but the plumbing is there, just lazy messages that don't gather any file context.
+Error reporting is bad currently, but the plumbing is there, just lazy messages.
 
 Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
 
