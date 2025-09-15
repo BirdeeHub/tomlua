@@ -3,6 +3,11 @@ version = "1.2.3"
 debug = true
 max_connections = 256
 pi_value = 3.1415926535
+exp_value = 1.23e4
+exp_value_neg = 1.23e-4
+exp_value_dneg = -1.23e-4
+exp_value_plus = 1.23e+4
+exp_value_dplus = +1.23e+4
 
 testhexnumber = 0xDEADBEEF
 testoctnumber = 0o755

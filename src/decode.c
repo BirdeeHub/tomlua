@@ -396,27 +396,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         lua_pushnumber(L, NAN);
         return true;
     } else if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
-        if (curr.v == '+') {
-            if (iter_starts_with(src, "+inf", 4)) {
-                iter_skip_n(src, 4);
-                lua_pushnumber(L, INFINITY);
-                return true;
-            } else if (iter_starts_with(src, "+nan", 4)) {
-                iter_skip_n(src, 4);
-                lua_pushnumber(L, NAN);
-                return true;
-            }
-        } else if (curr.v == '-') {
-            if (iter_starts_with(src, "-inf", 4)) {
-                iter_skip_n(src, 4);
-                lua_pushnumber(L, -INFINITY);
-                return true;
-            } else if (iter_starts_with(src, "-nan", 4)) {
-                iter_skip_n(src, 4);
-                lua_pushnumber(L, -NAN);
-                return true;
-            }
-        } else if (iter_starts_with(src, "0x", 2)) {
+        if (iter_starts_with(src, "0x", 2)) {
             // Hex integer
             buf_soft_reset(buf);
             iter_skip_n(src, 2);
@@ -505,7 +485,28 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             bool t_used = false;
             bool z_used = false;
             bool was_underscore = true;
-            if (curr.v == '-' || curr.v == '+') buf_push(buf, curr.v);
+            if (curr.v == '-' || curr.v == '+') {
+                if (iter_starts_with(src, "+inf", 4)) {
+                    iter_skip_n(src, 4);
+                    lua_pushnumber(L, INFINITY);
+                    return true;
+                } else if (iter_starts_with(src, "+nan", 4)) {
+                    iter_skip_n(src, 4);
+                    lua_pushnumber(L, NAN);
+                    return true;
+                } else if (iter_starts_with(src, "-inf", 4)) {
+                    iter_skip_n(src, 4);
+                    lua_pushnumber(L, -INFINITY);
+                    return true;
+                } else if (iter_starts_with(src, "-nan", 4)) {
+                    iter_skip_n(src, 4);
+                    lua_pushnumber(L, -NAN);
+                    return true;
+                } else {
+                    buf_push(buf, curr.v);
+                    iter_skip(src);
+                }
+            }
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
                 if (ch == '_') {
@@ -520,7 +521,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                     iter_skip(src);
                     iter_result next = iter_peek(src);
                     if (next.ok && (next.v == '+' || next.v == '-')) {
-                        buf_push(buf, ch);
+                        buf_push(buf, next.v);
                         iter_skip(src);
                     }
                     was_underscore = false;
