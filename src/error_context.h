@@ -212,9 +212,8 @@ static int tmlerr_gc(lua_State *L) {
 static int tmlerr_tostring_meta(lua_State *L) {
     return push_tmlerr_string(L, (TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
 }
-static TMLErr *new_tmlerr(lua_State *L) {
+static TMLErr *push_new_tmlerr(lua_State *L) {
     TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));
-    lua_replace(L, DECODE_ERR_IDX);
     if (luaL_newmetatable(L, "TomluaError")) {
         lua_pushcfunction(L, tmlerr_tostring_meta);
         lua_setfield(L, -2, "__tostring");
@@ -222,6 +221,11 @@ static TMLErr *new_tmlerr(lua_State *L) {
         lua_setfield(L, -2, "__gc");
     }
     lua_setmetatable(L, -2);
+    return lasterr;
+}
+static TMLErr *new_tmlerr(lua_State *L) {
+    TMLErr *lasterr = push_new_tmlerr(L);
+    lua_replace(L, DECODE_ERR_IDX);
     return lasterr;
 }
 
