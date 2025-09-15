@@ -188,23 +188,11 @@ int luaopen_tomlua(lua_State *L) {
     int argtop = lua_gettop(L);
     lua_newtable(L); // module table
     if (argtop > 0) lua_replace(L, 1);
-    tomlua_types(L);
-    lua_setfield(L, 1, "types");
-    lua_pushcfunction(L, tomlua_typename);
-    lua_setfield(L, 1, "typename");
-    lua_pushcfunction(L, lnew_date);
-    lua_setfield(L, 1, "new_date");
-    lua_pushcfunction(L, tomlua_type_of);
-    lua_setfield(L, 1, "type");
-    lua_pushcfunction(L, str_2_mul);
-    lua_setfield(L, 1, "str_2_mul");
-    push_encode(L);
-    lua_setfield(L, 1, "encode");
     lua_newtable(L);  // options table (argtop + 1)
     lua_newtable(L);  // options table metatable (argtop + 2)
     {
         TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
-        if (argtop > 1) {
+        if (lua_istable(L, 2)) {
             *uopts = opts_parse(L, 2, argtop + 1);
         } else {
             *uopts = opts_parse(L, -1, argtop + 1);
@@ -227,6 +215,18 @@ int luaopen_tomlua(lua_State *L) {
     // pop opts
     lua_setfield(L, 1, "opts");
     lua_settop(L, 1);
+    tomlua_types(L);
+    lua_setfield(L, 1, "types");
+    lua_pushcfunction(L, tomlua_typename);
+    lua_setfield(L, 1, "typename");
+    lua_pushcfunction(L, lnew_date);
+    lua_setfield(L, 1, "new_date");
+    lua_pushcfunction(L, tomlua_type_of);
+    lua_setfield(L, 1, "type");
+    lua_pushcfunction(L, str_2_mul);
+    lua_setfield(L, 1, "str_2_mul");
+    push_encode(L);
+    lua_setfield(L, 1, "encode");
     lua_newtable(L);
     lua_pushcfunction(L, luaopen_tomlua);
     lua_setfield(L, 2, "__call");
