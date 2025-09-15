@@ -226,11 +226,11 @@ int luaopen_tomlua(lua_State *L) {
     lua_setmetatable(L, argtop + 1);
     // pop opts
     lua_setfield(L, 1, "opts");
-    lua_newtable(L);  // main metatable, now at argtop + 1
-    lua_pushcfunction(L, luaopen_tomlua);
-    lua_setfield(L, argtop + 1, "__call");
-    lua_setmetatable(L, 1);
     lua_settop(L, 1);
+    lua_newtable(L);
+    lua_pushcfunction(L, luaopen_tomlua);
+    lua_setfield(L, 2, "__call");
+    lua_setmetatable(L, 1);
     return 1;
 }
 int luaopen_embed_tomlua(lua_State *L) { return luaopen_tomlua(L); }
