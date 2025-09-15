@@ -250,7 +250,7 @@ static inline str_iter str_to_iter(const char *str, size_t len) {
     return ((str_iter) { .len = len, .pos = 0, .buf = str });
 }
 
-static inline bool iter_starts_with(const str_iter *a, char *b, size_t len) {
+static bool iter_starts_with(const str_iter *a, char *b, size_t len) {
     if (!a || !a->buf || !b) return false;
     if (a->pos + len > a->len) return false;
     return memcmp(a->buf + a->pos, b, len) == 0;

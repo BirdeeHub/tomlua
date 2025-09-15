@@ -2,14 +2,9 @@
 #ifndef SRC_ERROR_CONTEXT_H_
 #define SRC_ERROR_CONTEXT_H_
 
-#include <lua.h>
-#include <lauxlib.h>
+#include <stddef.h>
 
 #include "./types.h"
-
-// TODO: make a nice feature that allows us to give string and position and get start and end of surrounding X lines or something
-// That way we can give errors on decode that include source context
-// make the context stuff separate from anything which grabs an upvalue so that we can use it everywhere in the codebase
 
 typedef struct {
     size_t len;
@@ -17,15 +12,7 @@ typedef struct {
     char *msg;
 } TMLErr;
 
-static inline void push_err_upval(lua_State *L) {
-    lua_pushvalue(L, lua_upvalueindex(1));
-}
-
-static inline TMLErr *get_err_upval(lua_State *L) {
-    return (TMLErr *)lua_touserdata(L, lua_upvalueindex(1));
-}
-
-static inline void free_tmlerr(TMLErr *err) {
+static void free_tmlerr(TMLErr *err) {
     if (err) {
         if (err->heap) {
             free(err->msg);
@@ -35,36 +22,7 @@ static inline void free_tmlerr(TMLErr *err) {
     }
 }
 
-static inline int push_tmlerr_string(lua_State *L, TMLErr *err) {
-    if (!err || !err->msg) {
-        lua_pushliteral(L, "Error: (no message)");
-    } else {
-        lua_pushlstring(L, err->msg, err->len);
-    }
-    return 1;
-}
-
-static int tmlerr_gc(lua_State *L) {
-    free_tmlerr((TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
-    return 0;
-}
-static int tmlerr_tostring_meta(lua_State *L) {
-    return push_tmlerr_string(L, (TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
-}
-static int new_TMLErr(lua_State *L) {
-    TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));
-    *lasterr = (TMLErr){0};
-    if (luaL_newmetatable(L, "TomluaError")) {
-        lua_pushcfunction(L, tmlerr_tostring_meta);
-        lua_setfield(L, -2, "__tostring");
-        lua_pushcfunction(L, tmlerr_gc);
-        lua_setfield(L, -2, "__gc");
-    }
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
-static inline bool set_tmlerr(TMLErr *err, size_t heap_size, size_t len, char *msg) {
+static bool set_tmlerr(TMLErr *err, size_t heap_size, size_t len, char *msg) {
     if (err->heap) free(err->msg);  // clears previous message if heap allocated
     err->heap = heap_size;
     err->msg = msg;
@@ -72,11 +30,7 @@ static inline bool set_tmlerr(TMLErr *err, size_t heap_size, size_t len, char *m
     return false;  // returns `not ok` as a convenience
 }
 
-static bool set_err_upval(lua_State *L, size_t heap_size, size_t len, char *msg) {
-    return set_tmlerr(get_err_upval(L), heap_size, len, msg);
-}
-
-static inline bool tmlerr_push(TMLErr *err, char c) {
+static bool tmlerr_push(TMLErr *err, char c) {
     if (!err) return false;
     if (!err->heap) {
         if (err->len == 0) {
@@ -109,11 +63,7 @@ static inline bool tmlerr_push(TMLErr *err, char c) {
     return true;
 }
 
-static inline bool err_push(lua_State *L, char c) {
-    return tmlerr_push(get_err_upval(L), c);
-}
-
-static inline bool tmlerr_push_str(TMLErr *err, const char *str, size_t len) {
+static bool tmlerr_push_str(TMLErr *err, const char *str, size_t len) {
     if (!err || !str) return false;
 
     if (!err->heap) {
@@ -151,18 +101,127 @@ static inline bool tmlerr_push_str(TMLErr *err, const char *str, size_t len) {
 
     return true;
 }
-static inline bool err_push_str(lua_State *L, const char *str, size_t len) {
-    return tmlerr_push_str(get_err_upval(L), str, len);
-}
 
-static inline bool tmlerr_push_buf(TMLErr *err, const str_buf *buf) {
+static bool tmlerr_push_buf(TMLErr *err, const str_buf *buf) {
     if (!buf || !buf->data) return false;
     return tmlerr_push_str(err, buf->data, buf->len);
 }
 
-static inline bool err_push_buf(lua_State *L, const str_buf *buf) {
-    if (!buf || !buf->data) return false;
-    return err_push_str(L, buf->data, buf->len);
+// position 0 is the start, and otherwise, ends of lines
+// if it reaches the end of src, final position is src_len
+// thus, it is best to always read FROM the current position up UNTIL the next position.
+// returns the number of positions written
+static int get_err_context(size_t positions[], const int max_positions, const size_t pos, const char *src, const size_t src_len) {
+    if (pos >= src_len || max_positions < 2) return 0;
+    // find start of context
+    size_t start = pos;
+    int up = max_positions / 2 + max_positions % 2;
+    while (start > 0 && up > 0) {
+        if (src[start - 1] == '\n') up--;
+        if (up > 0) start--;
+    }
+    // get ends of lines
+    positions[0] = start;
+    int count = 1;
+    for (size_t i = start; i < src_len && count < max_positions; i++)
+        if (src[i] == '\n') positions[count++] = i;
+    // end was hit rather than max positions.
+    // Add position of EOF (indexing may cause error)
+    if (count < max_positions) positions[count++] = src_len;
+    return count;
+}
+
+static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t positions[], const int num_positions, const char *src, const size_t src_len) {
+    if (!err || !positions || num_positions < 2 || !src) return false;
+    if (errpos < positions[0] || errpos >= positions[num_positions - 1]) return false;
+    if (!tmlerr_push(err, '\n')) return false;
+    for (int i = 1; i < num_positions; i++) {
+        size_t line_start = positions[i-1];
+        size_t line_end   = positions[i];
+        size_t line_len   = line_end - line_start;
+
+        // push the line itself
+        if (!tmlerr_push_str(err, src + line_start, line_len)) return false;
+
+        // if this line contains the error position
+        if (line_start <= errpos && errpos < line_end) {
+            if (!tmlerr_push(err, '\n')) return false;
+
+            size_t caret_pos = errpos - line_start;
+            for (size_t s = 0; s < line_len; s++) {
+                switch ((caret_pos < s) ? s - caret_pos : caret_pos - s) {
+                    case 0:
+                        if (!tmlerr_push(err, '^')) return false;
+                        break;
+                    case 1:
+                        if (!tmlerr_push(err, ' ')) return false;
+                        break;
+                    case 2: case 3: case 4:
+                        if (!tmlerr_push(err, '*')) return false;
+                        break;
+                    default:
+                        if (s < caret_pos) {
+                            if (!tmlerr_push(err, ' ')) return false;
+                        } else {
+                            s = line_len;
+                        }
+                }
+            }
+        }
+    }
+    if (!tmlerr_push(err, '\n')) return false;
+    return true;
+}
+
+static bool tmlerr_push_ctx_from_iter(TMLErr *err, int max_lines, const str_iter *src) {
+    // this is an error helper. max_lines will always be known at compile time
+    // and will always be small, so this warning is not relevant
+    // NOLINTNEXTLINE(runtime/arrays)
+    size_t positions[max_lines];
+    return tmlerr_push_positions(
+        err,
+        src->pos,
+        positions,
+        get_err_context(positions, max_lines, src->pos, src->buf, src->len),
+        src->buf,
+        src->len
+    );
+}
+
+#include <lua.h>
+#include <lauxlib.h>
+static int push_tmlerr_string(lua_State *L, TMLErr *err) {
+    if (!err || !err->msg) {
+        lua_pushliteral(L, "Error: (no message)");
+    } else {
+        lua_pushlstring(L, err->msg, err->len);
+    }
+    return 1;
+}
+static void push_err_upval(lua_State *L) {
+    lua_pushvalue(L, lua_upvalueindex(1));
+}
+static TMLErr *get_err_upval(lua_State *L) {
+    return (TMLErr *)lua_touserdata(L, lua_upvalueindex(1));
+}
+static int tmlerr_gc(lua_State *L) {
+    free_tmlerr((TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
+    return 0;
+}
+static int tmlerr_tostring_meta(lua_State *L) {
+    return push_tmlerr_string(L, (TMLErr *)luaL_checkudata(L, 1, "TomluaError"));
+}
+static inline int new_TMLErr(lua_State *L) {
+    TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));
+    *lasterr = (TMLErr){0};
+    if (luaL_newmetatable(L, "TomluaError")) {
+        lua_pushcfunction(L, tmlerr_tostring_meta);
+        lua_setfield(L, -2, "__tostring");
+        lua_pushcfunction(L, tmlerr_gc);
+        lua_setfield(L, -2, "__gc");
+    }
+    lua_setmetatable(L, -2);
+    return 1;
 }
 
 #endif  // SRC_ERROR_CONTEXT_H_

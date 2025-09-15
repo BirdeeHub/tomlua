@@ -6,7 +6,7 @@ CC           ?= gcc
 LUA          ?= lua
 BEAR         ?= bear
 GREP         ?= grep
-CFLAGS       ?= -O3 -flto -Wl,-s -Winline
+CFLAGS       ?= -O3 -flto -Wl,-s -Winline -finline-functions -finline-small-functions
 
 EMBED_SCRIPT := $(SRC)/embed.lua
 EMBEDDER_SRC := $(SRC)/src/embed.c
