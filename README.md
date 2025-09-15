@@ -131,23 +131,6 @@ print(date > date2) -- true
 print(date) -- print as toml date string
 ```
 
-```c
-enum TomlType {
-    TOML_UNTYPED,  // Untyped TOML Item
-    TOML_STRING,  // lua string
-    TOML_STRING_MULTI,  // lua string
-    TOML_INTEGER,  // lua number
-    TOML_FLOAT,  // lua number
-    TOML_BOOL,  // lua bool
-    TOML_ARRAY,  // lua table
-    TOML_TABLE,  // lua table
-    TOML_LOCAL_DATE,  // string, or userdata with fancy_dates
-    TOML_LOCAL_TIME,  // string, or userdata with fancy_dates
-    TOML_LOCAL_DATETIME,  // string, or userdata with fancy_dates
-    TOML_OFFSET_DATETIME,  // string, or userdata with fancy_dates
-};
-```
-
 ---
 
 On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
