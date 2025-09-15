@@ -85,7 +85,7 @@ static inline int str_2_mul(lua_State *L) {
 
 static TomluaUserOpts opts_parse(lua_State *L, int idx) {
     int top = lua_gettop(L);
-    TomluaUserOpts opts = {};
+    TomluaUserOpts opts = {0};
     luaL_checktype(L, idx, LUA_TTABLE);
     lua_getfield(L, idx, "strict");
     opts.strict = lua_toboolean(L, -1);
