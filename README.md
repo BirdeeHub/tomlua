@@ -36,7 +36,7 @@ Basic benchmarking shows promising results:
 
 Rockspec is present, but the package is not yet on luarocks.
 
-Better instructions are on the roadmap as well.
+Better installation instructions are on the roadmap as well.
 
 ### Using Make
 
