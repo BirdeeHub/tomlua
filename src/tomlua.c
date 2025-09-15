@@ -83,73 +83,113 @@ static inline int str_2_mul(lua_State *L) {
     return 1;
 }
 
-static int tomlua_new(lua_State *L) {
-    // arg 1 = options or nil
-    TomluaUserOpts opts = {0};
-    if (lua_istable(L, 2)) {
-        lua_getfield(L, 2, "strict");
-        opts.strict = lua_toboolean(L, -1);
-        lua_getfield(L, 2, "fancy_tables");
-        opts.fancy_tables = lua_toboolean(L, -1);
-        lua_getfield(L, 2, "int_keys");
-        opts.int_keys = lua_toboolean(L, -1);
-        lua_getfield(L, 2, "fancy_dates");
-        opts.fancy_dates = lua_toboolean(L, -1);
-        lua_getfield(L, 2, "multi_strings");
-        opts.multi_strings = lua_toboolean(L, -1);
+static TomluaUserOpts opts_parse(lua_State *L, int idx) {
+    int top = lua_gettop(L);
+    TomluaUserOpts opts = {};
+    luaL_checktype(L, idx, LUA_TTABLE);
+    lua_getfield(L, idx, "strict");
+    opts.strict = lua_toboolean(L, -1);
+    lua_getfield(L, idx, "fancy_tables");
+    opts.fancy_tables = lua_toboolean(L, -1);
+    lua_getfield(L, idx, "int_keys");
+    opts.int_keys = lua_toboolean(L, -1);
+    lua_getfield(L, idx, "fancy_dates");
+    opts.fancy_dates = lua_toboolean(L, -1);
+    lua_getfield(L, idx, "multi_strings");
+    opts.multi_strings = lua_toboolean(L, -1);
+    lua_settop(L, top);
+    return opts;
+}
+static int opts_call(lua_State *L) {
+    TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
+    *opts = opts_parse(L, 2);
+    return 0;
+}
+static int opts_index(lua_State *L) {
+    TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
+    const char *key = luaL_checkstring(L, 2);
+    if (strcmp(key, "strict") == 0) {
+        lua_pushboolean(L, opts->strict);
+    } else if (strcmp(key, "fancy_tables") == 0) {
+        lua_pushboolean(L, opts->fancy_tables);
+    } else if (strcmp(key, "int_keys") == 0) {
+        lua_pushboolean(L, opts->int_keys);
+    } else if (strcmp(key, "fancy_dates") == 0) {
+        lua_pushboolean(L, opts->fancy_dates);
+    } else if (strcmp(key, "multi_strings") == 0) {
+        lua_pushboolean(L, opts->multi_strings);
+    } else {
+        lua_pushnil(L); // unknown key
     }
-
-    lua_settop(L, 0);
-    lua_newtable(L); // module table with encode and decode
-    lua_pushvalue(L, lua_upvalueindex(1));
-    lua_setmetatable(L, 1);
-    lua_pushvalue(L, lua_upvalueindex(2));
-    lua_setfield(L, 1, "encode");
-    lua_pushvalue(L, lua_upvalueindex(3));
-    lua_setfield(L, 1, "types");
-    lua_pushvalue(L, lua_upvalueindex(4));
-    lua_setfield(L, 1, "typename");
-    lua_pushvalue(L, lua_upvalueindex(5));
-    lua_setfield(L, 1, "new_date");
-    lua_pushvalue(L, lua_upvalueindex(6));
-    lua_setfield(L, 1, "type");
-    lua_pushvalue(L, lua_upvalueindex(7));
-    lua_setfield(L, 1, "str_2_mul");
-
-    lua_settop(L, 1);
-    {
-        TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
-        *uopts = opts;
-    }
-    lua_pushcclosure(L, tomlua_decode, 1);
-    lua_setfield(L, 1, "decode");
     return 1;
+}
+static int opts_newindex(lua_State *L) {
+    TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
+    const char *key = luaL_checkstring(L, 2);
+    int value = lua_toboolean(L, 3);
+    if (strcmp(key, "strict") == 0) {
+        opts->strict = value;
+    } else if (strcmp(key, "fancy_tables") == 0) {
+        opts->fancy_tables = value;
+    } else if (strcmp(key, "int_keys") == 0) {
+        opts->int_keys = value;
+    } else if (strcmp(key, "fancy_dates") == 0) {
+        opts->fancy_dates = value;
+    } else if (strcmp(key, "multi_strings") == 0) {
+        opts->multi_strings = value;
+    } else {
+        luaL_error(L, "invalid option '%s'", key);
+    }
+    return 0;
 }
 
 int luaopen_tomlua(lua_State *L) {
-    lua_settop(L, 0);
+    int argtop = lua_gettop(L);
     lua_newtable(L); // module table
-    lua_newtable(L); // meta table (and upvalue 1)
-    lua_pushvalue(L, -1);
-    push_encode(L);
+    if (argtop > 0) lua_replace(L, 1);
     tomlua_types(L);
-    lua_pushvalue(L, -1);
     lua_setfield(L, 1, "types");
     lua_pushcfunction(L, tomlua_typename);
-    lua_pushvalue(L, -1);
     lua_setfield(L, 1, "typename");
     lua_pushcfunction(L, lnew_date);
-    lua_pushvalue(L, -1);
     lua_setfield(L, 1, "new_date");
     lua_pushcfunction(L, tomlua_type_of);
-    lua_pushvalue(L, -1);
     lua_setfield(L, 1, "type");
     lua_pushcfunction(L, str_2_mul);
-    lua_pushvalue(L, -1);
     lua_setfield(L, 1, "str_2_mul");
-    lua_pushcclosure(L, tomlua_new, 7);
-    lua_setfield(L, 2, "__call");
+    push_encode(L);
+    lua_setfield(L, 1, "encode");
+    lua_newtable(L);  // options table (argtop + 1)
+    lua_newtable(L);  // options table metatable (argtop + 2)
+    {
+        TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
+        if (argtop > 1) {
+            *uopts = opts_parse(L, 2);
+        } else {
+            *uopts = (TomluaUserOpts){0};
+        }
+    }
+    lua_pushvalue(L, -1);
+    lua_pushcclosure(L, tomlua_decode, 1);
+    lua_setfield(L, 1, "decode");
+    lua_pushvalue(L, -1);
+    lua_pushcclosure(L, opts_index, 1);
+    lua_setfield(L, argtop + 2, "__index");
+    lua_pushvalue(L, -1);
+    lua_pushcclosure(L, opts_newindex, 1);
+    lua_setfield(L, argtop + 2, "__newindex");
+    // NOTE: dont copy opts for last closure
+    lua_pushcclosure(L, opts_call, 1);
+    lua_setfield(L, argtop + 2, "__call");
+    // pop opts meta
+    lua_setmetatable(L, argtop + 1);
+    // pop opts
+    lua_setfield(L, 1, "opts");
+    lua_newtable(L);  // main metatable, now at argtop + 1
+    lua_pushcfunction(L, luaopen_tomlua);
+    lua_setfield(L, argtop + 1, "__call");
     lua_setmetatable(L, 1);
+    lua_settop(L, 1);
     return 1;
 }
 int luaopen_embed_tomlua(lua_State *L) { return luaopen_tomlua(L); }
