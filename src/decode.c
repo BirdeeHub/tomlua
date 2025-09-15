@@ -278,6 +278,8 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             continue;
         }
         last_was_comma = false;
+        lua_pushnil(L);
+        int val_spacer = lua_gettop(L);
         int keys_len = parse_keys(L, src, buf, int_keys);
         if (!keys_len) return false;
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
@@ -288,7 +290,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             return set_tmlerr(new_tmlerr(L), false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
         if (!parse_value(L, src, buf, opts)) return false;
-        lua_insert(L, lua_gettop(L) - keys_len);
+        lua_replace(L, val_spacer);
         if (strict) {
             if (!set_kv_strict(L, keys_len)) {
                 return false;
@@ -485,7 +487,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             bool t_used = false;
             bool z_used = false;
             bool was_underscore = true;
-            if (curr.v == '-' || curr.v == '+') {
+            if (curr.v == '+') {
                 if (iter_starts_with(src, "+inf", 4)) {
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, INFINITY);
@@ -494,7 +496,12 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, NAN);
                     return true;
-                } else if (iter_starts_with(src, "-inf", 4)) {
+                } else {
+                    buf_push(buf, curr.v);
+                    iter_skip(src);
+                }
+            } else if (curr.v == '-') {
+                if (iter_starts_with(src, "-inf", 4)) {
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, -INFINITY);
                     return true;
@@ -686,6 +693,8 @@ int tomlua_decode(lua_State *L) {
                 if (!heading_nav(L, keys_len, false)) goto fail;
             }
         } else {
+            lua_pushnil(L);
+            int val_spacer = lua_gettop(L);
             int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != '=') {
@@ -698,7 +707,7 @@ int tomlua_decode(lua_State *L) {
                 goto fail;
             }
             if (!parse_value(L, &src, &scratch, &uopts)) goto fail;
-            lua_insert(L, lua_gettop(L) - keys_len);
+            lua_replace(L, val_spacer);
             // [-1?] keys
             // [-?] value
             // [-?-1] current root table
