@@ -42,6 +42,42 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, uint32_t c, bool esc
     }
 }
 
+// 0 for not an array, 1 for array, 2 for heading array
+static inline int is_lua_heading_array(lua_State *L, int idx) {
+    int old_top = lua_gettop(L);
+    idx = absindex(old_top, idx);
+    if (!lua_istable(L, idx)) return false;
+    switch (get_meta_toml_type(L, idx)) {
+        case TOML_TABLE: return 0;
+        case TOML_ARRAY: if (lua_arraylen(L, idx) == 0) return 1;
+        default: break;
+    }
+    bool is_heading = true;
+    int count = 0;
+    lua_Number highest_int_key = 0;
+    lua_pushnil(L);  // next(nil) // get first kv pair on stack
+    while (lua_next(L, idx) != 0) {
+        // now at stack: key value
+        if (!lua_istable(L, -1)) is_heading = false;
+        lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
+        if (lua_isnumber(L, -1)) {
+            lua_Number key = lua_tonumber(L, -1);
+            if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
+                lua_settop(L, old_top);
+                return 0;
+            }
+            count++;
+            if (key > highest_int_key) highest_int_key = key;
+        } else {
+            lua_settop(L, old_top);
+            return 0;
+        }
+    }
+    lua_settop(L, old_top);
+    if (highest_int_key != count || count == 0) return 0;
+    return (is_heading) ? 2 : 1;
+}
+
 static inline int lbuf_push_str(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
     size_t len;
@@ -51,6 +87,7 @@ static inline int lbuf_push_str(lua_State *L) {
     return 1;
 }
 
+// TODO: make it not always print all 17.00000000000000001
 static inline bool buf_push_num(str_buf *buf, lua_Number n) {
     if (isnan(n)) {
         if (!buf_push_str(buf, "nan", 3)) return false;
@@ -301,42 +338,6 @@ static inline int lbuf_new(lua_State *L) {
     }
     lua_setmetatable(L, -2);
     return 1;
-}
-
-// 0 for not an array, 1 for array, 2 for heading array
-static inline int is_lua_heading_array(lua_State *L, int idx) {
-    int old_top = lua_gettop(L);
-    idx = absindex(old_top, idx);
-    if (!lua_istable(L, idx)) return false;
-    switch (get_meta_toml_type(L, idx)) {
-        case TOML_TABLE: return 0;
-        case TOML_ARRAY: if (lua_arraylen(L, idx) == 0) return 1;
-        default: break;
-    }
-    bool is_heading = true;
-    int count = 0;
-    lua_Number highest_int_key = 0;
-    lua_pushnil(L);  // next(nil) // get first kv pair on stack
-    while (lua_next(L, idx) != 0) {
-        // now at stack: key value
-        if (!lua_istable(L, -1)) is_heading = false;
-        lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
-        if (lua_isnumber(L, -1)) {
-            lua_Number key = lua_tonumber(L, -1);
-            if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
-                lua_settop(L, old_top);
-                return 0;
-            }
-            count++;
-            if (key > highest_int_key) highest_int_key = key;
-        } else {
-            lua_settop(L, old_top);
-            return 0;
-        }
-    }
-    lua_settop(L, old_top);
-    if (highest_int_key != count || count == 0) return 0;
-    return (is_heading) ? 2 : 1;
 }
 
 static inline int lis_lua_heading_array(lua_State *L) {
