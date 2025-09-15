@@ -214,6 +214,7 @@ static int tmlerr_tostring_meta(lua_State *L) {
 }
 static TMLErr *push_new_tmlerr(lua_State *L) {
     TMLErr *lasterr = (TMLErr *)lua_newuserdata(L, sizeof(TMLErr));
+    *lasterr = (TMLErr){0};
     if (luaL_newmetatable(L, "TomluaError")) {
         lua_pushcfunction(L, tmlerr_tostring_meta);
         lua_setfield(L, -2, "__tostring");
