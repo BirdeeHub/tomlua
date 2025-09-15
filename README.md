@@ -144,6 +144,7 @@ local date = tomlua.new_date({
 })
 date.year = 2222 -- set values
 for k, v in getmetatable(date).__pairs(date) do
+-- for k, v in pairs(date) do -- in lua5.2+ this also works
     print(k, v)
 end
 local timestamp = date() -- call with no args to get timestamp
