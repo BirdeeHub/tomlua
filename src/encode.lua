@@ -16,6 +16,7 @@
 -- that could get pretty hard.
 -- lua pcall catches stack overflows but not from C
 -- plus, I precompile this and embed it in the binary.
+-- This is basically purely API calls, all the crunching is done in C.
 
 local check_heading_array, new_buf = ...
 return function(input)
