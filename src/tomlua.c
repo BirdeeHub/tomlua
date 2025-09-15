@@ -83,33 +83,54 @@ static inline int str_2_mul(lua_State *L) {
     return 1;
 }
 
+// negative taridx means all false
 static TomluaUserOpts opts_parse(lua_State *L, int taridx, int optidx) {
     int top = lua_gettop(L);
     TomluaUserOpts opts = {0};
-    luaL_checktype(L, taridx, LUA_TTABLE);
+    if (taridx > 0) luaL_checktype(L, taridx, LUA_TTABLE);
 
-    lua_getfield(L, taridx, "strict");
-    opts.strict = lua_toboolean(L, -1);
+    if (taridx > 0) {
+        lua_getfield(L, taridx, "strict");
+        opts.strict = lua_toboolean(L, -1);
+    } else {
+        opts.strict = false;
+    }
     lua_pushboolean(L, opts.strict);
     lua_setfield(L, optidx, "strict");
 
-    lua_getfield(L, taridx, "fancy_tables");
-    opts.fancy_tables = lua_toboolean(L, -1);
+    if (taridx > 0) {
+        lua_getfield(L, taridx, "fancy_tables");
+        opts.fancy_tables = lua_toboolean(L, -1);
+    } else {
+        opts.fancy_tables = false;
+    }
     lua_pushboolean(L, opts.fancy_tables);
     lua_setfield(L, optidx, "fancy_tables");
 
-    lua_getfield(L, taridx, "int_keys");
-    opts.int_keys = lua_toboolean(L, -1);
+    if (taridx > 0) {
+        lua_getfield(L, taridx, "int_keys");
+        opts.int_keys = lua_toboolean(L, -1);
+    } else {
+        opts.int_keys = false;
+    }
     lua_pushboolean(L, opts.int_keys);
     lua_setfield(L, optidx, "int_keys");
 
-    lua_getfield(L, taridx, "fancy_dates");
-    opts.fancy_dates = lua_toboolean(L, -1);
+    if (taridx > 0) {
+        lua_getfield(L, taridx, "fancy_dates");
+        opts.fancy_dates = lua_toboolean(L, -1);
+    } else {
+        opts.fancy_dates = false;
+    }
     lua_pushboolean(L, opts.fancy_dates);
     lua_setfield(L, optidx, "fancy_dates");
 
-    lua_getfield(L, taridx, "multi_strings");
-    opts.multi_strings = lua_toboolean(L, -1);
+    if (taridx > 0) {
+        lua_getfield(L, taridx, "multi_strings");
+        opts.multi_strings = lua_toboolean(L, -1);
+    } else {
+        opts.multi_strings = false;
+    }
     lua_pushboolean(L, opts.multi_strings);
     lua_setfield(L, optidx, "multi_strings");
 
@@ -186,9 +207,7 @@ int luaopen_tomlua(lua_State *L) {
         if (argtop > 1) {
             *uopts = opts_parse(L, 2, argtop + 1);
         } else {
-            lua_newtable(L);
-            *uopts = opts_parse(L, argtop + 4, argtop + 1);
-            lua_pop(L, 1);
+            *uopts = opts_parse(L, -1, argtop + 1);
         }
     }
     lua_pushvalue(L, -1);
