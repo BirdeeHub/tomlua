@@ -138,8 +138,6 @@ print(date > date2) -- true
 print(date < date2) -- false
 print("date1", date)
 
-print(inspect(tomlua))
-
 print(tomlua.typename(tomlua.type(date)))
 
 

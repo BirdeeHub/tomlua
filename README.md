@@ -38,7 +38,10 @@ and has a dev shell you can use to build it via make as well.
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
-local tomlua = require("tomlua")({
+local tomlua = require("tomlua")
+
+-- you can call it like a function and get a copy with different options
+local tomlua2 = tomlua {
     -- fancy_tables allows multiline inline tables with a trailing comma
     -- key = value still must be on the same line
     -- the tables, much like arrays, must still start on the same line as their key as well
@@ -54,7 +57,10 @@ local tomlua = require("tomlua")({
     -- causes multiline strings to be parsed into a userdata type
     -- which can be converted to a lua string with tostring
     multi_strings = false,
-})
+}
+
+-- or you can set them directly!
+tomlua.opts.fancy_dates = true
 
 local data, err = tomlua.decode(some_string)
 
