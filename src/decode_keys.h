@@ -11,7 +11,7 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
     buf_soft_reset(buf);
     iter_result current = iter_peek(src);
     if (!current.ok) {
-        set_tmlerr(get_err_upval(L), false, 32, "expected key, got end of content");
+        set_tmlerr(new_tmlerr(L), false, 32, "expected key, got end of content");
         return false;
     }
     char c = current.v;
@@ -27,19 +27,20 @@ static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int
         current = iter_peek(src);
         while (is_identifier_char(current.v)) {
             if (!buf_push(buf, current.v)) {
-                set_tmlerr(get_err_upval(L), false, 3, "OOM");
+                set_tmlerr(new_tmlerr(L), false, 3, "OOM");
                 return false;
             }
             iter_skip(src);
             current = iter_peek(src);
         }
     } else {
-        set_tmlerr(get_err_upval(L), false, 42, "called parse_key with invalid first char: ");
-        tmlerr_push(get_err_upval(L), c);
+        TMLErr *err = new_tmlerr(L);
+        set_tmlerr(err, false, 42, "called parse_key with invalid first char: ");
+        tmlerr_push(err, c);
         return false;
     }
     if (!push_buf_to_lua_string(L, buf)) {
-        set_tmlerr(get_err_upval(L), false, 3, "OOM");
+        set_tmlerr(new_tmlerr(L), false, 3, "OOM");
         return false;
     }
     if (int_keys && non_string && lua_isnumber(L, -1)) {
@@ -57,14 +58,14 @@ static int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) 
     while (iter_peek(src).ok) {
         i++;
         if (consume_whitespace_to_line(src)) {
-            set_tmlerr(get_err_upval(L), false, 33, "newlines not allowed between keys");
+            set_tmlerr(new_tmlerr(L), false, 33, "newlines not allowed between keys");
             return false;
         }
         if (!parse_key(L, src, buf, int_keys)) {
             return false;
         }
         if (consume_whitespace_to_line(src)) {
-            set_tmlerr(get_err_upval(L), false, 68, "newlines not allowed between keys and their terminators: =, ], or ]]");
+            set_tmlerr(new_tmlerr(L), false, 68, "newlines not allowed between keys and their terminators: =, ], or ]]");
             return false;
         }
         iter_result next = iter_peek(src);
@@ -74,15 +75,15 @@ static int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) 
             } else if (next.v == '.') {
                 iter_skip(src);
             } else {
-                set_tmlerr(get_err_upval(L), false, 43, "keys may not contain spaces without quotes!");
+                set_tmlerr(new_tmlerr(L), false, 43, "keys may not contain spaces without quotes!");
                 return false;
             }
         } else {
-            set_tmlerr(get_err_upval(L), false, 13, "trailing key!");
+            set_tmlerr(new_tmlerr(L), false, 13, "trailing key!");
             return false;
         }
     }
-    if (!i) set_tmlerr(get_err_upval(L), false, 14, "empty key list");
+    if (!i) set_tmlerr(new_tmlerr(L), false, 14, "empty key list");
     return i;
 }
 
