@@ -163,6 +163,7 @@ do
     "names"."boo" = "hi"
     names."boo2" = "hi2"
     "tk2-dsadas.com" = "value"
+    "tk2-dsadas.com" = "vaaalue"
     I AM AN ERROR
     [test2]
     key = "value"

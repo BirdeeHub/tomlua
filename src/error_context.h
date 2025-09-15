@@ -142,10 +142,10 @@ static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t
         if (!tmlerr_push_str(err, src + line_start, line_len)) return false;
 
         // if this line contains the error position
-        if (line_start <= errpos && errpos < line_end) {
+        if (line_start < errpos && errpos <= line_end) {
             if (!tmlerr_push(err, '\n')) return false;
 
-            size_t caret_pos = errpos - line_start;
+            size_t caret_pos = errpos - line_start - 1;
             for (size_t s = 0; s < line_len; s++) {
                 switch ((caret_pos < s) ? s - caret_pos : caret_pos - s) {
                     case 0:

@@ -15,8 +15,6 @@ If you wish to edit existing toml, you should do that using a package more suite
 
 This is instead intended for hot-path parsing of toml files.
 
-Error reporting is bad currently, but the plumbing is there, just lazy messages.
-
 Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
 
 At 15-30 microseconds per parse (depending on settings), speed is comparable to cjson despite parsing toml rather than json, and it is 10x faster than toml_edit
