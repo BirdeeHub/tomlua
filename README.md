@@ -17,6 +17,7 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 * Handles multi-line strings and date types (optional).
 * Compatible with Lua 5.1+.
 * Supports embedding in Lua C modules or Nix packaging.
+* Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
 
 ---
 
@@ -25,7 +26,6 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 * Does **not preserve comments**.
 * Output may differ from the original TOML formatting.
 * Intended primarily for **reading TOML on startup**, or writing whole files, not for editing.
-* Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
 
 ---
 
