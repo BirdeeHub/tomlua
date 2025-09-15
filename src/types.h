@@ -12,8 +12,7 @@
 #endif
 
 #define DECODE_RESULT_IDX 2
-#define DECODE_ERR_IDX 3
-#define DECODE_DEFINED_IDX 4
+#define DECODE_DEFINED_IDX 3
 
 // NOTE: just for debugging
 #include <stdio.h>

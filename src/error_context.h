@@ -225,7 +225,7 @@ static TMLErr *push_new_tmlerr(lua_State *L) {
 }
 static TMLErr *new_tmlerr(lua_State *L) {
     TMLErr *lasterr = push_new_tmlerr(L);
-    lua_replace(L, DECODE_ERR_IDX);
+    lua_replace(L, DECODE_DEFINED_IDX);
     return lasterr;
 }
 

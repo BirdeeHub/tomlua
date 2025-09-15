@@ -637,10 +637,10 @@ int tomlua_decode(lua_State *L) {
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     }
-    // If we have an error, it will go here
-    lua_pushnil(L);
     // Table we will use to hold defined stuff for uniqueness book-keeping
+    // If we have an error, it will go here also, replacing the defined table if any (because we don't need it anymore)
     if (strict) lua_newtable(L);
+    else lua_pushnil(L);
 
     // set top as the starting location
     lua_pushvalue(L, DECODE_RESULT_IDX);
@@ -728,10 +728,10 @@ int tomlua_decode(lua_State *L) {
     return 1;
 
 fail:
-    lua_settop(L, DECODE_ERR_IDX);
-    tmlerr_push_ctx_from_iter(get_err_val(L, DECODE_ERR_IDX), 7, &src);
+    lua_settop(L, DECODE_DEFINED_IDX);
+    tmlerr_push_ctx_from_iter(get_err_val(L, DECODE_DEFINED_IDX), 7, &src);
     free_str_buf(&scratch);
     lua_pushnil(L);
-    push_tmlerr_string(L, get_err_val(L, DECODE_ERR_IDX));
+    push_tmlerr_string(L, get_err_val(L, DECODE_DEFINED_IDX));
     return 2;
 }
