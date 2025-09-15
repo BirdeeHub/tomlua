@@ -19,15 +19,11 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 * Supports embedding in Lua C modules or Nix packaging.
 * Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
 
----
-
 ## Limitations
 
 * Does **not preserve comments**.
 * Output may differ from the original TOML formatting.
 * Intended primarily for **reading TOML on startup**, or writing whole files, not for editing.
-
----
 
 ## Performance
 
@@ -36,11 +32,11 @@ Basic benchmarking shows promising results:
 * Slightly slower than `cjson` (1.2–2.0x), despite parsing TOML instead of JSON.
 * Around **10x faster** than `toml_edit` for parsing.
 
----
-
 ## Installation
 
 Rockspec is present, but the package is not yet on luarocks.
+
+Better instructions are on the roadmap as well.
 
 ### Using Make
 
@@ -61,8 +57,6 @@ export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
 * Overlay and packages available for Lua versions 5.1+.
 * Dev shell included for building via `make`.
 * Not yet on nixpkgs
-
----
 
 ### Useage
 
@@ -158,8 +152,6 @@ date(timestamp + 12345) -- set value from timestamp (__call takes same arg as ne
 print(date > date2) -- true
 print(date) -- print as toml date string
 ```
-
----
 
 ## Philosophy
 
