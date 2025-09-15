@@ -751,7 +751,7 @@ fail:
     lua_pushnil(L);
     push_to_output_table(L);
     lua_pushnil(L);
-    tmlerr_push_ctx_from_iter(get_err_upval(L), 8, &src);
+    tmlerr_push_ctx_from_iter(get_err_upval(L), 7, &src);
     push_tmlerr_string(L, get_err_upval(L));
     return 2;
 }

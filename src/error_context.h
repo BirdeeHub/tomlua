@@ -176,7 +176,7 @@ static bool tmlerr_push_ctx_from_iter(TMLErr *err, int max_lines, const str_iter
     // this is an error helper. max_lines will always be known at compile time
     // and will always be small, so this warning is not relevant
     // NOLINTNEXTLINE(runtime/arrays)
-    size_t positions[max_lines];
+    size_t positions[max_lines + 1];
     return tmlerr_push_positions(
         err,
         src->pos,
