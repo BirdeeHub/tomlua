@@ -181,7 +181,7 @@ static bool tmlerr_push_ctx_from_iter(TMLErr *err, int max_lines, const str_iter
         err,
         src->pos,
         positions,
-        get_err_context(positions, max_lines, src->pos, src->buf, src->len),
+        get_err_context(positions, max_lines + 1, src->pos, src->buf, src->len),
         src->buf,
         src->len
     );

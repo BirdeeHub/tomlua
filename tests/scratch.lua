@@ -140,3 +140,52 @@ print("date1", date)
 print(inspect(tomlua))
 
 print(tomlua.typename(tomlua.type(date)))
+
+
+print("ERROR TEST")
+do
+    local toml = tomlua {
+        fancy_tables = false,
+        strict = true,
+        fancy_dates = true,
+        multi_strings = true,
+    }
+    local errtoml = [=[
+    release_date = 2022-08-24T12:00:00.666969696969696969Z
+    next_release = 2028-08-24T12:00:00.666Z
+    last_backup = 2025-08-23T23:45:12-07:00
+    last_modified = 2025-08-24 12:00:00Z
+    [[test]]
+    names.hello = "h\u1234i"
+    key = "\U0001F600 value"
+    [[test]]
+    key = "value"
+    "names"."boo" = "hi"
+    names."boo2" = "hi2"
+    "tk2-dsadas.com" = "value"
+    I AM AN ERROR
+    [test2]
+    key = "value"
+    "tk1-assass.com" = "value"
+    [[test2.key2]]
+    das1 = "dasda"
+    das2 = 'dasda'
+    'das3' = '''da
+    sda'''
+    das4 = """da
+    sda"""
+
+    [database]
+    type = "postgres"
+    host = "localhost"
+    port = 5432
+    username = "dbuser"
+    password = "secret"
+    pool_size = 10
+
+    [database.replica]
+    host = "replica1.local"
+    port = 5433
+    ]=]
+    print(toml.decode(errtoml))
+end

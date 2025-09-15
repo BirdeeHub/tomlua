@@ -5,6 +5,7 @@
 #include "./decode_str.h"
 #include "./types.h"
 #include "./error_context.h"
+#include <stddef.h>
 
 static inline bool parse_key(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) {
     buf_soft_reset(buf);
@@ -72,6 +73,9 @@ static int parse_keys(lua_State *L, str_iter *src, str_buf *buf, bool int_keys) 
                 break;
             } else if (next.v == '.') {
                 iter_skip(src);
+            } else {
+                set_tmlerr(get_err_upval(L), false, 43, "keys may not contain spaces without quotes!");
+                return false;
             }
         } else {
             set_tmlerr(get_err_upval(L), false, 13, "trailing key!");
