@@ -146,7 +146,7 @@ static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t
             if (!tmlerr_push(err, '\n')) return false;
 
             size_t caret_pos = errpos - line_start - 1;
-            for (size_t s = 0; s < line_len; s++) {
+            for (size_t s = 0; s < line_len + 4; s++) {
                 switch ((caret_pos < s) ? s - caret_pos : caret_pos - s) {
                     case 0:
                         if (!tmlerr_push(err, '^')) return false;
@@ -161,7 +161,7 @@ static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t
                         if (s < caret_pos) {
                             if (!tmlerr_push(err, ' ')) return false;
                         } else {
-                            s = line_len;
+                            s = src_len;
                         }
                 }
             }
