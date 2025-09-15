@@ -304,7 +304,7 @@ static int embed_new(lua_State *L) {
     return 1;
 }
 
-int luaopen_tomlua_embed(lua_State *L) {
+int luaopen_embed(lua_State *L) {
     lua_newuserdata(L, 0);
     if (luaL_newmetatable(L, "C_LUA_EMBEDDER_HELPER")) {
         lua_pushcfunction(L, env__index);
@@ -317,3 +317,4 @@ int luaopen_tomlua_embed(lua_State *L) {
     lua_setmetatable(L, -2);
     return 1;
 }
+int luaopen_tomlua_embed(lua_State *L) { return luaopen_embed(L); }
