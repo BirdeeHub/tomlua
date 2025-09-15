@@ -1,42 +1,70 @@
 # TOMLUA
 
-> [!WARNING]
-> This is not finished software yet! But the pieces are all there! Needs polish.
-> Tests/CI, better docs, error descriptions which are less lazy, push to luarocks and nixpkgs, etc.
+> ⚠️ **Warning:** This is a work-in-progress!
+> The core functionality is present, but polish is still under development, including but not limited to:
+> tests, CI, better documentation, luaCats annotations, clearer error messages, and published packages on the relevant repositories.
 
-Parses toml files into and out of lua tables ASAP.
+**TOMLUA** is a fast TOML parser and emitter for Lua, implemented in C. It is designed for **hot-path parsing** of TOML files into Lua tables, not for editing existing files.
 
-Implemented in C
-
-This is not intended to replace packages like [toml_edit](https://github.com/nvim-neorocks/toml-edit.lua), which are slower but better for editing existing files.
-
-It will not be re-emitting comments, and it will not re-output in the same format as the ingested file.
-
-If you wish to edit existing toml, you should do that using a package more suited for that.
-
-This is instead intended for hot-path parsing of toml files.
-
-Basic benchmarking shows promising results.
-
-Speed is slightly slower than cjson but comparable despite parsing toml rather than json (cjson is 1.2x - 2.0x faster, depending on the file and settings)
-
-But it is 10x faster than toml_edit
+It is not intended to replace packages like [toml\_edit](https://github.com/nvim-neorocks/toml-edit.lua), which are slower but more suitable for editing TOML while preserving comments and formatting.
 
 ---
 
-build with make and add the tomlua.so to your LUA_CPATH (or package.cpath at runtime) or install via luarocks
+## Features
 
-make requires that LUA_INCDIR be set to the path of your lua headers,
-and (without further configuration) you should also have lua in your path and be in the root of the repository.
+* Fast parsing of TOML files into Lua tables.
+* Emits TOML from Lua tables.
+* Handles multi-line strings and date types (optional).
+* Compatible with Lua 5.1+.
+* Supports embedding in Lua C modules or Nix packaging.
 
-If you do not have gcc, install it, or set CC to clang or some other c compiler.
+---
 
-Yes there will eventually be better build instructions.
+## Limitations
 
-It is also packaged via nix (flake or flakeless)!
-It offers an overlay to add it to any of the package sets,
-packages for all versions of lua 5.1+,
-and has a dev shell you can use to build it via make as well.
+* Does **not preserve comments**.
+* Output may differ from the original TOML formatting.
+* Intended primarily for **reading TOML on startup**, or writing whole files, not for editing.
+* Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
+
+---
+
+## Performance
+
+Basic benchmarking shows promising results:
+
+* Slightly slower than `cjson` (1.2–2.0x), despite parsing TOML instead of JSON.
+* Around **10x faster** than `toml_edit` for parsing.
+
+---
+
+## Installation
+
+Rockspec is present, but the package is not yet on luarocks.
+
+### Using Make
+
+```bash
+# Ensure LUA_INCDIR points to Lua headers directory
+make LUA_INCDIR=/path/to/lua/includes
+
+# Add the resulting module to Lua's package.cpath
+export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
+```
+
+* Requires a C compiler (GCC, Clang, etc.). If not gcc, set CC variable as well
+* You should be in the root of the repository.
+
+### Using Nix
+
+* Flake or flakeless support.
+* Overlay and packages available for Lua versions 5.1+.
+* Dev shell included for building via `make`.
+* Not yet on nixpkgs
+
+---
+
+### Useage
 
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
@@ -132,6 +160,12 @@ print(date) -- print as toml date string
 ```
 
 ---
+
+## Philosophy
+
+* TOML is usually a **config format**, not a serialization format.
+* Parsing speed is important for **startup-heavy workflows**.
+* Editing or re-emitting TOML is **secondary**; use dedicated editors for that.
 
 On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
 
