@@ -636,7 +636,7 @@ int tomlua_decode(lua_State *L) {
     if (strict) lua_newtable(L);
 
     // set top as the starting location
-    lua_pushvalue(L, 2);
+    lua_pushvalue(L, DECODE_RESULT_IDX);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
     while (iter_peek(&src).ok) {
