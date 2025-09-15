@@ -637,6 +637,7 @@ int tomlua_decode(lua_State *L) {
         lua_pushstring(L, "tomlua.decode first argument must be a string! tomlua.decode(string, table|bool?) -> table?, err?");
         return 2;
     }
+    // If we have an error, it will go here
     lua_pushnil(L);
     // Table we will use to hold defined stuff for uniqueness book-keeping
     if (strict) lua_newtable(L);
