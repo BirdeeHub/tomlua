@@ -2,7 +2,7 @@
 
 > [!WARNING]
 > This is not finished software yet!
-> All the pieces are there though now.
+> Most of the pieces are there though now.
 > It needs polish, better error messages, tests, better docs, publishing, etc.
 
 Parses toml files into and out of lua tables ASAP.
