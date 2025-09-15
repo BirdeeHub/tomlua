@@ -625,9 +625,6 @@ int tomlua_decode(lua_State *L) {
     }
 
     str_iter src = lua_str_to_iter(L, 1);
-    // NOTE: I might actually not be allowed to pop this in case it gets GC'd?
-    // https://www.lua.org/manual/5.1/manual.html#lua_tolstring
-    // lua_pop(L, 1); // That's fine though
     if (src.buf == NULL) {
         lua_settop(L, 0);
         lua_pushnil(L);
