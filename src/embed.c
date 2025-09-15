@@ -181,9 +181,10 @@ static int embed_run(lua_State *L) {
     return 0;
 }
 
+#include "types.h"
 static int embed_writer(lua_State *L, const void *p, size_t sz, void *ud) {
     if (!p || !ud) return LUA_ERRERR;
-    luaL_addlstring((luaL_Buffer *)ud, (const char *)p, sz);
+    buf_push_str((str_buf *)ud, (const char *)p, sz);
     return 0;
 }
 static int embed_add(lua_State *L) {
@@ -193,6 +194,7 @@ static int embed_add(lua_State *L) {
     // { modname = str, c_fn_name = str, make_table = bool?, chunk = str }
     lua_newtable(L);
     lua_insert(L, 1);
+    str_buf buf = new_str_buf();
     int nargs = lua_gettop(L);
     if (!lua_isstring(L, 2)) return luaL_error(L, EMBED_USEAGE_MESSAGE, 1);
     if (!lua_isstring(L, 3)) return luaL_error(L, EMBED_USEAGE_MESSAGE, 2);
@@ -216,12 +218,11 @@ static int embed_add(lua_State *L) {
             lua_setfield(L, 1, "c_fn_name");
         } else {
             // calculate luaopen_mod_path from arg 1 mod.path
-            luaL_Buffer b;
-            luaL_buffinit(L, &b);
-            luaL_addstring(&b, "luaopen_");
+            buf.len = 0;
+            buf_push_str(&buf, "luaopen_", 8);
             for (const char *p = lua_tostring(L, 2); *p; p++)
-                luaL_addchar(&b, (*p == '.') ? '_' : *p);
-            luaL_pushresult(&b);
+                buf_push(&buf, (*p == '.') ? '_' : *p);
+            push_buf_to_lua_string(L, &buf);
             lua_setfield(L, 1, "c_fn_name");
         }
     }
@@ -243,13 +244,17 @@ static int embed_add(lua_State *L) {
             return luaL_error(L, "failed to load Lua file %s at %s\n%s", err);
         }
     }
-    luaL_Buffer buf;
-    luaL_buffinit(L, &buf);
+    buf.len = 0;
+#if LUA_VERSION_NUM < 503
     if (lua_dump(L, embed_writer, &buf)) {
+#else
+    if (lua_dump(L, embed_writer, &buf, true)) {
+#endif
         const char *err = lua_tostring(L, -1);
         return luaL_error(L, "Failed to dump Lua bytecode%s at %s\n%s", err);
     }
-    luaL_pushresult(&buf);
+    push_buf_to_lua_string(L, &buf);
+    free_str_buf(&buf);
     lua_setfield(L, 1, "chunk");
 
     // push value for run
