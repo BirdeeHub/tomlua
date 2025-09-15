@@ -53,9 +53,8 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
 }
 
 // pops value and keys, leaves root on top
-static inline bool set_kv(lua_State *L, int keys_len) {
+static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
     if (keys_len <= 0) return set_tmlerr(new_tmlerr(L), false, 22, "no key provided to set");
-    int value_idx = lua_gettop(L) - keys_len;
     int keys_start = value_idx + 1;
     int root_idx = value_idx - 1;
     lua_pushvalue(L, root_idx);     // copy root table to top
@@ -199,9 +198,8 @@ static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_typ
 // NOTE: FOR STRICT MODE ONLY!!
 // pops value and keys, leaves root on top
 // returns ok == false if it sets an existing value directly, or into an inline table
-static bool set_kv_strict(lua_State *L, int keys_len) {
+static bool set_kv_strict(lua_State *L, int keys_len, int value_idx) {
     if (keys_len <= 0) return set_tmlerr(new_tmlerr(L), false, 22, "no key provided to set");
-    int value_idx = lua_gettop(L) - keys_len;
     int keys_start = value_idx + 1;
     int root_idx = value_idx - 1;
     lua_pushvalue(L, root_idx);     // copy root table to top
@@ -292,11 +290,11 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
         if (!parse_value(L, src, buf, opts)) return false;
         lua_replace(L, val_spacer);
         if (strict) {
-            if (!set_kv_strict(L, keys_len)) {
+            if (!set_kv_strict(L, keys_len, val_spacer)) {
                 return false;
             }
         } else {
-            if (!set_kv(L, keys_len)) {
+            if (!set_kv(L, keys_len, val_spacer)) {
                 return false;
             }
         }
@@ -712,9 +710,9 @@ int tomlua_decode(lua_State *L) {
             // [-?] value
             // [-?-1] current root table
             if (strict) {
-                if (!set_kv_strict(L, keys_len)) goto fail;
+                if (!set_kv_strict(L, keys_len, val_spacer)) goto fail;
             } else {
-                if (!set_kv(L, keys_len)) goto fail;
+                if (!set_kv(L, keys_len, val_spacer)) goto fail;
             }
             // [-1] current root table
             if (!consume_whitespace_to_line(&src)) {
