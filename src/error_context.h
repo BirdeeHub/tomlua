@@ -2,8 +2,6 @@
 #ifndef SRC_ERROR_CONTEXT_H_
 #define SRC_ERROR_CONTEXT_H_
 
-#include <stddef.h>
-
 #include "./types.h"
 
 typedef struct {
