@@ -14,6 +14,8 @@ local check_heading_array, new_buf = ...
 -- NOTE: this is probably faster in lua
 -- I'd have to make basically all of these lua api calls anyway
 -- and this way, I don't need to do any cycle detection here.
+-- which is good, because with the deferring of headings,
+-- that could get pretty hard.
 -- lua pcall catches stack overflows but not from C
 -- plus, I precompile this and embed it in the binary.
 return function(input)
