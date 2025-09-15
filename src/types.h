@@ -269,6 +269,10 @@ static inline void iter_skip(str_iter *iter) {
     iter->pos++;
 }
 
+static inline void iter_reset_pos(str_iter *iter) {
+    iter->pos = 0;
+}
+
 static inline void iter_skip_n(str_iter *iter, unsigned int n) {
     iter->pos += n;
 }

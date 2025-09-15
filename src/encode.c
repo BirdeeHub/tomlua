@@ -123,7 +123,7 @@ static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
     if (is_safe) {
         if (!buf_push_str(buf, iter->buf, iter->len)) return false;
     } else {
-        iter->pos = 0;
+        iter_reset_pos(iter);
         if (!buf_push_esc_simple(buf, iter)) return false;
     }
     return true;
