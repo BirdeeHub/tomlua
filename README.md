@@ -1,7 +1,7 @@
 # TOMLUA
 
 > [!WARNING]
-> This is not finished software yet!
+> This is not finished software yet! But the pieces are all there! Needs polish. Tests/CI, better docs, push to luarocks and nixpkgs, etc.
 
 Parses toml files into and out of lua tables ASAP.
 
@@ -17,7 +17,9 @@ This is instead intended for hot-path parsing of toml files.
 
 Basic benchmarking (repeatedly parsing [tests/example.toml](./tests/example.toml) file) shows promising results.
 
-Speed is slightly slower than cjson but comparable despite parsing toml rather than json (cjson is 1.2x - 2.0x faster), and it is 10x faster than toml_edit
+Speed is slightly slower than cjson but comparable despite parsing toml rather than json (cjson is 1.2x - 2.0x faster, depending on the file and settings)
+
+But it is 10x faster than toml_edit
 
 ---
 
