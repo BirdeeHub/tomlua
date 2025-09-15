@@ -9,7 +9,7 @@
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, keys...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, keys...: string):Tomlua.String_buffer
 
--- NOTE: this is might actually be faster in lua
+-- NOTE: this part might actually be faster in lua
 -- I'd have to make basically all of these lua api calls anyway
 -- and this way, I don't need to do any cycle detection here.
 -- which is good, because with the deferring of headings,
