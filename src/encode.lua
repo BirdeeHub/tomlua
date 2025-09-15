@@ -9,16 +9,8 @@
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, keys...: string):Tomlua.String_buffer
 ---@field push_keys fun(self: Tomlua.String_buffer, keys...: string):Tomlua.String_buffer
 
--- NOTE: this part might actually be faster in lua
--- I'd have to make basically all of these lua api calls anyway
--- and this way, I don't need to do any cycle detection here.
--- which is good, because with the deferring of headings,
--- that could get pretty hard.
--- lua pcall catches stack overflows but not from C
--- plus, I precompile this and embed it in the binary.
--- This is basically purely API calls, all the crunching is done in C.
-
 local check_heading_array, new_buf = ...
+local unpack = (unpack or table.unpack)
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = new_buf()
