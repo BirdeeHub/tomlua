@@ -7,10 +7,10 @@
 ---@field push fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
 ---@field push_inline_value fun(self: Tomlua.String_buffer, value: any, array_level: number?):Tomlua.String_buffer
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, keys...: string):Tomlua.String_buffer
----@field push_heading_table fun(self: Tomlua.String_buffer, value: any, keys...: string): Tomlua.Deferred_Heading[]
+---@field push_heading_table fun(self: Tomlua.String_buffer, value: any, keys...: string?): Tomlua.Deferred_Heading[]
 ---@field push_keys fun(self: Tomlua.String_buffer, keys...: string):Tomlua.String_buffer
 
-local check_heading_array, new_buf = ...
+local new_buf = ...
 local unpack = unpack or table.unpack
 return function(input)
     ---@type Tomlua.String_buffer
@@ -21,48 +21,28 @@ return function(input)
         local klen = #keys
         for i = 1, #q do
             local h = rawget(q, i)
-            rawset(keys, klen + 1, h.key)
+            rawset(keys, klen + 1, rawget(h, "key"))
             if h.is_array then
-                for _, val in ipairs(h.value) do
+                dst:push("\n")
+                for _, val in ipairs(rawget(h, "value")) do
                     dst:push_heading(true, unpack(keys))
                     for k, v in pairs(val) do
                         dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
                     end
                 end
-                dst:push("\n")
             else
-                flush_q(dst:push_heading_table(h.value, unpack(keys)), keys)
+                dst:push("\n")
+                flush_q(dst:push_heading_table(rawget(h, "value"), unpack(keys)), keys)
             end
             rawset(keys, klen + 1, nil)
         end
     end
 
-    ---@type Tomlua.Deferred_Heading[]
-    local heading_q = {}
     local ok, val = pcall(function()
-        for k, v in pairs(input) do
-            local vtype = type(v)
-            if vtype == "table" then
-                local table_type = check_heading_array(v)
-                if table_type == 2 then
-                    table.insert(heading_q, { is_array = true, key = k, value = v })
-                elseif table_type == 1 then
-                    dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
-                else
-                    table.insert(heading_q, { is_array = false, key = k, value = v })
-                end
-            else
-                dst:push_keys(k):push(" = "):push_inline_value(v):push("\n")
-            end
-        end
-        dst:push("\n")
-        flush_q(heading_q, {})
+        flush_q(dst:push_heading_table(input), {})
         return tostring(dst)
-    end, input)
-
-    if ok then
-        return val
-    else
-        return nil, val
+    end)
+    if ok then return val
+    else return nil, val
     end
 end

@@ -301,7 +301,7 @@ static inline int lbuf_push_heading_table(lua_State *L) {
     int residx = validx + 1;
     int result_len = 0;
     int key_start = visited_idx + 3;
-    buf_push_heading(L, buf, key_start, false);
+    if (lua_isstring(L, key_start)) buf_push_heading(L, buf, key_start, false);
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
     while (lua_next(L, validx) != 0) {
         int vidx = lua_gettop(L);
@@ -334,7 +334,6 @@ static inline int lbuf_push_heading_table(lua_State *L) {
         }
         lua_settop(L, key_idx);
     }
-    buf_push(buf, '\n');
     lua_settop(L, residx);
     return 1;
 }
@@ -369,14 +368,8 @@ static inline int lbuf_new(lua_State *L) {
     return 1;
 }
 
-static inline int lis_lua_heading_array(lua_State *L) {
-    lua_pushinteger(L, is_lua_heading_array(L, 1));
-    return 1;
-}
-
 void push_encode(lua_State *L) {
     push_embedded_encode(L);
-    lua_pushcfunction(L, lis_lua_heading_array);
     lua_pushcfunction(L, lbuf_new);
-    lua_call(L, 2, 1);
+    lua_call(L, 1, 1);
 }
