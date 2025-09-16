@@ -86,25 +86,6 @@ static inline int lbuf_push_str(lua_State *L) {
     return 1;
 }
 
-// TODO: make it not always print all 17.00000000000000001
-static inline bool buf_push_num(str_buf *buf, lua_Number n) {
-    if (isnan(n)) {
-        if (!buf_push_str(buf, "nan", 3)) return false;
-    } else if (isinf(n)) {
-        if (!buf_push_str(buf, n > 0 ? "+inf" : "-inf", 4)) return false;
-    } else if (n == (lua_Number)(lua_Integer)n) {
-        lua_Integer i = (lua_Integer)n;
-        char tmp[32];
-        int len = snprintf(tmp, sizeof(tmp), "%lld", (long long)i);
-        if (len < 0 || !buf_push_str(buf, tmp, len)) return false;
-    } else {
-        char tmp[32];
-        int len = snprintf(tmp, sizeof(tmp), "%.17g", n); // high-precision float
-        if (len < 0 || !buf_push_str(buf, tmp, len)) return false;
-    }
-    return true;
-}
-
 static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
     if (!buf_push_str(dst, "\"\"\"", 3)) return false;
     while (iter_peek(src).ok) {
@@ -215,8 +196,9 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
             if (src.buf == NULL || !buf_push_esc_simple(buf, &src)) return luaL_error(L, "failed to push escaped simple string");
         } break;
         case LUA_TNUMBER: {
-            lua_Number n = lua_tonumber(L, val_idx);
-            if (!buf_push_num(buf, n)) return luaL_error(L, "failed to push number");
+            size_t len;
+            const char *str = lua_tolstring(L, val_idx, &len);
+            if (!buf_push_str(buf, str, len)) return false;
         } break;
         case LUA_TBOOLEAN: if (lua_toboolean(L, val_idx)) {
                 buf_push_str(buf, "true", 4);
