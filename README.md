@@ -13,7 +13,6 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 
 * Fast parsing of TOML files into Lua tables.
 * Emits TOML from Lua tables.
-* Handles multi-line strings and date types (optional).
 * Compatible with Lua 5.1+.
 * Supports embedding in Lua C modules or Nix packaging.
 * Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
