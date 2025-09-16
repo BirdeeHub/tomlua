@@ -298,7 +298,7 @@ static inline int lbuf_push_heading_table(lua_State *L) {
     lua_newtable(L);
     lua_insert(L, residx);
     int result_len = 0;
-    int key_start = visited_idx + 3;
+    int key_start = residx + 1;
     if (lua_isstring(L, key_start)) buf_push_heading(L, buf, key_start, false);
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
     while (lua_next(L, validx) != 0) {
