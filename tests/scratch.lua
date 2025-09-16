@@ -91,7 +91,7 @@ do
     }
     table.insert(data.g, data)
     print(toml.encode(data))
-    print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR STACK OVERFLOW")
+    print("THIS SHOULD RETURN ERROR AS SECOND RETURN VALUE FOR CYCLE DETECTION")
     data = {}
     data.value = data
     print(toml.encode(data))

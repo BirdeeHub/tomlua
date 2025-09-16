@@ -206,7 +206,7 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
             // cycle detection
             lua_pushvalue(L, val_idx);
             lua_rawget(L, visited_idx);
-            if (!lua_isnil(L, -1)) return luaL_error(L, "cyclic reference");
+            if (!lua_isnil(L, -1)) return luaL_error(L, "Circular reference in table");
             lua_pop(L, 1);
             lua_pushvalue(L, val_idx);
             lua_pushboolean(L, true);
