@@ -85,7 +85,7 @@ static inline int lbuf_push_str(lua_State *L) {
     return 1;
 }
 
-static inline bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
+static bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
     if (!buf_push_str(dst, "\"\"\"", 3)) return false;
     while (iter_peek(src).ok) {
         char c = iter_peek(src).v;
@@ -145,43 +145,41 @@ static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
     return true;
 }
 
-static inline int lbuf_push_keys(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    int top = lua_gettop(L);
-    for (int i = 2; i <= top; i++) {
+static bool buf_push_keys(lua_State *L, str_buf *buf, int key_start, int top) {
+    for (int i = key_start; i <= top; i++) {
         str_iter src = {0};
         src.buf = luaL_checklstring(L, i, &src.len);
-        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key");
+        if (!buf_push_esc_key(buf, &src)) return false;
         if (i != top) {
-            if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key");
+            if (!buf_push(buf, '.')) return false;
         }
     }
+    return true;
+}
+static inline int lbuf_push_keys(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
+    if (!buf_push_keys(L, buf, 2, lua_gettop(L))) return luaL_error(L, "failed to push escaped key");
     lua_settop(L, 1);
     return 1;
 }
 
-static inline int lbuf_push_heading(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    bool is_array = lua_toboolean(L, 2);
-    int top = lua_gettop(L);
+static inline int buf_push_heading(lua_State *L, str_buf *buf, int key_start, bool is_array) {
     if (is_array) {
         if (!buf_push_str(buf, "[[", 2)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     } else {
         if (!buf_push(buf, '[')) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     }
-    for (int i = 3; i <= top; i++) {
-        str_iter src = {0};
-        src.buf = luaL_checklstring(L, i, &src.len);
-        if (!buf_push_esc_key(buf, &src)) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
-        if (i != top) {
-            if (!buf_push(buf, '.')) return luaL_error(L, "failed to push escaped key to %s heading", (is_array) ? "array" : "table");
-        }
-    }
+    if (!buf_push_keys(L, buf, key_start, lua_gettop(L))) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     if (is_array) {
         if (!buf_push_str(buf, "]]\n", 3)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     } else {
         if (!buf_push_str(buf, "]\n", 2)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     }
+    return 1;
+}
+static inline int lbuf_push_heading(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
+    buf_push_heading(L, buf, 3, lua_toboolean(L, 2));
     lua_settop(L, 1);
     return 1;
 }
@@ -292,6 +290,55 @@ static inline int lbuf_push_inline_value(lua_State *L) {
     return 1;
 }
 
+static inline int lbuf_push_heading_table(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
+    lua_newtable(L);
+    lua_insert(L, 2);
+    int visited_idx = 2;
+    int validx = visited_idx + 1;
+    lua_newtable(L);
+    lua_insert(L, validx + 1);
+    int residx = validx + 1;
+    int result_len = 0;
+    int key_start = visited_idx + 3;
+    buf_push_heading(L, buf, key_start, false);
+    lua_pushnil(L);  // next(nil) // get first kv pair on stack
+    while (lua_next(L, validx) != 0) {
+        int vidx = lua_gettop(L);
+        int key_idx = vidx - 1;
+        if (lua_istable(L, -1)) {
+            int table_type = is_lua_heading_array(L, -1);
+            if (table_type == 2 || table_type == 0) {
+                // create Deferred_Heading
+                lua_newtable(L);
+                lua_pushboolean(L, table_type);
+                lua_setfield(L, -2, "is_array");
+                lua_pushvalue(L, key_idx);
+                lua_setfield(L, -2, "key");
+                lua_pushvalue(L, vidx);
+                lua_setfield(L, -2, "value");
+                lua_rawseti(L, residx, ++result_len);
+            } else if (table_type == 1) {
+                str_iter lstr = lua_str_to_iter(L, key_idx);
+                buf_push_esc_key(buf, &lstr);
+                buf_push_str(buf, " = ", 3);
+                buf_push_inline_value(L, buf, visited_idx, 0);
+                buf_push(buf, '\n');
+            }
+        } else {
+            str_iter lstr = lua_str_to_iter(L, key_idx);
+            buf_push_esc_key(buf, &lstr);
+            buf_push_str(buf, " = ", 3);
+            buf_push_inline_value(L, buf, visited_idx, 0);
+            buf_push(buf, '\n');
+        }
+        lua_settop(L, key_idx);
+    }
+    buf_push(buf, '\n');
+    lua_settop(L, residx);
+    return 1;
+}
+
 static inline int lbuf_index(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, lbuf_push_str);
@@ -300,6 +347,8 @@ static inline int lbuf_index(lua_State *L) {
     lua_setfield(L, -2, "push_inline_value");
     lua_pushcfunction(L, lbuf_push_heading);
     lua_setfield(L, -2, "push_heading");
+    lua_pushcfunction(L, lbuf_push_heading_table);
+    lua_setfield(L, -2, "push_heading_table");
     lua_pushcfunction(L, lbuf_push_keys);
     lua_setfield(L, -2, "push_keys");
     return 1;

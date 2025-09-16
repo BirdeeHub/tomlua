@@ -30,7 +30,8 @@ end
 local last_result
 local last_error
 
--- Benchmark
+-----------------------------------------
+----------- Benchmarks ------------------
 local start_time = os.clock()
 
 for _ = 1, iterations do
@@ -105,8 +106,10 @@ end
 tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
 local to_encode = tomlua.decode(contents)
 
+-- ENCODE
+
 -- Benchmark
-start_time = os.clock()
+local start_time = os.clock()
 
 for _ = 1, iterations do
     local str, e = tomlua.encode(to_encode)
@@ -117,7 +120,7 @@ for _ = 1, iterations do
     end
 end
 
-elapsed = os.clock() - start_time
+local elapsed = os.clock() - start_time
 
 print("Last result:", last_result)
 print("ENCODE BENCH")
@@ -136,6 +139,6 @@ for _ = 1, iterations do
     end
 end
 
-elapsed2 = os.clock() - start_time
+local elapsed2 = os.clock() - start_time
 print(stats("JSON", elapsed2))
 print(rate_compare("tomlua/cjson", elapsed, elapsed2))
