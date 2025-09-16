@@ -282,9 +282,7 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
 
 static inline int lbuf_push_inline_value(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    lua_settop(L, 2);
-    lua_newtable(L);
-    lua_insert(L, 2);
+    lua_settop(L, 3);
     if (!buf_push_inline_value(L, buf, 2, 0)) return luaL_error(L, "failed to push inline value");
     lua_settop(L, 1);
     return 1;
@@ -296,9 +294,9 @@ static inline int lbuf_push_heading_table(lua_State *L) {
     lua_insert(L, 2);
     int visited_idx = 2;
     int validx = visited_idx + 1;
-    lua_newtable(L);
-    lua_insert(L, validx + 1);
     int residx = validx + 1;
+    lua_newtable(L);
+    lua_insert(L, residx);
     int result_len = 0;
     int key_start = visited_idx + 3;
     if (lua_isstring(L, key_start)) buf_push_heading(L, buf, key_start, false);
