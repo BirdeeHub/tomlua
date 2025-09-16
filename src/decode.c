@@ -13,7 +13,7 @@
 
 // pops keys, leaves new root on top
 static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
-    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L), false, 28, "no keys provided to navigate");
+    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
     lua_pushvalue(L, DECODE_RESULT_IDX);
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
@@ -28,14 +28,14 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
             lua_pushvalue(L, -2);
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            return set_tmlerr(new_tmlerr(L), false, 33, "cannot navigate through non-table");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 33, "cannot navigate through non-table");
         }
         lua_remove(L, parent_idx);  // remove parent table, keep child on top
     }
     if (array_type) {
         // We’re at the table that should act as an array
         if (!lua_istable(L, -1)) {
-            return set_tmlerr(new_tmlerr(L), false, 37, "target of array heading isn't a table");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 37, "target of array heading isn't a table");
         }
         size_t len = lua_arraylen(L, -1);
         // append new table at len+1
@@ -54,7 +54,7 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
 
 // pops value and keys, leaves root on top
 static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
-    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L), false, 22, "no key provided to set");
+    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 22, "no key provided to set");
     int keys_start = value_idx + 1;
     int root_idx = value_idx - 1;
     lua_pushvalue(L, root_idx);     // copy root table to top
@@ -72,7 +72,7 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
             lua_pushvalue(L, -2);  // copy so we can continue with it after rawset
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            return set_tmlerr(new_tmlerr(L), false, 18, "key is not a table");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 18, "key is not a table");
         }
         lua_remove(L, parent_idx);
     }
@@ -151,7 +151,7 @@ static inline int set_defined_key(lua_State *L, int t_idx, int k_idx) {
 // NOTE: FOR STRICT MODE ONLY!!
 // pops keys, leaves new root on top
 static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_type) {
-    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L), false, 28, "no keys provided to navigate");
+    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
     lua_pushvalue(L, DECODE_RESULT_IDX);
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
@@ -166,18 +166,18 @@ static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_typ
             lua_pushvalue(L, -2);
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            return set_tmlerr(new_tmlerr(L), false, 33, "cannot navigate through non-table");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 33, "cannot navigate through non-table");
         }
         lua_remove(L, parent_idx);  // remove parent table, keep child on top
     }
     if (!array_type) {
         if (!add_defined(L, -1)) {
-            return set_tmlerr(new_tmlerr(L), false, 32, "cannot set the same table twice!");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 32, "cannot set the same table twice!");
         }
     } else {
         // We’re at the table that should act as an array
         if (!lua_istable(L, -1)) {
-            return set_tmlerr(new_tmlerr(L), false, 37, "target of array heading isn't a table");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 37, "target of array heading isn't a table");
         }
         size_t len = lua_arraylen(L, -1);
         // append new table at len+1
@@ -199,7 +199,7 @@ static inline bool heading_nav_strict(lua_State *L, int keys_len, bool array_typ
 // pops value and keys, leaves root on top
 // returns ok == false if it sets an existing value directly, or into an inline table
 static bool set_kv_strict(lua_State *L, int keys_len, int value_idx) {
-    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L), false, 22, "no key provided to set");
+    if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 22, "no key provided to set");
     int keys_start = value_idx + 1;
     int root_idx = value_idx - 1;
     lua_pushvalue(L, root_idx);     // copy root table to top
@@ -217,17 +217,17 @@ static bool set_kv_strict(lua_State *L, int keys_len, int value_idx) {
             lua_pushvalue(L, -2);
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            return set_tmlerr(new_tmlerr(L), false, 18, "key is not a table");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 18, "key is not a table");
         }
         if (set_defined_key(L, parent_idx, key_idx) == 2) {
-            return set_tmlerr(new_tmlerr(L), false, 49, "key is part of a table defined as an inline value");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 49, "key is part of a table defined as an inline value");
         }
         lua_remove(L, parent_idx);
         add_defined(L, -1);
     }
 
     if (set_defined_key(L, -1, -2)) {
-        return set_tmlerr(new_tmlerr(L), false, 23, "key was already defined");
+        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 23, "key was already defined");
     }
     if (lua_istable(L, value_idx)) add_inline(L, value_idx);
     lua_pushvalue(L, -2);
@@ -254,20 +254,20 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
             iter_skip(src);
             if (last_was_comma && !fancy_tables) {
                 lua_pop(L, 1);
-                return set_tmlerr(new_tmlerr(L), false, 42, "trailing comma in inline table not allowed");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 42, "trailing comma in inline table not allowed");
             }
             return true;
         } else if (iter_peek(src).v == '\n') {
             iter_skip(src);
-            if (!fancy_tables) return set_tmlerr(new_tmlerr(L), false, 35, "inline tables can not be multi-line");
+            if (!fancy_tables) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "inline tables can not be multi-line");
         } else if (iter_starts_with(src, "\r\n", 2)) {
             iter_skip_n(src, 2);
-            if (!fancy_tables) return set_tmlerr(new_tmlerr(L), false, 35, "inline tables can not be multi-line");
+            if (!fancy_tables) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "inline tables can not be multi-line");
         } else if (d == ',') {
             iter_skip(src);
             if (last_was_comma) {
                 lua_pop(L, 1);
-                return set_tmlerr(new_tmlerr(L), false, 18, "2 commas in a row!");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 18, "2 commas in a row!");
             }
             last_was_comma = true;
             continue;
@@ -281,11 +281,11 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
         int keys_len = parse_keys(L, src, buf, int_keys);
         if (!keys_len) return false;
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
-            return set_tmlerr(new_tmlerr(L), false, 35, "keys for assignment must end with =");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "keys for assignment must end with =");
         }
         iter_skip(src);
         if (consume_whitespace_to_line(src)) {
-            return set_tmlerr(new_tmlerr(L), false, 76, "the value in key = value expressions must begin on the same line as the key!");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
         if (!parse_value(L, src, buf, opts)) return false;
         lua_replace(L, val_spacer);
@@ -301,21 +301,21 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
         if (fancy_tables) {
             while (consume_whitespace_to_line(src)) {}
         } else if (consume_whitespace_to_line(src)) {
-            return set_tmlerr(new_tmlerr(L), false, 39, "toml inline tables cannot be multi-line");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 39, "toml inline tables cannot be multi-line");
         }
         iter_result next = iter_peek(src);
         if (next.ok && (next.v != ',' && next.v != '}')) {
-            return set_tmlerr(new_tmlerr(L), false, 65, "toml inline table values must be separated with , or ended with }");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 65, "toml inline table values must be separated with , or ended with }");
         }
     }
-    return set_tmlerr(new_tmlerr(L), false, 17, "missing closing }");
+    return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "missing closing }");
 }
 
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
     iter_result curr = iter_peek(src);
-    if (!curr.ok) return set_tmlerr(new_tmlerr(L), false, 34, "expected value, got end of content");
+    if (!curr.ok) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 34, "expected value, got end of content");
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
         iter_skip_n(src, 4);
@@ -335,14 +335,14 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         if (opts->multi_strings) {
             str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
             if (!s || !buf || !buf->data) {
-                return set_tmlerr(new_tmlerr(L), false, 59, "tomlua.decode failed to push multi-line string to lua stack");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 59, "tomlua.decode failed to push multi-line string to lua stack");
             }
             *s = new_buf_from_str(buf->data, buf->len);
             push_multi_string_mt(L);
             lua_setmetatable(L, -2);
         } else {
             if (!push_buf_to_lua_string(L, buf)) {
-                return set_tmlerr(new_tmlerr(L), false, 48, "tomlua.decode failed to push string to lua stack");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
             }
         }
         return true;
@@ -353,7 +353,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             return false;
         }
         if (!push_buf_to_lua_string(L, buf)) {
-            return set_tmlerr(new_tmlerr(L), false, 48, "tomlua.decode failed to push string to lua stack");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
         }
         return true;
     } else if (iter_starts_with(src, "'''", 3)) {
@@ -365,14 +365,14 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         if (opts->multi_strings) {
             str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
             if (!s || !buf || !buf->data) {
-                return set_tmlerr(new_tmlerr(L), false, 59, "tomlua.decode failed to push multi-line string to lua stack");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 59, "tomlua.decode failed to push multi-line string to lua stack");
             }
             *s = new_buf_from_str(buf->data, buf->len);
             push_multi_string_mt(L);
             lua_setmetatable(L, -2);
         } else {
             if (!push_buf_to_lua_string(L, buf)) {
-                return set_tmlerr(new_tmlerr(L), false, 48, "tomlua.decode failed to push string to lua stack");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
             }
         }
         return true;
@@ -383,7 +383,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             return false;
         }
         if (!push_buf_to_lua_string(L, buf)) {
-            return set_tmlerr(new_tmlerr(L), false, 48, "tomlua.decode failed to push string to lua stack");
+            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
         }
         return true;
     // --- numbers (and dates) ---
@@ -409,16 +409,16 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                     iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
-                        return set_tmlerr(new_tmlerr(L), false, 51, "consecutive underscores not allowed in hex literals");
+                        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 51, "consecutive underscores not allowed in hex literals");
                     }
                     was_underscore = true;
                     iter_skip(src);
                 } else break;
             }
             if (was_underscore) {
-                return set_tmlerr(new_tmlerr(L), false, 53, "hex literals not allowed to have trailing underscores");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 53, "hex literals not allowed to have trailing underscores");
             }
-            if (buf->len == 0) return set_tmlerr(new_tmlerr(L), false, 17, "empty hex literal");
+            if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "empty hex literal");
             // Convert buffer to integer
             int64_t val = strtoll(buf->data, NULL, 16);
             lua_pushinteger(L, val);
@@ -436,16 +436,16 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                     iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
-                        return set_tmlerr(new_tmlerr(L), false, 53, "consecutive underscores not allowed in octal literals");
+                        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 53, "consecutive underscores not allowed in octal literals");
                     }
                     was_underscore = true;
                     iter_skip(src);
                 } else break;
             }
             if (was_underscore) {
-                return set_tmlerr(new_tmlerr(L), false, 55, "octal literals not allowed to have trailing underscores");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 55, "octal literals not allowed to have trailing underscores");
             }
-            if (buf->len == 0) return set_tmlerr(new_tmlerr(L), false, 19, "empty octal literal");
+            if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 19, "empty octal literal");
             int64_t val = strtoll(buf->data, NULL, 8);
             lua_pushinteger(L, val);
             return true;
@@ -462,16 +462,16 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                     iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
-                        return set_tmlerr(new_tmlerr(L), false, 54, "consecutive underscores not allowed in binary literals");
+                        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 54, "consecutive underscores not allowed in binary literals");
                     }
                     was_underscore = true;
                     iter_skip(src);
                 } else break;
             }
             if (was_underscore) {
-                return set_tmlerr(new_tmlerr(L), false, 56, "binary literals not allowed to have trailing underscores");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 56, "binary literals not allowed to have trailing underscores");
             }
-            if (buf->len == 0) return set_tmlerr(new_tmlerr(L), false, 20, "empty binary literal");
+            if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 20, "empty binary literal");
             int64_t val = strtoll(buf->data, NULL, 2);
             lua_pushinteger(L, val);
             return true;
@@ -517,7 +517,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 if (ch == '_') {
                     iter_skip(src);
                     if (was_underscore) {
-                        return set_tmlerr(new_tmlerr(L), false, 46, "consecutive underscores not allowed in numbers");
+                        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 46, "consecutive underscores not allowed in numbers");
                     }
                     was_underscore = true;
                 } else if (ch == 'e' || ch == 'E') {
@@ -565,7 +565,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 }
             }
             if (was_underscore) {
-                return set_tmlerr(new_tmlerr(L), false, 56, "number literals not allowed to have trailing underscores");
+                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 56, "number literals not allowed to have trailing underscores");
             }
             if (buf->len > 0) {
                 if (is_date) {
@@ -577,11 +577,11 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                         };
                         TomlDate date;
                         if (!parse_toml_date(&date_src, &date))
-                            return set_tmlerr(new_tmlerr(L), false, 29, "Invalid date format provided!");
+                            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 29, "Invalid date format provided!");
                         if (!push_new_toml_date(L, date))
-                            return set_tmlerr(new_tmlerr(L), false, 51, "tomlua.decode failed to push date type to lua stack");
+                            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 51, "tomlua.decode failed to push date type to lua stack");
                     } else if (!push_buf_to_lua_string(L, buf)) {
-                        return set_tmlerr(new_tmlerr(L), false, 53, "tomlua.decode failed to push date string to lua stack");
+                        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 53, "tomlua.decode failed to push date string to lua stack");
                     }
                 } else if (is_float) {
                     lua_pushnumber(L, strtod(buf->data, NULL));
@@ -608,13 +608,13 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             if (!parse_value(L, src, buf, opts)) return false;
             lua_rawseti(L, -2, idx++);
         }
-        return set_tmlerr(new_tmlerr(L), false, 17, "missing closing ]");
+        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "missing closing ]");
     // --- inline table --- does NOT support multiline or trailing comma (without fancy_tables)
     } else if (curr.v == '{') {
         iter_skip(src);
         return parse_inline_table(L, src, buf, opts);
     }
-    return set_tmlerr(new_tmlerr(L), false, 13, "invalid value");
+    return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 13, "invalid value");
 }
 
 int tomlua_decode(lua_State *L) {
@@ -659,12 +659,12 @@ int tomlua_decode(lua_State *L) {
             int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (!iter_starts_with(&src, "]]", 2)) {
-                set_tmlerr(new_tmlerr(L), false, 30, "table heading must end with ]]");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 30, "table heading must end with ]]");
                 goto fail;
             }
             iter_skip_n(&src, 2);  // consume ]]
             if (!consume_whitespace_to_line(&src)) {
-                set_tmlerr(new_tmlerr(L), false, 56, "array [[headers]] must have a new line before new values");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 56, "array [[headers]] must have a new line before new values");
                 goto fail;
             }
             if (strict) {
@@ -678,12 +678,12 @@ int tomlua_decode(lua_State *L) {
             int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != ']') {
-                set_tmlerr(new_tmlerr(L), false, 29, "table heading must end with ]");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 29, "table heading must end with ]");
                 goto fail;
             }
             iter_skip(&src);  // consume ]
             if (!consume_whitespace_to_line(&src)) {
-                set_tmlerr(new_tmlerr(L), false, 54, "table [headers] must have a new line before new values");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 54, "table [headers] must have a new line before new values");
                 goto fail;
             }
             if (strict) {
@@ -697,12 +697,12 @@ int tomlua_decode(lua_State *L) {
             int keys_len = parse_keys(L, &src, &scratch, int_keys);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != '=') {
-                set_tmlerr(new_tmlerr(L), false, 35, "keys for assignment must end with =");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "keys for assignment must end with =");
                 goto fail;
             }
             iter_skip(&src);  // consume =
             if (consume_whitespace_to_line(&src)) {
-                set_tmlerr(new_tmlerr(L), false, 76, "the value in key = value expressions must begin on the same line as the key!");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 76, "the value in key = value expressions must begin on the same line as the key!");
                 goto fail;
             }
             if (!parse_value(L, &src, &scratch, &uopts)) goto fail;
@@ -717,7 +717,7 @@ int tomlua_decode(lua_State *L) {
             }
             // [-1] current root table
             if (!consume_whitespace_to_line(&src)) {
-                set_tmlerr(new_tmlerr(L), false, 66, "key value pairs must be followed by a new line (or end of content)");
+                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 66, "key value pairs must be followed by a new line (or end of content)");
                 goto fail;
             }
         }

@@ -224,9 +224,9 @@ static TMLErr *push_new_tmlerr(lua_State *L) {
     lua_setmetatable(L, -2);
     return lasterr;
 }
-static TMLErr *new_tmlerr(lua_State *L) {
+static TMLErr *new_tmlerr(lua_State *L, int target_idx) {
     TMLErr *lasterr = push_new_tmlerr(L);
-    lua_replace(L, DECODE_DEFINED_IDX);
+    lua_replace(L, target_idx);
     return lasterr;
 }
 
