@@ -10,7 +10,7 @@
 ---@field push_keys fun(self: Tomlua.String_buffer, keys...: string):Tomlua.String_buffer
 
 local check_heading_array, new_buf = ...
-local unpack = (unpack or table.unpack)
+local unpack = unpack or table.unpack
 return function(input)
     ---@type Tomlua.String_buffer
     local dst = new_buf()
