@@ -198,7 +198,7 @@ static int buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, in
         case LUA_TNUMBER: {
             size_t len;
             const char *str = lua_tolstring(L, val_idx, &len);
-            if (!buf_push_str(buf, str, len)) return false;
+            if (!buf_push_str(buf, str, len)) return luaL_error(L, "failed to push number");
         } break;
         case LUA_TBOOLEAN: if (lua_toboolean(L, val_idx)) {
                 buf_push_str(buf, "true", 4);
