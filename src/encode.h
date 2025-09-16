@@ -27,10 +27,9 @@ static inline bool is_lua_array(lua_State *L, int idx) {
     int old_top = lua_gettop(L);
     idx = absindex(old_top, idx);
     if (!lua_istable(L, idx)) return false;
-    switch (get_meta_toml_type(L, idx)) {
-        case TOML_TABLE: return false;
-        case TOML_ARRAY: if (lua_arraylen(L, idx) == 0) return true;
-        default: break;
+    if (lua_arraylen(L, idx) == 0) {
+        if (get_meta_toml_type(L, idx) == TOML_ARRAY) return true;
+        else return 0;
     }
     int count = 0;
     lua_Number highest_int_key = 0;
