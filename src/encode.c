@@ -163,13 +163,13 @@ static inline int lbuf_push_keys(lua_State *L) {
     return 1;
 }
 
-static inline int buf_push_heading(lua_State *L, str_buf *buf, int key_start, bool is_array) {
+static inline int buf_push_heading(lua_State *L, str_buf *buf, int key_start, int keys_end, bool is_array) {
     if (is_array) {
         if (!buf_push_str(buf, "[[", 2)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     } else {
         if (!buf_push(buf, '[')) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     }
-    if (!buf_push_keys(L, buf, key_start, lua_gettop(L))) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
+    if (!buf_push_keys(L, buf, key_start, keys_end)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     if (is_array) {
         if (!buf_push_str(buf, "]]\n", 3)) return luaL_error(L, "failed to push to %s heading", (is_array) ? "array" : "table");
     } else {
@@ -179,7 +179,7 @@ static inline int buf_push_heading(lua_State *L, str_buf *buf, int key_start, bo
 }
 static inline int lbuf_push_heading(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    buf_push_heading(L, buf, 3, lua_toboolean(L, 2));
+    buf_push_heading(L, buf, 3, lua_gettop(L), lua_toboolean(L, 2));
     lua_settop(L, 1);
     return 1;
 }
@@ -288,18 +288,11 @@ static inline int lbuf_push_inline_value(lua_State *L) {
     return 1;
 }
 
-static inline int lbuf_push_heading_table(lua_State *L) {
-    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
+static inline void buf_push_heading_table(lua_State *L, str_buf *buf, int validx, int residx, int key_start, int key_end) {
+    int visited_idx = lua_gettop(L) + 1;
     lua_newtable(L);
-    lua_insert(L, 2);
-    int visited_idx = 2;
-    int validx = visited_idx + 1;
-    int residx = validx + 1;
-    lua_newtable(L);
-    lua_insert(L, residx);
     int result_len = 0;
-    int key_start = residx + 1;
-    if (lua_isstring(L, key_start)) buf_push_heading(L, buf, key_start, false);
+    if (lua_isstring(L, key_start)) buf_push_heading(L, buf, key_start, key_end, false);
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
     while (lua_next(L, validx) != 0) {
         int vidx = lua_gettop(L);
@@ -332,6 +325,17 @@ static inline int lbuf_push_heading_table(lua_State *L) {
         }
         lua_settop(L, key_idx);
     }
+    lua_settop(L, visited_idx - 1);
+}
+
+static inline int lbuf_push_heading_table(lua_State *L) {
+    str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
+    int validx = 2;
+    int key_start = validx + 1;
+    int key_end = lua_gettop(L);
+    lua_newtable(L);
+    int residx = key_end + 1;
+    buf_push_heading_table(L, buf, validx, residx, key_start, key_end);
     lua_settop(L, residx);
     return 1;
 }
