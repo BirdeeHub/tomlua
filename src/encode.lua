@@ -31,8 +31,10 @@ return function(input)
                     end
                 end
             else
-                dst:push("\n")
-                flush_q(dst:push_heading_table(rawget(h, "value"), unpack(keys)), keys)
+                flush_q(
+                    dst:push("\n"):push_heading_table(rawget(h, "value"), unpack(keys)),
+                    keys
+                )
             end
             rawset(keys, klen + 1, nil)
         end
