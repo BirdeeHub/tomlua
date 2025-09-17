@@ -288,9 +288,7 @@ static inline int lbuf_push_inline_value(lua_State *L) {
     return 1;
 }
 
-static inline void buf_push_heading_table(lua_State *L, str_buf *buf, int validx, int residx, int key_start, int key_end) {
-    lua_newtable(L);
-    int visited_idx = lua_gettop(L);
+static inline void buf_push_heading_table(lua_State *L, str_buf *buf, int validx, int residx, int visited_idx, int key_start, int key_end) {
     int result_len = 0;
     if (lua_isstring(L, key_start)) buf_push_heading(L, buf, key_start, key_end, false);
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
@@ -325,17 +323,17 @@ static inline void buf_push_heading_table(lua_State *L, str_buf *buf, int validx
         }
         lua_settop(L, key_idx);
     }
-    lua_settop(L, visited_idx - 1);
 }
 
 static inline int lbuf_push_heading_table(lua_State *L) {
     str_buf *buf = (str_buf *)luaL_checkudata(L, 1, "TomluaStrBuf");
-    int validx = 2;
+    int visited_idx = 2;
+    int validx = visited_idx + 1;
     int key_start = validx + 1;
     int key_end = lua_gettop(L);
     lua_newtable(L);
     int residx = key_end + 1;
-    buf_push_heading_table(L, buf, validx, residx, key_start, key_end);
+    buf_push_heading_table(L, buf, validx, residx, visited_idx, key_start, key_end);
     lua_settop(L, residx);
     return 1;
 }

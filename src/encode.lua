@@ -7,7 +7,7 @@
 ---@field push fun(self: Tomlua.String_buffer, str: string):Tomlua.String_buffer
 ---@field push_inline_value fun(self: Tomlua.String_buffer, visited: table<table, boolean?>, value: any, array_level: number?):Tomlua.String_buffer
 ---@field push_heading fun(self: Tomlua.String_buffer, is_array: boolean, keys...: string):Tomlua.String_buffer
----@field push_heading_table fun(self: Tomlua.String_buffer, value: any, keys...: string?): Tomlua.Deferred_Heading[]
+---@field push_heading_table fun(self: Tomlua.String_buffer, visited: table<table, boolean?>, value: any, keys...: string?): Tomlua.Deferred_Heading[]
 ---@field push_keys fun(self: Tomlua.String_buffer, keys...: string):Tomlua.String_buffer
 
 local new_buf = ...
@@ -38,7 +38,7 @@ return function(input)
                 rawset(visited, v, true)
                 flush_q(
                     visited,
-                    dst:push("\n"):push_heading_table(v, unpack(keys)),
+                    dst:push("\n"):push_heading_table(visited, v, unpack(keys)),
                     keys
                 )
                 rawset(visited, v, nil)
@@ -49,7 +49,7 @@ return function(input)
 
     local ok, val = pcall(function()
         local visited = {}
-        flush_q(visited, dst:push_heading_table(input), {})
+        flush_q(visited, dst:push_heading_table(visited, input), {})
         return tostring(dst)
     end)
     if ok then return val
