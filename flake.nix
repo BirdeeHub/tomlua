@@ -47,7 +47,7 @@
     overlays.default = overlay;
     checks = forAllSys (system: let
       pkgs = getpkgs system;
-      mkCheck = luaname: v: pkgs.runCommandCC ("tests-tom" + luaname) (let
+      mkCheck = luaname: _: pkgs.runCommandCC ("tests-tom" + luaname) (let
         lua = pkgs.${luaname}; # .withPackages (lp: [lp.inspect]);
       in {
         SRC = self;
