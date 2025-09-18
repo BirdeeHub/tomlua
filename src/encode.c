@@ -319,6 +319,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
                     lua_pushvalue(L, -2);
                     str_iter src = lua_str_to_iter(L, -1);
                     if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 24, "failed to push table key");
+                    // pop string AFTER writing to output buffer
                     lua_pop(L, 1);
                     if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "failed to push table equals");
                     // pop and push value to buffer (-1 because no newlines allowed)
@@ -437,6 +438,7 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
                     str_iter lstr = lua_str_to_iter(L, -1);
                     if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in array heading entry");
                     if (!buf_push_esc_key(buf, &lstr)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push array heading key");
+                    // pop string AFTER writing to output buffer
                     lua_pop(L, 1);
                     if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in array heading entry");
                     // pops value, leaves key for next lua_next
