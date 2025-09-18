@@ -5,6 +5,8 @@
     forAllSys = genAttrs inputs.systems or nixpkgs.lib.platforms.all or [ inputs.system or builtins.throw "No systems list provided!" ];
     getpkgs = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "system" "appendOverlays" ]
       then nixpkgs.appendOverlays [ overlay ] else import nixpkgs { inherit system; overlays = [ overlay ]; };
+    getpkgsnooverlay = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "system" "appendOverlays" ]
+      then nixpkgs else import nixpkgs { inherit system; };
     APPNAME = "tomlua";
     l_pkg_enum = {
       lua5_1 = "lua51Packages";
@@ -43,6 +45,20 @@
     };
   in {
     overlays.default = overlay;
+    checks = forAllSys (system: let
+      pkgs = getpkgsnooverlay system;
+      mkCheck = luaname: v: pkgs.runCommandCC ("tests-tom" + luaname) (let
+        lua = pkgs.${luaname}; # .withPackages (lp: [lp.inspect]);
+      in {
+        SRC = self;
+        LUA_INCDIR = "${lua}/include";
+        LUA = lua.interpreter;
+      }) ''
+        mkdir -p "$out" && cd "$SRC" && {
+          make build test DESTDIR="$out" | tee "$out/test.log";
+        }
+      '';
+    in builtins.mapAttrs mkCheck l_pkg_enum);
     packages = forAllSys (system: let
       pkgs = getpkgs system;
     in (with builtins; pkgs.lib.pipe l_pkg_enum [

@@ -39,7 +39,7 @@ bear:
 
 test: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
-	$(LUA) "$(TESTDIR)/init.lua" -- "$(TESTDIR)" "$(DESTDIR)"
+	$(LUA) "$(TESTDIR)/run_tests.lua" -- "$(TESTDIR)" "$(DESTDIR)"
 
 install:
 ifdef LIBDIR
