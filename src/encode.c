@@ -366,11 +366,10 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
 //---@field key string
 //---@field value any
 // leaves stack how it found it, writes entries to residx list
-static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx, const int visited_idx, Keys *keys) {
+static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx, const int visited_idx) {
     lua_newtable(L);
     int residx = lua_gettop(L);
     int result_len = 0;
-    if (keys->len != 0) buf_push_heading(L, buf, keys, false);
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
     while (lua_next(L, validx) != 0) {
         int vidx = lua_gettop(L);
@@ -428,7 +427,7 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
             size_t array_len = lua_arraylen(L, deferred);
             if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 54, "failed to push newline before processing array heading");
             for (size_t i = 1; i <= array_len; i++) {
-                buf_push_heading(L, buf, keys, true);
+                if (!buf_push_heading(L, buf, keys, true)) return false;
                 lua_rawgeti(L, deferred, i);
                 int tidx = lua_gettop(L);
                 lua_pushnil(L);
@@ -457,7 +456,8 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
             lua_pushboolean(L, true);
             lua_rawset(L, visited_idx);
 
-            if(!buf_push_heading_table(L, buf, deferred, visited_idx, keys)) return false;
+            if(!buf_push_heading(L, buf, keys, false)) return false;
+            if(!buf_push_heading_table(L, buf, deferred, visited_idx)) return false;
             if(!flush_q(L, buf, ENCODE_VISITED_IDX, keys)) return false;
 
             lua_settop(L, deferred);
@@ -496,7 +496,7 @@ int encode(lua_State *L) {
     // NOTE: ENCODE_VISITED_IDX; // 2
     // This will also be where our error ends up if we get one.
     lua_newtable(L);
-    if(!buf_push_heading_table(L, &buf, 1, ENCODE_VISITED_IDX, &keys)) goto fail;
+    if(!buf_push_heading_table(L, &buf, 1, ENCODE_VISITED_IDX)) goto fail;
     if(!flush_q(L, &buf, ENCODE_VISITED_IDX, &keys)) goto fail;
     free_keys(&keys);
     lua_settop(L, 0);
