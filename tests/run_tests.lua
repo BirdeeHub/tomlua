@@ -14,7 +14,7 @@ local define = require('gambiarra')
 
 local function run_test_file(path)
 	local ok, run = pcall(require, path)
-	if ok then run(define, tomlua_test_dir) end
+	if ok then pcall(run, define, tomlua_test_dir) end
 end
 
 run_test_file('tests')
