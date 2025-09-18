@@ -117,6 +117,9 @@ typedef struct {
     char *data;
 } str_buf;
 
+// NOTE: str_iter does NOT own its string
+// make sure whatever resource you initialize str_iter with
+// is still valid for the life required of the iterator
 typedef struct {
     size_t len;
     size_t pos;
