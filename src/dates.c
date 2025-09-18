@@ -102,9 +102,8 @@ static inline bool char_isdigit(char c) {
 
 static bool parse_number(str_iter *iter, int digits, int *out) {
     int val = 0;
-    iter_result cur = iter_peek(iter);
+    char cur = iter_peek(iter).v;
     for (int i = 0; i < digits; i++) {
-        int cur = iter_peek(iter).v;
         if (!char_isdigit(cur)) return false;
         val = val * 10 + (cur - '0');
         iter_skip(iter);
