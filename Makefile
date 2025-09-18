@@ -31,8 +31,6 @@ check_so_was_built = \
 		false; \
 	fi
 
-all: build test
-
 build: $(SRC)/src/*
 	$(check_lua_incdir)
 	@mkdir -p $(DESTDIR)
