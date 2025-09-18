@@ -223,7 +223,7 @@ int luaopen_tomlua(lua_State *L) {
     lua_setfield(L, 1, "type");
     lua_pushcfunction(L, str_2_mul);
     lua_setfield(L, 1, "str_2_mul");
-    push_encode(L);
+    lua_pushcfunction(L, encode);
     lua_setfield(L, 1, "encode");
     lua_newtable(L);
     lua_pushcfunction(L, luaopen_tomlua);

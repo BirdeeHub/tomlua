@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include "./types.h"
 
-void push_encode(lua_State *L);
+int encode(lua_State *L);
 
 // getmetatable(idx).toml_type to allow overriding of representation
 static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
