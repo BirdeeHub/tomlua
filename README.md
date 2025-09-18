@@ -12,7 +12,7 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 ## Features
 
 * Fast parsing of TOML files into Lua tables.
-* Emits TOML from Lua tables.
+* Emits TOML from Lua tables (also quickly).
 * Compatible with Lua 5.1+.
 * Supports embedding in Lua C modules or Nix packaging.
 * Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
@@ -92,6 +92,7 @@ data, err = tomlua.decode(some_string, { some = "defaults" })
 
 -- encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
 -- instead you may customize dates by replacing them with tomlua date types
+-- and you may decide to make some strings multiline with tomlua.str_2_mul
 -- and you may make arrays appear as tables, or empty tables appear as arrays,
 -- local empty_toml_array = setmetatable({}, {
 --   toml_type = tomlua.types.ARRAY
@@ -156,13 +157,13 @@ print(date) -- print as toml date string
 
 * TOML is usually a **config format**, not a serialization format.
 * Parsing speed is important for **startup-heavy workflows**.
-* Editing or re-emitting TOML is **secondary**; use dedicated editors for that.
+* Editing or re-emitting TOML is **secondary**; using dedicated editor libraries for that may make sense still.
 
 On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
 
 This is a tiny c library designed to chew through those as if you were using cjson for parsing json.
 
-It is able to emit toml as well, but this is mostly for completeness.
+It is able to emit toml as well, and still does so quickly, but this was mostly for completeness.
 
 Usually, toml is used as a config format, and not a serialization format.
 
