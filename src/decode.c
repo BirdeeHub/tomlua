@@ -4,6 +4,7 @@
 #include <math.h>
 #include <lua.h>
 #include <lauxlib.h>
+#include <string.h>
 
 #include "types.h"
 #include "dates.h"
@@ -646,6 +647,12 @@ int tomlua_decode(lua_State *L) {
     lua_pushvalue(L, DECODE_RESULT_IDX);
     // avoid allocations by making every parse_value use the same scratch buffer
     str_buf scratch = new_str_buf();
+    if (scratch.data == NULL) {
+        lua_settop(L, 0);
+        lua_pushnil(L);
+        lua_pushstring(L, "Unable to allocate memory for scratch buffer");
+        return 2;
+    }
     while (iter_peek(&src).ok) {
         {
             // consume until non-blank line, consume initial whitespace, then end loop

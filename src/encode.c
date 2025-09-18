@@ -471,18 +471,21 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
 
 int encode(lua_State *L) {
     if (!lua_istable(L, 1)) {
+        lua_settop(L, 0);
         lua_pushnil(L);
         lua_pushstring(L, "Argument must be a table");
         return 2;
     }
     str_buf buf = new_str_buf();
     if (buf.data == NULL) {
+        lua_settop(L, 0);
         lua_pushnil(L);
         lua_pushstring(L, "Unable to allocate memory for output buffer");
         return 2;
     }
     Keys keys = new_keys();
     if (keys.keys == NULL) {
+        lua_settop(L, 0);
         lua_pushnil(L);
         lua_pushstring(L, "Unable to allocate memory for keys struct");
         return 2;
