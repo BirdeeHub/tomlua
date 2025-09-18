@@ -56,4 +56,4 @@ else
 endif
 
 clean:
-	rm -rf $(DESTDIR) compile_commands.json
+	rm -rf $(DESTDIR) compile_commands.json compile_commands.tmp
