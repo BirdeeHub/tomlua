@@ -475,7 +475,17 @@ int encode(lua_State *L) {
     }
     lua_settop(L, 1);
     str_buf buf = new_str_buf();
+    if (buf.data == NULL) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Unable to allocate memory for output buffer");
+        return 2;
+    }
     Keys keys = new_keys();
+    if (keys.keys == NULL) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Unable to allocate memory for keys struct");
+        return 2;
+    }
     // NOTE: ENCODE_VISITED_IDX; // 2
     // This will also be where our error ends up if we get one.
     lua_newtable(L);
