@@ -75,10 +75,8 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
 }
 
 bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
-    {
-        if (iter_peek(src).v == '\n') iter_skip(src);
-        else if (iter_starts_with(src, "\r\n", 2)) iter_skip_n(src, 2);
-    }
+    if (iter_peek(src).v == '\n') iter_skip(src);
+    else if (iter_starts_with(src, "\r\n", 2)) iter_skip_n(src, 2);
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
@@ -145,10 +143,8 @@ bool parse_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
 }
 
 bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
-    {
-        if (iter_peek(src).v == '\n') iter_skip(src);
-        else if (iter_starts_with(src, "\r\n", 2)) iter_skip_n(src, 2);
-    }
+    if (iter_peek(src).v == '\n') iter_skip(src);
+    else if (iter_starts_with(src, "\r\n", 2)) iter_skip_n(src, 2);
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
