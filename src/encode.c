@@ -315,7 +315,9 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
                     }
                     first = false;
                     if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 37, "failed to push table space before key");
-                    str_iter src = lua_str_to_iter(L, -2);
+                    lua_pushvalue(L, -2);
+                    str_iter src = lua_str_to_iter(L, -1);
+                    lua_pop(L, 1);
                     if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 24, "failed to push table key");
                     if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "failed to push table equals");
                     // pop and push value to buffer (-1 because no newlines allowed)
