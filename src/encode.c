@@ -315,6 +315,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
                     }
                     first = false;
                     if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 37, "failed to push table space before key");
+                    // push necessary to avoid stringifying the key
                     lua_pushvalue(L, -2);
                     str_iter src = lua_str_to_iter(L, -1);
                     if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 24, "failed to push table key");
@@ -432,6 +433,7 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
                 int tidx = lua_gettop(L);
                 lua_pushnil(L);
                 while (lua_next(L, tidx) != 0) {
+                    // push necessary to avoid stringifying the key
                     lua_pushvalue(L, -2);
                     str_iter lstr = lua_str_to_iter(L, -1);
                     if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in array heading entry");
