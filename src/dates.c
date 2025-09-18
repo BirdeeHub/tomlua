@@ -119,7 +119,7 @@ static inline bool expect_char(str_iter *iter, char c) {
     return r.ok && r.v == c;
 }
 
-static inline bool parse_time(str_iter *src, TomlDate *date) {
+static bool parse_time(str_iter *src, TomlDate *date) {
     if (!parse_number(src, 2, &date->hour)) return false;
     if (!expect_char(src, ':')) return false;
     if (!parse_number(src, 2, &date->minute)) return false;
@@ -289,7 +289,7 @@ static int ldate_newindex(lua_State *L) {
     return 0; // __newindex returns nothing
 }
 
-static inline int ldate_iter(lua_State *L, bool is_ipairs) {
+static int ldate_iter(lua_State *L, bool is_ipairs) {
     TomlDate *date = (TomlDate *)lua_touserdata(L, 1);
     int ktype = lua_type(L, 2);
     int key = -1;
@@ -337,11 +337,11 @@ static inline int ldate_iter(lua_State *L, bool is_ipairs) {
     return 2;
 }
 
-static inline int ldate_ipairs_iter(lua_State *L) {
+static int ldate_ipairs_iter(lua_State *L) {
     return ldate_iter(L, true);
 }
 
-static inline int ldate_pairs_iter(lua_State *L) {
+static int ldate_pairs_iter(lua_State *L) {
     return ldate_iter(L, false);
 }
 
@@ -370,7 +370,7 @@ static inline int days_in_month(int year, int month) {
     return DAYS_IN_MONTH[month-1];
 }
 
-static inline uint64_t days_since_year0(int year, int month, int day) {
+static uint64_t days_since_year0(int year, int month, int day) {
     // Count all days in previous years
     uint64_t y = (uint64_t)year;
     uint64_t total_days = y * 365ULL;          // base days
@@ -391,7 +391,7 @@ static inline uint64_t days_since_year0(int year, int month, int day) {
 }
 
 // Convert TomlDate to a uint64_t "timestamp" in microseconds since 0000-01-01T00:00:00 UTC
-static inline uint64_t tomldate_to_utc_timestamp(const TomlDate *d) {
+static uint64_t tomldate_to_utc_timestamp(const TomlDate *d) {
     int y = d->year;
     int m = d->month;
     int day = d->day;
@@ -433,7 +433,7 @@ static inline uint64_t tomldate_to_utc_timestamp(const TomlDate *d) {
     return timestamp;
 }
 
-static inline void utc_timestamp_to_tomldate(uint64_t timestamp, TomlDate *date) {
+static void utc_timestamp_to_tomldate(uint64_t timestamp, TomlDate *date) {
     // Reset the date
     *date = (TomlDate){0};
     date->toml_type = TOML_LOCAL_DATETIME;
@@ -485,7 +485,7 @@ static inline void utc_timestamp_to_tomldate(uint64_t timestamp, TomlDate *date)
     date->offset_minute = 0;
 }
 
-static inline int compare_dates(const TomlDate *a, const TomlDate *b) {
+static int compare_dates(const TomlDate *a, const TomlDate *b) {
     uint64_t ts_a = tomldate_to_utc_timestamp(a);
     uint64_t ts_b = tomldate_to_utc_timestamp(b);
 

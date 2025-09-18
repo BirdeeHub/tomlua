@@ -45,7 +45,7 @@ typedef struct {
     int offset_minute;
 } TomlDate;
 
-static inline int string_2_date_field_idx(const char *str) {
+static int string_2_date_field_idx(const char *str) {
     for (uint8_t i = 0; i < DATE_LENGTH; i++) {
         if (strcmp(str, DATE_FIELD_NAMES[i]) == 0) return i;
     }
@@ -57,7 +57,7 @@ typedef struct {
     bool ok;
 } date_result;
 
-static inline date_result date_field_by_idx(TomlDate *date, int idx) {
+static date_result date_field_by_idx(TomlDate *date, int idx) {
     date_result value = {0};
     switch (idx) {
         case 0: value.v = date->toml_type; break;
@@ -76,7 +76,7 @@ static inline date_result date_field_by_idx(TomlDate *date, int idx) {
     return value;
 }
 
-static inline bool date_field_set_by_idx(TomlDate *date, int idx, int val) {
+static bool date_field_set_by_idx(TomlDate *date, int idx, int val) {
     switch (idx) {
         case 0: date->toml_type = val; break;
         case 1: date->year = val; break;

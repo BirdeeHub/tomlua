@@ -365,7 +365,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
 //---@field key string
 //---@field value any
 // leaves stack how it found it, writes entries to residx list
-static inline bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx, const int visited_idx, Keys *keys) {
+static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx, const int visited_idx, Keys *keys) {
     lua_newtable(L);
     int residx = lua_gettop(L);
     int result_len = 0;

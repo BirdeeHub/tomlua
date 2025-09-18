@@ -5,7 +5,7 @@
 #include "error_context.h"
 
 // Convert a hex string to a codepoint
-static uint32_t hex_to_codepoint(const char src[], int len) {
+static inline uint32_t hex_to_codepoint(const char src[], int len) {
     uint32_t cp = 0;
     for (int i = 0; i < len; i++) {
         char c = src[i];
@@ -24,7 +24,7 @@ static uint32_t hex_to_codepoint(const char src[], int len) {
     return cp;
 }
 
-static bool push_unicode(lua_State *L, str_buf *dst, char src[], int len) {
+static inline bool push_unicode(lua_State *L, str_buf *dst, char src[], int len) {
     for (size_t i = 0; i < len; i++) {
         if (!is_hex_char(src[i])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 33, "unexpected unicode specifier char");
     }

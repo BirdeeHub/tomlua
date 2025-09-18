@@ -9,7 +9,7 @@
 int encode(lua_State *L);
 
 // getmetatable(idx).toml_type to allow overriding of representation
-static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
+static TomlType get_meta_toml_type(lua_State *L, int idx) {
     if (luaL_getmetafield(L, idx, "toml_type")) {
         if (lua_isnumber(L, -1)) {
             lua_Number n = lua_tonumber(L, -1);
@@ -23,7 +23,7 @@ static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
     return TOML_UNTYPED;
 }
 
-static inline bool is_lua_array(lua_State *L, int idx) {
+static bool is_lua_array(lua_State *L, int idx) {
     int old_top = lua_gettop(L);
     idx = absindex(old_top, idx);
     if (!lua_istable(L, idx)) return false;

@@ -70,7 +70,7 @@ int luaopen_tomlua_date(lua_State *L) {
     return 1;
 }
 
-static inline int str_2_mul(lua_State *L) {
+static int str_2_mul(lua_State *L) {
     size_t len = 0;
     const char *data = lua_tolstring(L, 1, &len);
     if (data == NULL) return luaL_error(L, "tomlua.str_2_mul takes a string as its only argument!");
