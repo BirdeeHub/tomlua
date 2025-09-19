@@ -40,7 +40,8 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
         char c = current.v;
         iter_result nextres = iter_peek(src);
         if (c == '\\' && nextres.ok) {
-            char next = iter_next(src).v;
+            char next = nextres.v;
+            iter_skip(src);
             switch (next) {
                 case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
                 case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
