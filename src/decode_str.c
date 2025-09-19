@@ -101,7 +101,6 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src, int err
                 } break;
                 case 'f': if (!buf_push(dst, '\f')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 case 'r': if (!buf_push(dst, '\r')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
-                case '\\': if (!buf_push(dst, '\\')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
