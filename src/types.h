@@ -43,6 +43,8 @@ typedef enum {
     TOML_BOOL,  // lua bool
     TOML_ARRAY,  // lua table
     TOML_TABLE,  // lua table
+    TOML_ARRAY_INLINE,  // same, except display forced to be inline
+    TOML_TABLE_INLINE,  // same, except display forced to be inline
     TOML_LOCAL_DATE,  // string for now
     TOML_LOCAL_TIME,  // string for now
     TOML_LOCAL_DATETIME,  // string for now
@@ -63,6 +65,8 @@ static const char *toml_type_to_lua_name(int t) {
         case TOML_BOOL: return "BOOL"; break;
         case TOML_ARRAY: return "ARRAY"; break;
         case TOML_TABLE: return "TABLE"; break;
+        case TOML_ARRAY_INLINE: return "ARRAY_INLINE"; break;
+        case TOML_TABLE_INLINE: return "TABLE_INLINE"; break;
         case TOML_LOCAL_DATE: return "LOCAL_DATE"; break;
         case TOML_LOCAL_TIME: return "LOCAL_TIME"; break;
         case TOML_LOCAL_DATETIME: return "LOCAL_DATETIME"; break;
@@ -141,6 +145,7 @@ typedef struct {
     bool fancy_dates;
     bool fancy_tables;
     bool multi_strings;
+    bool mark_inline;
 } TomluaUserOpts;
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
     return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
@@ -151,7 +156,8 @@ static inline TomluaUserOpts toml_user_opts_copy(TomluaUserOpts *opts) {
             .int_keys = opts->int_keys,
             .fancy_dates = opts->fancy_dates,
             .fancy_tables = opts->fancy_tables,
-            .multi_strings = opts->multi_strings
+            .multi_strings = opts->multi_strings,
+            .mark_inline = opts->mark_inline
     });
 }
 

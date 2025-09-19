@@ -80,6 +80,9 @@ local tomlua2 = tomlua {
     -- causes multiline strings to be parsed into a userdata type
     -- which can be converted to a lua string with tostring
     multi_strings = false,
+    -- adds metafield toml_type to inline table and array decode results
+    -- such that it keeps track of what was inline or a heading in the file for encode
+    mark_inline = false,
 }
 
 -- or you can set them directly on the current object
@@ -100,6 +103,7 @@ data, err = tomlua.decode(some_string, { some = "defaults" })
 -- local a_toml_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
 --   toml_type = tomlua.types.TABLE
 -- })
+-- you may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline
 local str, err = tomlua.encode(some_table)
 
 tomlua.types = {
@@ -111,10 +115,12 @@ tomlua.types = {
     BOOL, -- 5  -- lua bool
     ARRAY, -- 6  -- lua table
     TABLE, -- 7  -- lua table
-    LOCAL_DATE, -- 8  -- string, or userdata with fancy_dates
-    LOCAL_TIME, -- 9  -- string, or userdata with fancy_dates
-    LOCAL_DATETIME, -- 10  -- string, or userdata with fancy_dates
-    OFFSET_DATETIME, -- 11  -- string, or userdata with fancy_dates
+    ARRAY_INLINE, -- 8  -- same as ARRAY, but forces encode to print it as a inline
+    TABLE_INLINE, -- 9  -- same as TABLE, but forces encode to print it as a inline
+    LOCAL_DATE, -- 10  -- string, or userdata with fancy_dates
+    LOCAL_TIME, -- 11  -- string, or userdata with fancy_dates
+    LOCAL_DATETIME, -- 12  -- string, or userdata with fancy_dates
+    OFFSET_DATETIME, -- 13  -- string, or userdata with fancy_dates
 }
 tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 

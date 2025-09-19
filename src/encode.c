@@ -99,39 +99,81 @@ static inline bool buf_push_toml_escaped_char(str_buf *buf, const uint32_t c, co
     }
 }
 
-// 0 for not an array, 1 for array, 2 for heading array
+// 0 for print inline, 1 for table heading, 2 for array heading
 // does not verify that the value is a table for optimization reasons
-static inline int is_lua_heading_array(lua_State *L, int idx) {
+static inline int toml_heading_type(lua_State *L, int idx) {
     int old_top = lua_gettop(L);
     idx = absindex(old_top, idx);
-    if (lua_arraylen(L, idx) == 0) {
-        if (get_meta_toml_type(L, idx) == TOML_ARRAY) return 1;
-        else return 0;
+    if (!lua_istable(L, idx)) return 0;
+    switch (get_meta_toml_type(L, idx)) {
+        case TOML_ARRAY_INLINE:
+        case TOML_TABLE_INLINE:
+            return 0;
+        case TOML_ARRAY:
+            if (lua_arraylen(L, idx) == 0) return 0;
+            else break;
+        default:
+            if (lua_arraylen(L, idx) == 0) return 1;
     }
-    bool is_heading = true;
+    bool is_array_heading = true;
     int count = 0;
     lua_Number highest_int_key = 0;
     lua_pushnil(L);  // next(nil) // get first kv pair on stack
     while (lua_next(L, idx) != 0) {
         // now at stack: key value
-        if (!lua_istable(L, -1)) is_heading = false;
+        if (!lua_istable(L, -1)) is_array_heading = false;
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
         if (lua_isnumber(L, -1)) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
                 lua_settop(L, old_top);
-                return 0;
+                return 1;
             }
             count++;
             if (key > highest_int_key) highest_int_key = key;
         } else {
             lua_settop(L, old_top);
-            return 0;
+            return 1;
         }
     }
     lua_settop(L, old_top);
-    if (highest_int_key != count || count == 0) return 0;
-    return (is_heading) ? 2 : 1;
+    if (highest_int_key != count || count == 0) return 1;
+    return (is_array_heading) ? 2 : 0;
+}
+
+static inline bool is_lua_array(lua_State *L, int idx) {
+    int old_top = lua_gettop(L);
+    idx = absindex(old_top, idx);
+    if (lua_arraylen(L, idx) == 0) {
+        switch (get_meta_toml_type(L, idx)) {
+            case TOML_ARRAY:
+            case TOML_ARRAY_INLINE:
+                return true;
+            default: return false;
+        }
+    }
+    int count = 0;
+    lua_Number highest_int_key = 0;
+    lua_pushnil(L);  // next(nil) // get first kv pair on stack
+    while (lua_next(L, idx) != 0) {
+        // now at stack: key value
+        lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
+        if (lua_isnumber(L, -1)) {
+            lua_Number key = lua_tonumber(L, -1);
+            if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
+                lua_settop(L, old_top);
+                return false;
+            }
+            count++;
+            if (key > highest_int_key) highest_int_key = key;
+        } else {
+            lua_settop(L, old_top);
+            return false;
+        }
+    }
+    lua_settop(L, old_top);
+    if (highest_int_key != count || count == 0) return false;
+    return true;
 }
 
 static bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
@@ -375,26 +417,18 @@ static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx,
     while (lua_next(L, validx) != 0) {
         int vidx = lua_gettop(L);
         int key_idx = vidx - 1;
-        if (lua_istable(L, vidx)) {
-            int table_type = is_lua_heading_array(L, vidx);
-            if (table_type == 2 || table_type == 0) {
-                // create Deferred_Heading
-                lua_newtable(L);
-                lua_pushboolean(L, table_type);
-                lua_setfield(L, -2, "is_array");
-                lua_pushvalue(L, key_idx);
-                lua_setfield(L, -2, "key");
-                lua_pushvalue(L, vidx);
-                lua_setfield(L, -2, "value");
-                lua_rawseti(L, residx, ++result_len);
-            } else if (table_type == 1) {
-                str_iter lstr = lua_str_to_iter(L, key_idx);
-                if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in table heading entry");
-                if (!buf_push_esc_key(buf, &lstr)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push table heading key");
-                if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in table heading entry");
-                if (!buf_push_inline_value(L, buf, visited_idx, 0)) return false;
-                if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 48, "failed to push newline after table heading entry");
-            }
+        // 0(inline), 1(table), or 2(is_array)
+        int table_type = toml_heading_type(L, vidx);
+        if (table_type) {
+            // create Deferred_Heading
+            lua_newtable(L);
+            lua_pushboolean(L, table_type == 2);
+            lua_setfield(L, -2, "is_array");
+            lua_pushvalue(L, key_idx);
+            lua_setfield(L, -2, "key");
+            lua_pushvalue(L, vidx);
+            lua_setfield(L, -2, "value");
+            lua_rawseti(L, residx, ++result_len);
         } else {
             str_iter lstr = lua_str_to_iter(L, key_idx);
             if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in table heading entry");

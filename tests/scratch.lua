@@ -99,7 +99,7 @@ do
 end
 
 do
-    local toml = tomlua { fancy_tables = false, strict = false, fancy_dates = true, multi_strings = true }
+    local toml = tomlua { fancy_tables = false, strict = false, fancy_dates = true, multi_strings = true, mark_inline = true }
     local to_encode = toml.decode(contents)
     local str, e = toml.encode(to_encode)
     last_result = str

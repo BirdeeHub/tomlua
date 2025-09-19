@@ -245,6 +245,12 @@ static bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaU
 // adds a table to the lua stack and return NULL or error
 static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
     lua_newtable(L);
+    if (opts->mark_inline) {
+        lua_newtable(L);
+        lua_pushinteger(L, TOML_TABLE_INLINE);
+        lua_setfield(L, -2, "toml_type");
+        lua_setmetatable(L, -2);
+    }
     bool last_was_comma = false;
     const bool strict = opts->strict;
     const bool int_keys = opts->int_keys;
@@ -596,6 +602,12 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
     } else if (curr.v == '[') {
         iter_skip(src);
         lua_newtable(L);
+        if (opts->mark_inline) {
+            lua_newtable(L);
+            lua_pushinteger(L, TOML_ARRAY_INLINE);
+            lua_setfield(L, -2, "toml_type");
+            lua_setmetatable(L, -2);
+        }
         int idx = 1;
         while (iter_peek(src).ok) {
             char d = iter_peek(src).v;

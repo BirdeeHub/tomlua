@@ -7,6 +7,42 @@
 #include "decode.h"
 #include "encode.h"
 
+static inline TomlType toml_table_type(lua_State *L, int idx) {
+    int old_top = lua_gettop(L);
+    idx = absindex(old_top, idx);
+    bool is_inline = false;
+    switch (get_meta_toml_type(L, idx)) {
+        case TOML_ARRAY: if (lua_arraylen(L, idx) == 0) return TOML_ARRAY; else break;
+        case TOML_ARRAY_INLINE:
+            is_inline = true;
+            if (lua_arraylen(L, idx) == 0) return TOML_ARRAY_INLINE; else break;
+        case TOML_TABLE_INLINE: return TOML_TABLE_INLINE;
+        default: return TOML_TABLE;
+    }
+    int count = 0;
+    lua_Number highest_int_key = 0;
+    lua_pushnil(L);  // next(nil) // get first kv pair on stack
+    while (lua_next(L, idx) != 0) {
+        // now at stack: key value
+        lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
+        if (lua_isnumber(L, -1)) {
+            lua_Number key = lua_tonumber(L, -1);
+            if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
+                lua_settop(L, old_top);
+                return TOML_TABLE;
+            }
+            count++;
+            if (key > highest_int_key) highest_int_key = key;
+        } else {
+            lua_settop(L, old_top);
+            return TOML_TABLE;
+        }
+    }
+    lua_settop(L, old_top);
+    if (highest_int_key != count || count == 0) return TOML_TABLE;
+    return is_inline ? TOML_ARRAY_INLINE : TOML_ARRAY;
+}
+
 static int tomlua_type_of(lua_State *L) {
     switch (lua_type(L, 1)) {
         case LUA_TSTRING:
@@ -25,13 +61,8 @@ static int tomlua_type_of(lua_State *L) {
             lua_pushnumber(L, TOML_BOOL);
             return 1;
         case LUA_TTABLE:
-            if (is_lua_array(L, 1)) {
-                lua_pushnumber(L, TOML_ARRAY);
-                return 1;
-            } else {
-                lua_pushnumber(L, TOML_TABLE);
-                return 1;
-            }
+            lua_pushinteger(L, toml_table_type(L, 1));
+            return 1;
         case LUA_TUSERDATA:
             if(udata_is_of_type(L, 1, "TomluaDate")) {
                 TomlDate *date = (TomlDate *)lua_touserdata(L, 1);
@@ -85,53 +116,33 @@ static int str_2_mul(lua_State *L) {
 static TomluaUserOpts opts_parse(lua_State *L, int taridx, int optidx) {
     int top = lua_gettop(L);
     TomluaUserOpts opts = {0};
-    if (taridx > 0) luaL_checktype(L, taridx, LUA_TTABLE);
-
     if (taridx > 0) {
+        luaL_checktype(L, taridx, LUA_TTABLE);
         lua_getfield(L, taridx, "strict");
         opts.strict = lua_toboolean(L, -1);
-    } else {
-        opts.strict = false;
+        lua_getfield(L, taridx, "fancy_tables");
+        opts.fancy_tables = lua_toboolean(L, -1);
+        lua_getfield(L, taridx, "int_keys");
+        opts.int_keys = lua_toboolean(L, -1);
+        lua_getfield(L, taridx, "fancy_dates");
+        opts.fancy_dates = lua_toboolean(L, -1);
+        lua_getfield(L, taridx, "multi_strings");
+        opts.multi_strings = lua_toboolean(L, -1);
+        lua_getfield(L, taridx, "mark_inline");
+        opts.mark_inline = lua_toboolean(L, -1);
     }
     lua_pushboolean(L, opts.strict);
     lua_setfield(L, optidx, "strict");
-
-    if (taridx > 0) {
-        lua_getfield(L, taridx, "fancy_tables");
-        opts.fancy_tables = lua_toboolean(L, -1);
-    } else {
-        opts.fancy_tables = false;
-    }
     lua_pushboolean(L, opts.fancy_tables);
     lua_setfield(L, optidx, "fancy_tables");
-
-    if (taridx > 0) {
-        lua_getfield(L, taridx, "int_keys");
-        opts.int_keys = lua_toboolean(L, -1);
-    } else {
-        opts.int_keys = false;
-    }
     lua_pushboolean(L, opts.int_keys);
     lua_setfield(L, optidx, "int_keys");
-
-    if (taridx > 0) {
-        lua_getfield(L, taridx, "fancy_dates");
-        opts.fancy_dates = lua_toboolean(L, -1);
-    } else {
-        opts.fancy_dates = false;
-    }
     lua_pushboolean(L, opts.fancy_dates);
     lua_setfield(L, optidx, "fancy_dates");
-
-    if (taridx > 0) {
-        lua_getfield(L, taridx, "multi_strings");
-        opts.multi_strings = lua_toboolean(L, -1);
-    } else {
-        opts.multi_strings = false;
-    }
     lua_pushboolean(L, opts.multi_strings);
     lua_setfield(L, optidx, "multi_strings");
-
+    lua_pushboolean(L, opts.mark_inline);
+    lua_setfield(L, optidx, "mark_inline");
     lua_settop(L, top);
     return opts;
 }
@@ -153,6 +164,8 @@ static int opts_index(lua_State *L) {
         lua_pushboolean(L, opts->fancy_dates);
     } else if (strcmp(key, "multi_strings") == 0) {
         lua_pushboolean(L, opts->multi_strings);
+    } else if (strcmp(key, "mark_inline") == 0) {
+        lua_pushboolean(L, opts->mark_inline);
     } else {
         lua_pushnil(L); // unknown key
     }
@@ -172,6 +185,8 @@ static int opts_newindex(lua_State *L) {
         opts->fancy_dates = value;
     } else if (strcmp(key, "multi_strings") == 0) {
         opts->multi_strings = value;
+    } else if (strcmp(key, "mark_inline") == 0) {
+        opts->mark_inline = value;
     } else {
         return luaL_error(L, "invalid option '%s'", key);
     }
