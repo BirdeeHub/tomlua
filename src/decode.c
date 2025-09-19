@@ -12,6 +12,9 @@
 #include "decode_keys.h"
 #include "error_context.h"
 
+#define DECODE_RESULT_IDX 2
+#define DECODE_DEFINED_IDX 3
+
 // pops keys, leaves new root on top
 static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 28, "no keys provided to navigate");
@@ -285,7 +288,7 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
         last_was_comma = false;
         lua_pushnil(L);
         int val_spacer = lua_gettop(L);
-        int keys_len = parse_keys(L, src, buf, int_keys);
+        int keys_len = parse_keys(L, src, buf, int_keys, DECODE_DEFINED_IDX);
         if (!keys_len) return false;
         if (iter_peek(src).ok && iter_peek(src).v != '=') {
             return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "keys for assignment must end with =");
@@ -336,7 +339,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
     } else if (iter_starts_with(src, "\"\"\"", 3)) {
         buf_soft_reset(buf);
         iter_skip_n(src, 3);
-        if (!parse_multi_basic_string(L, buf, src)) {
+        if (!parse_multi_basic_string(L, buf, src, DECODE_DEFINED_IDX)) {
             return false;
         }
         if (opts->multi_strings) {
@@ -356,7 +359,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
     } else if (curr.v == '"') {
         buf_soft_reset(buf);
         iter_skip(src);
-        if (!parse_basic_string(L, buf, src)) {
+        if (!parse_basic_string(L, buf, src, DECODE_DEFINED_IDX)) {
             return false;
         }
         if (!push_buf_to_lua_string(L, buf)) {
@@ -366,7 +369,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
     } else if (iter_starts_with(src, "'''", 3)) {
         buf_soft_reset(buf);
         iter_skip_n(src, 3);
-        if (!parse_multi_literal_string(L, buf, src)) {
+        if (!parse_multi_literal_string(L, buf, src, DECODE_DEFINED_IDX)) {
             return false;
         }
         if (opts->multi_strings) {
@@ -386,7 +389,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
     } else if (curr.v == '\'') {
         buf_soft_reset(buf);
         iter_skip(src);
-        if (!parse_literal_string(L, buf, src)) {
+        if (!parse_literal_string(L, buf, src, DECODE_DEFINED_IDX)) {
             return false;
         }
         if (!push_buf_to_lua_string(L, buf)) {
@@ -675,7 +678,7 @@ int tomlua_decode(lua_State *L) {
         if (iter_starts_with(&src, "[[", 2)) {
             iter_skip_n(&src, 2);
             lua_pop(L, 1); // pop current location, we are moving
-            int keys_len = parse_keys(L, &src, &scratch, int_keys);
+            int keys_len = parse_keys(L, &src, &scratch, int_keys, DECODE_DEFINED_IDX);
             if (!keys_len) goto fail;
             if (!iter_starts_with(&src, "]]", 2)) {
                 set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 30, "table heading must end with ]]");
@@ -694,7 +697,7 @@ int tomlua_decode(lua_State *L) {
         } else if (iter_peek(&src).v == '[') {
             iter_skip(&src);
             lua_pop(L, 1);  // pop current location, we are moving
-            int keys_len = parse_keys(L, &src, &scratch, int_keys);
+            int keys_len = parse_keys(L, &src, &scratch, int_keys, DECODE_DEFINED_IDX);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != ']') {
                 set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 29, "table heading must end with ]");
@@ -713,7 +716,7 @@ int tomlua_decode(lua_State *L) {
         } else {
             lua_pushnil(L);
             int val_spacer = lua_gettop(L);
-            int keys_len = parse_keys(L, &src, &scratch, int_keys);
+            int keys_len = parse_keys(L, &src, &scratch, int_keys, DECODE_DEFINED_IDX);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != '=') {
                 set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "keys for assignment must end with =");

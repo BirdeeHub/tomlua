@@ -5,7 +5,7 @@
 #include "error_context.h"
 
 // Convert a hex string to a codepoint
-static inline uint32_t hex_to_codepoint(const char src[], int len) {
+static inline uint32_t hex_to_codepoint(const char src[], int len, int erridx) {
     uint32_t cp = 0;
     for (int i = 0; i < len; i++) {
         char c = src[i];
@@ -24,17 +24,17 @@ static inline uint32_t hex_to_codepoint(const char src[], int len) {
     return cp;
 }
 
-static inline bool push_unicode(lua_State *L, str_buf *dst, char src[], int len) {
+static inline bool push_unicode(lua_State *L, str_buf *dst, char src[], int len, int erridx) {
     for (size_t i = 0; i < len; i++) {
-        if (!is_hex_char(src[i])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 33, "unexpected unicode specifier char");
+        if (!is_hex_char(src[i])) return set_tmlerr(new_tmlerr(L, erridx), false, 33, "unexpected unicode specifier char");
     }
-    uint32_t cp = hex_to_codepoint(src, len);
-    if (!buf_push_utf8(dst, cp)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+    uint32_t cp = hex_to_codepoint(src, len, erridx);
+    if (!buf_push_utf8(dst, cp)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
     return true;
 }
 
 // pushes string to dst, advances pos
-bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
+bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src, int erridx) {
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
@@ -43,13 +43,13 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
             char next = nextres.v;
             iter_skip(src);
             switch (next) {
-                case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 'f': if (!buf_push(dst, '\f')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 'r': if (!buf_push(dst, '\r')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case '"': if (!buf_push(dst, '\"')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case '\\': if (!buf_push(dst, '\\')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
+                case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 'f': if (!buf_push(dst, '\f')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 'r': if (!buf_push(dst, '\r')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case '"': if (!buf_push(dst, '\"')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case '\\': if (!buf_push(dst, '\\')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
@@ -59,23 +59,23 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         escaped[i] = iter_next(src).v;
                     }
-                    if (!push_unicode(L, dst, escaped, hex_len)) return false;
+                    if (!push_unicode(L, dst, escaped, hex_len, erridx)) return false;
                 } break;
                 default:
-                    if (!buf_push(dst, next)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+                    if (!buf_push(dst, next)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
             }
         } else if (c == '\n' || c == '\r' && nextres.v == '\n') {
-            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 34, "basic strings are single-line only");
+            return set_tmlerr(new_tmlerr(L, erridx), false, 34, "basic strings are single-line only");
         } else if (c == '"') {
             return true;
         } else {
-            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         }
     }
-    return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 43, "end of content reached before end of string");
+    return set_tmlerr(new_tmlerr(L, erridx), false, 43, "end of content reached before end of string");
 }
 
-bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
+bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src, int erridx) {
     if (iter_peek(src).v == '\n') iter_skip(src);
     else if (iter_starts_with(src, "\r\n", 2)) iter_skip_n(src, 2);
     while (iter_peek(src).ok) {
@@ -92,17 +92,17 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
             char next = nextres.v;
             iter_skip(src);
             switch (next) {
-                case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
+                case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 case '\n': {
                     int code = consume_whitespace_to_line(src);
                     while (code == 1) code = consume_whitespace_to_line(src);
                 } break;
-                case 'f': if (!buf_push(dst, '\f')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case 'r': if (!buf_push(dst, '\r')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case '"': if (!buf_push(dst, '"')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
-                case '\\': if (!buf_push(dst, '\\')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
+                case 'f': if (!buf_push(dst, '\f')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 'r': if (!buf_push(dst, '\r')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case '"': if (!buf_push(dst, '"')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case '\\': if (!buf_push(dst, '\\')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 // \uXXXX \UXXXXXXXX
                 case 'u':
                 case 'U': {
@@ -112,43 +112,43 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                     for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
                         escaped[i] = iter_next(src).v;
                     }
-                    if (!push_unicode(L, dst, escaped, hex_len)) return false;
+                    if (!push_unicode(L, dst, escaped, hex_len, erridx)) return false;
                 } break;
                 default:
-                    if (!buf_push(dst, next)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+                    if (!buf_push(dst, next)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
             }
         } else if (c == '\r' && nextres.v == '\n') {
             iter_skip(src);
-            if (!buf_push_str(dst, "\r\n", 2)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+            if (!buf_push_str(dst, "\r\n", 2)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         } else if (c == '\n') {
-            if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+            if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
             iter_skip_n(src, 2);
             return true;
         } else {
-            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         }
     }
-    return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 43, "end of content reached before end of string");
+    return set_tmlerr(new_tmlerr(L, erridx), false, 43, "end of content reached before end of string");
 }
 
-bool parse_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
+bool parse_literal_string(lua_State *L, str_buf *dst, str_iter *src, int erridx) {
     while (iter_peek(src).ok) {
         iter_result current = iter_next(src);
         char c = current.v;
         iter_result nextres = iter_peek(src);
         if (c == '\n' || c == '\r' && nextres.v == '\n') {
-            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 36, "literal strings are single-line only");
+            return set_tmlerr(new_tmlerr(L, erridx), false, 36, "literal strings are single-line only");
         } else if (c == '\'') {
             return true;
         } else {
-            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         }
     }
-    return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 43, "end of content reached before end of string");
+    return set_tmlerr(new_tmlerr(L, erridx), false, 43, "end of content reached before end of string");
 }
 
-bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
+bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src, int erridx) {
     if (iter_peek(src).v == '\n') iter_skip(src);
     else if (iter_starts_with(src, "\r\n", 2)) iter_skip_n(src, 2);
     while (iter_peek(src).ok) {
@@ -158,8 +158,8 @@ bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src) {
             iter_skip_n(src, 2);
             return true;
         } else {
-            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+            if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         }
     }
-    return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 43, "end of content reached before end of string");
+    return set_tmlerr(new_tmlerr(L, erridx), false, 43, "end of content reached before end of string");
 }

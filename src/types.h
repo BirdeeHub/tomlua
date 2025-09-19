@@ -11,9 +11,6 @@
 #include <stdbool.h>
 #endif
 
-#define DECODE_RESULT_IDX 2
-#define DECODE_DEFINED_IDX 3
-
 // NOTE: just for debugging
 #include <stdio.h>
 static void print_lua_stack(lua_State *L, const char *fmt, ...) {
