@@ -89,12 +89,12 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                 continue;
             };
             char next = nextres.v;
+            iter_skip(src);
             switch (next) {
                 case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
                 case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
                 case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM"); break;
                 case '\n': {
-                    iter_skip(src);
                     int code = consume_whitespace_to_line(src);
                     while (code == 1) code = consume_whitespace_to_line(src);
                 } break;
@@ -116,6 +116,11 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src) {
                 default:
                     if (!buf_push(dst, next)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
             }
+        } else if (c == '\r' && nextres.v == '\n') {
+            iter_skip(src);
+            if (!buf_push_str(dst, "\r\n", 2)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
+        } else if (c == '\n') {
+            if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 3, "OOM");
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
             iter_skip_n(src, 2);
             return true;

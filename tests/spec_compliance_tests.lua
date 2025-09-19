@@ -160,11 +160,13 @@ key = 2
 text = """Hello
 World
 """
+text2 = """Hello\nWorld\n"""
 ]]
         local data, err = tomlua_multi_strings.decode(toml_str)
         it(err == nil, "Should not error")
         it(type(data.text) == "userdata", "Multiline string should be userdata with multi_strings")
         it(tostring(data.text) == "Hello\nWorld\n", "Multiline string content should be correct")
+        it(tostring(data.text2) == "Hello\nWorld\n", "Multiline string content2 should be correct")
     end)
 
     -- Mark Inline
