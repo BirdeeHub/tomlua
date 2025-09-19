@@ -8,6 +8,8 @@ return function(define, test_dir)
     local tomlua_int_keys = require("tomlua")({ int_keys = true })
     local tomlua_multi_strings = require("tomlua")({ multi_strings = true })
     local tomlua_mark_inline = require("tomlua")({ mark_inline = true })
+    local tomlua_overflow_errors = require("tomlua")({ overflow_errors = true })
+    local tomlua_underflow_errors = require("tomlua")({ underflow_errors = true })
 
     define("decode example.toml", function()
         local f = io.open(("%s/example.toml"):format(test_dir), "r")
@@ -333,6 +335,52 @@ text6 = '''''five apostrophes??!?!'''''
   2
 ]]=]) ~= nil, "Encoded string should contain inline array")
         it(string.find(encoded_str, "inline_table = { %a = %d, %a = %d }") ~= nil, "Encoded string should contain inline table")
+    end)
+
+    define("underflow_errors: decode float underflow", function()
+        -- A very small number smaller than the smallest normal double
+        local tiny = "tiny = 1.00000000999999999999999999999000000001123213212131e-316"
+        local data, err = tomlua_underflow_errors.decode(tiny)
+        it(err ~= nil, "Should error on underflow when underflow_errors")
+        data, err = tomlua_default.decode(tiny)
+        it(err == nil, "Should not error on underflow otherwise")
+        it(data.tiny ~= 0.0, "Underflow should preserve subnormal value or 0 for extreme underflow")
+    end)
+
+    define("overflow_errors: decode float overflow", function()
+        -- A number too big to fit in a double
+        local huge = "huge = 1e400"
+        local data, err = tomlua_overflow_errors.decode(huge)
+        it(err ~= nil, "Should error on overflow when overflow_errors")
+        data, err = tomlua_default.decode(huge)
+        it(err == nil, "Should not error on overflow otherwise")
+        it(data.huge == math.huge, "Overflow should be converted to +INFINITY")
+    end)
+
+    define("overflow_errors: decode negative float overflow", function()
+        -- Negative number too small to fit in a double
+        local neghuge = "neghuge = -1e400"
+        local data, err = tomlua_overflow_errors.decode(neghuge)
+        it(err ~= nil, "Should error on negative overflow when overflow_errors")
+        data, err = tomlua_default.decode(neghuge)
+        it(err == nil, "Should not error on negative overflow otherwise")
+        it(data.neghuge == -math.huge, "Negative overflow should be converted to -INFINITY")
+    end)
+
+
+    define("overflow_errors: decode integer overflow", function()
+        local huge_int = [[
+huge_int = 999999999999999999999999999999999999999999999999999999999999999999999999999
+neg_huge_int = -999999999999999999999999999999999999999999999999999999999999999999999999999
+]]
+        local data, err = tomlua_overflow_errors.decode(huge_int)
+        it(err ~= nil, "Should error on extremely large integer when overflow_errors")
+        data, err = tomlua_default.decode(huge_int)
+        it(err == nil, "Should not error on extremely large integer otherwise")
+        -- Lua converts integers that don't fit into float or integer types, so expect it as a float
+        it(type(data.huge_int) == "number", "Value should be treated as number (float) when exceeding integer range")
+        it(data.huge_int == math.huge, "Value should be very large")
+        it(data.neg_huge_int == -math.huge, "Value should be very large")
     end)
 
 end

@@ -11,6 +11,14 @@
 #include <stdbool.h>
 #endif
 
+#ifndef LUA_MAXINTEGER
+#define LUA_MAXINTEGER LLONG_MAX
+#endif
+
+#ifndef LUA_MININTEGER
+#define LUA_MININTEGER LLONG_MIN
+#endif
+
 // NOTE: just for debugging
 #include <stdio.h>
 static void print_lua_stack(lua_State *L, const char *fmt, ...) {
@@ -232,6 +240,19 @@ static bool buf_push_str(str_buf *buf, const char *str, size_t len) {
     memcpy(buf->data + buf->len, str, len);
     buf->len += len;
 
+    return true;
+}
+
+static bool buf_null_terminate(str_buf *buf) {
+    if (!buf || buf->len == 0) return false;
+    if (buf->len >= buf->cap) {
+        size_t new_capacity = buf->cap > 0 ? buf->cap * 2 : 1;
+        char *tmp = (char *)realloc(buf->data, new_capacity * sizeof(char));
+        if (!tmp) return false;
+        buf->data = tmp;
+        buf->cap = new_capacity;
+    }
+    buf->data[buf->len] = '\0';
     return true;
 }
 

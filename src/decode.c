@@ -1,10 +1,14 @@
 // Copyright 2025 Birdee
+#include <float.h>
+#include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "types.h"
 #include "opts.h"
@@ -322,6 +326,36 @@ static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf,
     return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "missing closing }");
 }
 
+static bool push_integer_or_handle(lua_State *L, str_buf *s, int base, bool throw_on_overflow) {
+    errno = 0;
+    buf_null_terminate(s);
+    int64_t val = strtoll(s->data, NULL, base);
+    // Check if conversion failed or overflowed
+    if (errno == ERANGE || val > LUA_MAXINTEGER || val < LUA_MININTEGER) {
+        if (throw_on_overflow) {
+            return false;
+        } else {
+            // push +/- inf depending on sign
+            lua_pushnumber(L, (val < 0) ? -INFINITY : INFINITY);
+            return true;
+        }
+    }
+    lua_pushinteger(L, (lua_Integer)val);
+    return true;
+}
+
+static inline bool push_float_or_handle(lua_State *L, str_buf *s, bool throw_on_overflow, bool throw_on_underflow) {
+    errno = 0;
+    buf_null_terminate(s);
+    lua_Number val = strtod(s->data, NULL);
+    if (errno == ERANGE) {
+        if (throw_on_overflow && !isfinite(val)) return false;
+        if (throw_on_underflow && val != 0.0 && fabs(val) < DBL_MIN) return false;
+    }
+    lua_pushnumber(L, val);
+    return true;
+}
+
 // function is to recieve src iterator starting after the first `=`,
 // and place 1 new item on the stack but otherwise leave the stack unchanged
 bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
@@ -431,8 +465,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             }
             if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "empty hex literal");
             // Convert buffer to integer
-            int64_t val = strtoll(buf->data, NULL, 16);
-            lua_pushinteger(L, val);
+            if (!push_integer_or_handle(L, buf, 16, (*opts)[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 41, "Parse error: hex literal integer overflow");
             return true;
         } else if (iter_starts_with(src, "0o", 2)) {
             // Octal integer
@@ -457,8 +490,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 55, "octal literals not allowed to have trailing underscores");
             }
             if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 19, "empty octal literal");
-            int64_t val = strtoll(buf->data, NULL, 8);
-            lua_pushinteger(L, val);
+            if (!push_integer_or_handle(L, buf, 8, (*opts)[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 43, "Parse error: octal literal integer overflow");
             return true;
         } else if (iter_starts_with(src, "0b", 2)) {
             // binary integer
@@ -483,8 +515,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                 return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 56, "binary literals not allowed to have trailing underscores");
             }
             if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 20, "empty binary literal");
-            int64_t val = strtoll(buf->data, NULL, 2);
-            lua_pushinteger(L, val);
+            if (!push_integer_or_handle(L, buf, 2, (*opts)[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 44, "Parse error: binary literal integer overflow");
             return true;
         } else {
             // detect dates and pass on as strings, and numbers are allowed to have underscores in them (only 1 consecutive underscore at a time)
@@ -595,9 +626,9 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
                         return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 53, "tomlua.decode failed to push date string to lua stack");
                     }
                 } else if (is_float) {
-                    lua_pushnumber(L, strtod(buf->data, NULL));
+                    if (!push_float_or_handle(L, buf, (*opts)[TOMLOPTS_OVERFLOW_ERRORS], (*opts)[TOMLOPTS_UNDERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "Parse error: float literal overflow");
                 } else {
-                    lua_pushinteger(L, strtoll(buf->data, NULL, 10));
+                    if (!push_integer_or_handle(L, buf, 10, (*opts)[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 37, "Parse error: integer literal overflow");
                 }
                 return true;
             }

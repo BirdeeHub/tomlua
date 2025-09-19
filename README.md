@@ -83,6 +83,12 @@ local tomlua2 = tomlua {
     -- adds metafield toml_type to inline table and array decode results
     -- such that it keeps track of what was inline or a heading in the file for encode
     mark_inline = false,
+    -- if tomlua.decode reads a number bigger than can fit in a lua number or integer
+    -- with false it will set + or - math.huge for the value and return normally
+    -- with true it will return nil + an error
+    overflow_errors = false,
+    -- like overflow_errors setting, but for float precision underflow
+    underflow_errors = false,
 }
 
 -- or you can set them directly on the current object

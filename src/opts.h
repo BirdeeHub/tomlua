@@ -17,6 +17,8 @@ typedef enum {
     TOMLOPTS_FANCY_TABLES,
     TOMLOPTS_MULTI_STRINGS,
     TOMLOPTS_MARK_INLINE,
+    TOMLOPTS_OVERFLOW_ERRORS,
+    TOMLOPTS_UNDERFLOW_ERRORS,
     TOMLOPTS_LENGTH
 } TOMLOPTS;
 static const char *toml_opts_names[TOMLOPTS_LENGTH] = {
@@ -25,7 +27,9 @@ static const char *toml_opts_names[TOMLOPTS_LENGTH] = {
     "fancy_dates",
     "fancy_tables",
     "multi_strings",
-    "mark_inline"
+    "mark_inline",
+    "overflow_errors",
+    "underflow_errors"
 };
 typedef bool TomluaUserOpts[TOMLOPTS_LENGTH];
 

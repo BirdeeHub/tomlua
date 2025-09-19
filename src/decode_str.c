@@ -95,13 +95,13 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src, int err
             char next = nextres.v;
             iter_skip(src);
             switch (next) {
-                case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
-                case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
-                case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 case '\n': {
                     int code = consume_whitespace_to_line(src);
                     while (code == 1) code = consume_whitespace_to_line(src);
                 } break;
+                case 'b': if (!buf_push(dst, '\b')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 't': if (!buf_push(dst, '\t')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
+                case 'n': if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 case 'f': if (!buf_push(dst, '\f')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 case 'r': if (!buf_push(dst, '\r')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM"); break;
                 // \uXXXX \UXXXXXXXX
