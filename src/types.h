@@ -53,27 +53,30 @@ typedef enum {
     TOML_OFFSET_DATETIME,  // string for now
     TOML_MAX_TYPES  // contains the length of this enum
 } TomlType;
-
+static const char *toml_type_names[TOML_MAX_TYPES] = {
+    "UNTYPED",
+    "STRING",
+    "STRING_MULTI",
+    "INTEGER",
+    "FLOAT",
+    "BOOL",
+    "ARRAY",
+    "TABLE",
+    "ARRAY_INLINE",
+    "TABLE_INLINE",
+    "LOCAL_DATE",
+    "LOCAL_TIME",
+    "LOCAL_DATETIME",
+    "OFFSET_DATETIME",
+};
 static inline bool is_valid_toml_type(lua_Number t) {
     return (t >= 0 && t < TOML_MAX_TYPES && t == (lua_Number)(lua_Integer)t);
 }
-
 static const char *toml_type_to_lua_name(int t) {
-    switch (t) {
-        case TOML_STRING: return "STRING"; break;
-        case TOML_STRING_MULTI: return "STRING_MULTI"; break;
-        case TOML_INTEGER: return "INTEGER"; break;
-        case TOML_FLOAT: return "FLOAT"; break;
-        case TOML_BOOL: return "BOOL"; break;
-        case TOML_ARRAY: return "ARRAY"; break;
-        case TOML_TABLE: return "TABLE"; break;
-        case TOML_ARRAY_INLINE: return "ARRAY_INLINE"; break;
-        case TOML_TABLE_INLINE: return "TABLE_INLINE"; break;
-        case TOML_LOCAL_DATE: return "LOCAL_DATE"; break;
-        case TOML_LOCAL_TIME: return "LOCAL_TIME"; break;
-        case TOML_LOCAL_DATETIME: return "LOCAL_DATETIME"; break;
-        case TOML_OFFSET_DATETIME: return "OFFSET_DATETIME"; break;
-        default: return "UNTYPED";
+    if (t > 0 && t < TOML_MAX_TYPES) {
+        return toml_type_names[t];
+    } else {
+        return "UNTYPED";
     }
 }
 
@@ -140,28 +143,6 @@ typedef struct {
     bool ok;
     uint32_t v;
 } iter_utf8_result;
-
-typedef struct {
-    bool strict;
-    bool int_keys;
-    bool fancy_dates;
-    bool fancy_tables;
-    bool multi_strings;
-    bool mark_inline;
-} TomluaUserOpts;
-static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
-    return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
-}
-static inline TomluaUserOpts toml_user_opts_copy(TomluaUserOpts *opts) {
-    return ((TomluaUserOpts) {
-            .strict = opts->strict,
-            .int_keys = opts->int_keys,
-            .fancy_dates = opts->fancy_dates,
-            .fancy_tables = opts->fancy_tables,
-            .multi_strings = opts->multi_strings,
-            .mark_inline = opts->mark_inline
-    });
-}
 
 static inline void free_str_buf(str_buf *buf) {
     if (buf) {

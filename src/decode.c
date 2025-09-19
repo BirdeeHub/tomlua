@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "types.h"
+#include "opts.h"
 #include "dates.h"
 #include "decode_str.h"
 #include "decode_keys.h"
@@ -248,16 +249,16 @@ static bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaU
 // adds a table to the lua stack and return NULL or error
 static inline bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts *opts) {
     lua_newtable(L);
-    if (opts->mark_inline) {
+    if ((*opts)[TOMLOPTS_MARK_INLINE]) {
         lua_newtable(L);
         lua_pushinteger(L, TOML_TABLE_INLINE);
         lua_setfield(L, -2, "toml_type");
         lua_setmetatable(L, -2);
     }
     bool last_was_comma = false;
-    const bool strict = opts->strict;
-    const bool int_keys = opts->int_keys;
-    const bool fancy_tables = opts->fancy_tables;
+    const bool strict = (*opts)[TOMLOPTS_STRICT];
+    const bool int_keys = (*opts)[TOMLOPTS_INT_KEYS];
+    const bool fancy_tables = (*opts)[TOMLOPTS_FANCY_TABLES];
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
         if (d == '}') {
@@ -342,7 +343,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         if (!parse_multi_basic_string(L, buf, src, DECODE_DEFINED_IDX)) {
             return false;
         }
-        if (opts->multi_strings) {
+        if ((*opts)[TOMLOPTS_MULTI_STRINGS]) {
             str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
             if (!s || !buf || !buf->data) {
                 return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 59, "tomlua.decode failed to push multi-line string to lua stack");
@@ -372,7 +373,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
         if (!parse_multi_literal_string(L, buf, src, DECODE_DEFINED_IDX)) {
             return false;
         }
-        if (opts->multi_strings) {
+        if ((*opts)[TOMLOPTS_MULTI_STRINGS]) {
             str_buf *s = (str_buf *)lua_newuserdata(L, sizeof(str_buf));
             if (!s || !buf || !buf->data) {
                 return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 59, "tomlua.decode failed to push multi-line string to lua stack");
@@ -579,7 +580,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
             }
             if (buf->len > 0) {
                 if (is_date) {
-                    if (opts->fancy_dates) {
+                    if ((*opts)[TOMLOPTS_FANCY_DATES]) {
                         str_iter date_src = (str_iter) {
                             .len = buf->len,
                             .pos = 0,
@@ -605,7 +606,7 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
     } else if (curr.v == '[') {
         iter_skip(src);
         lua_newtable(L);
-        if (opts->mark_inline) {
+        if ((*opts)[TOMLOPTS_MARK_INLINE]) {
             lua_newtable(L);
             lua_pushinteger(L, TOML_ARRAY_INLINE);
             lua_setfield(L, -2, "toml_type");
@@ -635,9 +636,10 @@ bool parse_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts
 
 int tomlua_decode(lua_State *L) {
     // process arguments and options
-    TomluaUserOpts uopts = toml_user_opts_copy(get_opts_upval(L));
-    const bool strict = uopts.strict;
-    const bool int_keys = uopts.int_keys;
+    TomluaUserOpts uopts;
+    toml_user_opts_copy(&uopts, get_opts_upval(L));
+    const bool strict = uopts[TOMLOPTS_STRICT];
+    const bool int_keys = uopts[TOMLOPTS_INT_KEYS];
     // top. this will be our result at the end
     if (lua_istable(L, 2)) {
         lua_settop(L, 2);

@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include "types.h"
 #include "dates.h"
+#include "opts.h"
 #include "decode.h"
 #include "encode.h"
 
@@ -112,91 +113,6 @@ static int str_2_mul(lua_State *L) {
     return 1;
 }
 
-// negative taridx means all false
-static TomluaUserOpts opts_parse(lua_State *L, int taridx, int optidx) {
-    int top = lua_gettop(L);
-    TomluaUserOpts opts = {0};
-    if (taridx > 0) {
-        luaL_checktype(L, taridx, LUA_TTABLE);
-        lua_getfield(L, taridx, "strict");
-        opts.strict = lua_toboolean(L, -1);
-        lua_getfield(L, taridx, "fancy_tables");
-        opts.fancy_tables = lua_toboolean(L, -1);
-        lua_getfield(L, taridx, "int_keys");
-        opts.int_keys = lua_toboolean(L, -1);
-        lua_getfield(L, taridx, "fancy_dates");
-        opts.fancy_dates = lua_toboolean(L, -1);
-        lua_getfield(L, taridx, "multi_strings");
-        opts.multi_strings = lua_toboolean(L, -1);
-        lua_getfield(L, taridx, "mark_inline");
-        opts.mark_inline = lua_toboolean(L, -1);
-    }
-    lua_pushboolean(L, opts.strict);
-    lua_setfield(L, optidx, "strict");
-    lua_pushboolean(L, opts.fancy_tables);
-    lua_setfield(L, optidx, "fancy_tables");
-    lua_pushboolean(L, opts.int_keys);
-    lua_setfield(L, optidx, "int_keys");
-    lua_pushboolean(L, opts.fancy_dates);
-    lua_setfield(L, optidx, "fancy_dates");
-    lua_pushboolean(L, opts.multi_strings);
-    lua_setfield(L, optidx, "multi_strings");
-    lua_pushboolean(L, opts.mark_inline);
-    lua_setfield(L, optidx, "mark_inline");
-    lua_settop(L, top);
-    return opts;
-}
-static int opts_call(lua_State *L) {
-    TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
-    *opts = opts_parse(L, 2, 1);
-    return 0;
-}
-static int opts_index(lua_State *L) {
-    TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
-    const char *key = luaL_checkstring(L, 2);
-    if (strcmp(key, "strict") == 0) {
-        lua_pushboolean(L, opts->strict);
-    } else if (strcmp(key, "fancy_tables") == 0) {
-        lua_pushboolean(L, opts->fancy_tables);
-    } else if (strcmp(key, "int_keys") == 0) {
-        lua_pushboolean(L, opts->int_keys);
-    } else if (strcmp(key, "fancy_dates") == 0) {
-        lua_pushboolean(L, opts->fancy_dates);
-    } else if (strcmp(key, "multi_strings") == 0) {
-        lua_pushboolean(L, opts->multi_strings);
-    } else if (strcmp(key, "mark_inline") == 0) {
-        lua_pushboolean(L, opts->mark_inline);
-    } else {
-        lua_pushnil(L); // unknown key
-    }
-    return 1;
-}
-static int opts_newindex(lua_State *L) {
-    TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
-    const char *key = luaL_checkstring(L, 2);
-    int value = lua_toboolean(L, 3);
-    if (strcmp(key, "strict") == 0) {
-        opts->strict = value;
-    } else if (strcmp(key, "fancy_tables") == 0) {
-        opts->fancy_tables = value;
-    } else if (strcmp(key, "int_keys") == 0) {
-        opts->int_keys = value;
-    } else if (strcmp(key, "fancy_dates") == 0) {
-        opts->fancy_dates = value;
-    } else if (strcmp(key, "multi_strings") == 0) {
-        opts->multi_strings = value;
-    } else if (strcmp(key, "mark_inline") == 0) {
-        opts->mark_inline = value;
-    } else {
-        return luaL_error(L, "invalid option '%s'", key);
-    }
-    // mirror into table so `print(inspect(opts))` shows it
-    lua_pushvalue(L, 2); // key
-    lua_pushboolean(L, value);
-    lua_rawset(L, 1);
-    return 0;
-}
-
 int luaopen_tomlua(lua_State *L) {
     int argtop = lua_gettop(L);
     lua_newtable(L); // module table
@@ -206,9 +122,9 @@ int luaopen_tomlua(lua_State *L) {
     {
         TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
         if (lua_istable(L, 2)) {
-            *uopts = opts_parse(L, 2, argtop + 1);
+            opts_parse(L, uopts, 2, argtop + 1);
         } else {
-            *uopts = opts_parse(L, -1, argtop + 1);
+            opts_parse(L, uopts, -1, argtop + 1);
         }
     }
     lua_pushvalue(L, -1);
