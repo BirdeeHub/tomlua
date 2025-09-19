@@ -18,5 +18,6 @@ local function run_test_file(path)
 end
 
 run_test_file('tests')
+run_test_file('spec_compliance_tests')
 
 define.end_tests()
