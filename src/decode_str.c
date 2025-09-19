@@ -56,9 +56,12 @@ bool parse_basic_string(lua_State *L, str_buf *dst, str_iter *src, int erridx) {
                     bool is_long = next == 'U';
                     int hex_len = is_long ? 8 : 4;
                     char escaped[8];
-                    for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
+                    int i = 0;
+                    while (iter_peek(src).ok && i < hex_len) {
                         escaped[i] = iter_next(src).v;
+                        i++;
                     }
+                    if (i < hex_len) return set_tmlerr(new_tmlerr(L, erridx), false, 25, "incomplete unicode escape");
                     if (!push_unicode(L, dst, escaped, hex_len, erridx)) return false;
                 } break;
                 default:
@@ -107,9 +110,12 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src, int err
                     bool is_long = next == 'U';
                     int hex_len = is_long ? 8 : 4;
                     char escaped[8];
-                    for (int i = 0; iter_peek(src).ok && i < hex_len; i++) {
+                    int i = 0;
+                    while (iter_peek(src).ok && i < hex_len) {
                         escaped[i] = iter_next(src).v;
+                        i++;
                     }
+                    if (i < hex_len) return set_tmlerr(new_tmlerr(L, erridx), false, 25, "incomplete unicode escape");
                     if (!push_unicode(L, dst, escaped, hex_len, erridx)) return false;
                 } break;
                 default:
@@ -122,6 +128,12 @@ bool parse_multi_basic_string(lua_State *L, str_buf *dst, str_iter *src, int err
             if (!buf_push(dst, '\n')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
         } else if (c == '"' && iter_starts_with(src, "\"\"", 2)) {
             iter_skip_n(src, 2);
+            iter_result n = iter_peek(src);
+            for (int i = 0; n.ok && n.v == '"' && i < 2; i++) {
+                iter_skip(src);
+                n = iter_peek(src);
+                if (!buf_push(dst, '"')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
+            }
             return true;
         } else {
             if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
@@ -154,6 +166,12 @@ bool parse_multi_literal_string(lua_State *L, str_buf *dst, str_iter *src, int e
         char c = current.v;
         if (c == '\'' && iter_starts_with(src, "''", 2)) {
             iter_skip_n(src, 2);
+            iter_result n = iter_peek(src);
+            for (int i = 0; n.ok && n.v == '\'' && i < 2; i++) {
+                iter_skip(src);
+                n = iter_peek(src);
+                if (!buf_push(dst, '\'')) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
+            }
             return true;
         } else {
             if (!buf_push(dst, c)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");

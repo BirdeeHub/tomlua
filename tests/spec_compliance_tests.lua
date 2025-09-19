@@ -161,12 +161,20 @@ text = """Hello
 World
 """
 text2 = """Hello\nWorld\n"""
+text3 = """"This," she said, "is just a pointless statement.""""
+text4 = """""five quotes?!?!"""""
+text5 = ''''That,' she said, 'is still pointless.''''
+text6 = '''''five apostrophes??!?!'''''
 ]]
         local data, err = tomlua_multi_strings.decode(toml_str)
         it(err == nil, "Should not error")
         it(type(data.text) == "userdata", "Multiline string should be userdata with multi_strings")
-        it(tostring(data.text) == "Hello\nWorld\n", "Multiline string content should be correct")
-        it(tostring(data.text2) == "Hello\nWorld\n", "Multiline string content2 should be correct")
+        it(tostring(data.text) == "Hello\nWorld\n", "Multiline string content 1 should be correct")
+        it(tostring(data.text2) == "Hello\nWorld\n", "Multiline string content 2 should be correct")
+        it(tostring(data.text3) == [["This," she said, "is just a pointless statement."]], "Multiline string content 3 should be correct")
+        it(tostring(data.text4) == [[""five quotes?!?!""]], "Multiline string content 4 should be correct")
+        it(tostring(data.text5) == [['That,' she said, 'is still pointless.']], "Multiline string content 5 should be correct")
+        it(tostring(data.text6) == [[''five apostrophes??!?!'']], "Multiline string content 6 should be correct")
     end)
 
     -- Mark Inline
