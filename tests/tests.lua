@@ -342,6 +342,8 @@ text6 = '''''five apostrophes??!?!'''''
         local tiny = "tiny = 1.00000000999999999999999999999000000001123213212131e-316"
         local data, err = tomlua_underflow_errors.decode(tiny)
         it(err ~= nil, "Should error on underflow when underflow_errors")
+        data, err = tomlua_underflow_errors.decode("normal = 1004.44")
+        it(err == nil, "Should not error on normal values when underflow_errors")
         data, err = tomlua_default.decode(tiny)
         it(err == nil, "Should not error on underflow otherwise")
         it(data.tiny ~= 0.0, "Underflow should preserve subnormal value or 0 for extreme underflow")
@@ -362,6 +364,8 @@ text6 = '''''five apostrophes??!?!'''''
         local neghuge = "neghuge = -1e400"
         local data, err = tomlua_overflow_errors.decode(neghuge)
         it(err ~= nil, "Should error on negative overflow when overflow_errors")
+        data, err = tomlua_overflow_errors.decode("normal = 1004.44")
+        it(err == nil, "Should not error on normal values when overflow_errors")
         data, err = tomlua_default.decode(neghuge)
         it(err == nil, "Should not error on negative overflow otherwise")
         it(data.neghuge == -math.huge, "Negative overflow should be converted to -INFINITY")
@@ -375,6 +379,8 @@ neg_huge_int = -9999999999999999999999999999999999999999999999999999999999999999
 ]]
         local data, err = tomlua_overflow_errors.decode(huge_int)
         it(err ~= nil, "Should error on extremely large integer when overflow_errors")
+        data, err = tomlua_overflow_errors.decode("normal = 1004")
+        it(err == nil, "Should not error on normal values when overflow_errors")
         data, err = tomlua_default.decode(huge_int)
         it(err == nil, "Should not error on extremely large integer otherwise")
         -- Lua converts integers that don't fit into float or integer types, so expect it as a float
