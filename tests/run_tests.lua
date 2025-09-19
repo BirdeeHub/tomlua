@@ -8,7 +8,7 @@ if tomlua_test_dir == nil then
 	print("Usage: lua ./tests/init.lua -- <test_dir> <tomlua_lib_dir>")
 	os.exit(1)
 end
-package.path = ("%s/?.lua;"):format(tomlua_test_dir) .. package.path
+package.path = ("%s/?.lua;%s/?/init.lua;"):format(tomlua_test_dir, tomlua_test_dir) .. package.path
 package.cpath = ("%s/?.so;"):format(tomlua_dir) .. package.cpath
 local define = require('gambiarra')
 
