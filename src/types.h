@@ -87,6 +87,12 @@ static const char *toml_type_to_lua_name(int t) {
         return "UNTYPED";
     }
 }
+static inline TomlType toml_type_from_name(const char * name) {
+    for (int i = 1; i < TOML_MAX_TYPES; i++) {
+        if (strcmp(name, toml_type_names[i]) == 0) return i;
+    }
+    return TOML_UNTYPED;
+}
 
 static inline int absindex(int top, int idx) {
     if (idx > 0 || idx <= LUA_REGISTRYINDEX)  // already absolute or special

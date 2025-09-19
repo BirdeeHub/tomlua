@@ -138,7 +138,14 @@ print(date > date2) -- true
 print(date < date2) -- false
 print("date1", date)
 
+print(date.toml_type)
 print(tomlua.typename(tomlua.type(date)))
+date.toml_type = "LOCAL_TIME"
+print(date.toml_type)
+print(date)
+date.toml_type = tomlua.types.OFFSET_DATETIME
+print(date.toml_type)
+print(date)
 
 
 print("ERROR TEST")

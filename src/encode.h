@@ -17,6 +17,10 @@ static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
                 lua_pop(L, 1);
                 return (TomlType)n;
             }
+        } else if (lua_isstring(L, -1)) {
+            TomlType t = toml_type_from_name(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            return t;
         }
         lua_pop(L, 1);
     }

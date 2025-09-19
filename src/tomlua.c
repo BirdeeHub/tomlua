@@ -67,7 +67,7 @@ static int tomlua_type_of(lua_State *L) {
         case LUA_TUSERDATA:
             if(udata_is_of_type(L, 1, "TomluaDate")) {
                 TomlDate *date = (TomlDate *)lua_touserdata(L, 1);
-                lua_pushnumber(L, date->toml_type);
+                lua_pushnumber(L, (*date)[TOMLDATE_TOML_TYPE]);
                 return 1;
             } else if (udata_is_of_type(L, 1, "TomluaMultiStr")) {
                 lua_pushnumber(L, TOML_STRING_MULTI);

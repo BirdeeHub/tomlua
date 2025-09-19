@@ -3,13 +3,33 @@
 #define SRC_DATES_H_
 
 #include <lua.h>
-#include <string.h>
-#include <strings.h>
 #include <lauxlib.h>
 #include "./types.h"
 
-static const uint8_t DATE_LENGTH = 10;
-static const char *DATE_FIELD_NAMES[10] = {
+typedef enum {
+    TOMLDATE_TOML_TYPE,
+    // e.g. 1979
+    TOMLDATE_YEAR,
+    // 1–12
+    TOMLDATE_MONTH,
+    // 1–31
+    TOMLDATE_DAY,
+    // 0–23
+    TOMLDATE_HOUR,
+    // 0–59
+    TOMLDATE_MINUTE,
+    // 0–59 (leap second 60 possible if you want to support it)
+    TOMLDATE_SECOND,
+    // fractional seconds, 0–999999
+    // (millisecond precision is required; microsecond or nanosecond optional)
+    TOMLDATE_FRACTIONAL,
+    // UTC offset hours, e.g. -7 for -07:00
+    TOMLDATE_OFFSET_HOUR,
+    // UTC offset minutes, usually 0 but can be 30/45 for some zones
+    TOMLDATE_OFFSET_MINUTE,
+    TOMLDATE_DATE_LENGTH,
+} TOMLDATE_FIELDS;
+static const char *DATE_FIELD_NAMES[TOMLDATE_DATE_LENGTH] = {
     "toml_type",
     "year",
     "month",
@@ -21,76 +41,13 @@ static const char *DATE_FIELD_NAMES[10] = {
     "offset_hour",
     "offset_minute",
 };
+typedef int TomlDate[TOMLDATE_DATE_LENGTH];
 
-typedef struct {
-    TomlType toml_type;
-    // e.g. 1979
-    int year;
-    // 1–12
-    int month;
-    // 1–31
-    int day;
-    // 0–23
-    int hour;
-    // 0–59
-    int minute;
-    // 0–59 (leap second 60 possible if you want to support it)
-    int second;
-    // fractional seconds, 0–999999
-    // (millisecond precision is required; microsecond or nanosecond optional)
-    int fractional;
-    // UTC offset hours, e.g. -7 for -07:00
-    int offset_hour;
-    // UTC offset minutes, usually 0 but can be 30/45 for some zones
-    int offset_minute;
-} TomlDate;
-
-static int string_2_date_field_idx(const char *str) {
-    for (uint8_t i = 0; i < DATE_LENGTH; i++) {
+static TOMLDATE_FIELDS string_2_date_field_idx(const char *str) {
+    for (uint8_t i = 0; i < TOMLDATE_DATE_LENGTH; i++) {
         if (strcmp(str, DATE_FIELD_NAMES[i]) == 0) return i;
     }
-    return -1;
-}
-
-typedef struct {
-    int v;
-    bool ok;
-} date_result;
-
-static date_result date_field_by_idx(TomlDate *date, int idx) {
-    date_result value = {0};
-    switch (idx) {
-        case 0: value.v = date->toml_type; break;
-        case 1: value.v = date->year; break;
-        case 2: value.v = date->month; break;
-        case 3: value.v = date->day; break;
-        case 4: value.v = date->hour; break;
-        case 5: value.v = date->minute; break;
-        case 6: value.v = date->second; break;
-        case 7: value.v = date->fractional; break;
-        case 8: value.v = date->offset_hour; break;
-        case 9: value.v = date->offset_minute; break;
-        default: return value;
-    }
-    value.ok = true;
-    return value;
-}
-
-static bool date_field_set_by_idx(TomlDate *date, int idx, int val) {
-    switch (idx) {
-        case 0: date->toml_type = val; break;
-        case 1: date->year = val; break;
-        case 2: date->month = val; break;
-        case 3: date->day = val; break;
-        case 4: date->hour = val; break;
-        case 5: date->minute = val; break;
-        case 6: date->second = val; break;
-        case 7: date->fractional = val; break;
-        case 8: date->offset_hour = val; break;
-        case 9: date->offset_minute = val; break;
-        default: return false;
-    }
-    return true;
+    return TOMLDATE_DATE_LENGTH;
 }
 
 bool parse_toml_date(str_iter *src, TomlDate *date);

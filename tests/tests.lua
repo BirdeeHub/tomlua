@@ -184,6 +184,8 @@ key = 2
         it(err == nil, "Should not error")
         it(type(data.date) == "userdata", "Date should be userdata with fancy_dates")
         it(data.date.year == 1979, "Date year should be correct")
+        it(data.date.hour == 7, "Date hour should be correct")
+        it(data.date.day == 27, "Date day should be correct")
     end)
 
     -- Integer Keys
@@ -229,14 +231,14 @@ text6 = '''''five apostrophes??!?!'''''
         local toml_str = "table = { a = 1 }"
         local data, err = tomlua_mark_inline.decode(toml_str)
         it(err == nil, "Should not error")
-        it(getmetatable(data.table) and getmetatable(data.table).toml_type == tomlua_mark_inline.types.TABLE_INLINE, "Inline table should be marked as TABLE_INLINE")
+        it(tomlua_default.type(data.table) == tomlua_mark_inline.types.TABLE_INLINE, "Inline table should be marked as TABLE_INLINE")
     end)
 
     define("mark_inline option for inline array", function()
         local toml_str = "array = [1, 2]"
         local data, err = tomlua_mark_inline.decode(toml_str)
         it(err == nil, "Should not error")
-        it(getmetatable(data.array) and getmetatable(data.array).toml_type == tomlua_mark_inline.types.ARRAY_INLINE, "Inline array should be marked as ARRAY_INLINE")
+        it(tomlua_default.type(data.array) == tomlua_mark_inline.types.ARRAY_INLINE, "Inline array should be marked as ARRAY_INLINE")
     end)
 
     -- Encoding tests (basic round-trip)

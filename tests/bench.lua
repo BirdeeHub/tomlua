@@ -17,10 +17,10 @@ end
 local run_toml_edit = tonumber(arg[2]) ~= 0
 local iterations = tonumber(arg[3]) or tonumber(arg[2]) or 100
 
-local function stats(target, elapsed, n)
+local function stats(target, elapsed, n, is_encode)
     n = n or iterations
-    return ("Parsed %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µs/iteration")
-        :format(target, n, elapsed, n / elapsed, elapsed * 1e6 / n)
+    return ("%s %s %d times in %.6f seconds, avg. %.6f iterations per second, avg. %.2f µs/iteration")
+        :format(is_encode and "Emitted" or "Parsed", target, n, elapsed, n / elapsed, elapsed * 1e6 / n)
 end
 local function rate_compare(prefix, a, b, n)
     n = n or iterations
@@ -124,7 +124,7 @@ local elapsed = os.clock() - start_time
 
 print("Last result:", last_result)
 print("ENCODE BENCH")
-print(stats("TOML", elapsed))
+print(stats("TOML", elapsed, nil, true))
 
 
 -- Benchmark against cjson
@@ -140,5 +140,5 @@ for _ = 1, iterations do
 end
 
 local elapsed2 = os.clock() - start_time
-print(stats("JSON", elapsed2))
+print(stats("JSON", elapsed2, nil, true))
 print(rate_compare("tomlua/cjson", elapsed, elapsed2))

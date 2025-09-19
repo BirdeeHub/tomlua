@@ -3,11 +3,15 @@
 #include <lua.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <lauxlib.h>
 #include "./types.h"
 #include "./dates.h"
 
+#define DATE_GET(d, field) ((d)[TOMLDATE_##field])
+
+static inline void date_zero(TomlDate *date) {
+    memset(date, 0, sizeof(TomlDate));
+}
 static inline int digits_in_int(int value) {
     int digits;
     if (value == 0) {
@@ -23,7 +27,7 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
     char tmp[64];
     int n;
 
-    int normed_frac = date->fractional;
+    int normed_frac = DATE_GET(*date, FRACTIONAL);
     {
         int digits = digits_in_int(normed_frac);
         while (digits < 6) {
@@ -32,20 +36,20 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
         }
     }
 
-    switch (date->toml_type) {
+    switch ((*date)[TOMLDATE_TOML_TYPE]) {
         case TOML_LOCAL_DATE:
             n = snprintf(tmp, sizeof(tmp), "%04d-%02d-%02d",
-                         date->year, date->month, date->day);
+                         DATE_GET(*date, YEAR), DATE_GET(*date, MONTH), DATE_GET(*date, DAY));
             if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
             return buf_push_str(buf, tmp, (size_t)n);
 
         case TOML_LOCAL_TIME:
             n = snprintf(tmp, sizeof(tmp), "%02d:%02d:%02d",
-                         date->hour, date->minute, date->second);
+                         DATE_GET(*date, HOUR), DATE_GET(*date, MINUTE), DATE_GET(*date, SECOND));
             if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
             if (!buf_push_str(buf, tmp, (size_t)n)) return false;
 
-            if (date->fractional > 0) {
+            if (DATE_GET(*date, FRACTIONAL) > 0) {
                 n = snprintf(tmp, sizeof(tmp), ".%d", normed_frac);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
                 if (!buf_push_str(buf, tmp, (size_t)n)) return false;
@@ -54,12 +58,12 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
 
         case TOML_LOCAL_DATETIME:
             n = snprintf(tmp, sizeof(tmp), "%04d-%02d-%02dT%02d:%02d:%02d",
-                         date->year, date->month, date->day,
-                         date->hour, date->minute, date->second);
+                         DATE_GET(*date, YEAR), DATE_GET(*date, MONTH), DATE_GET(*date, DAY),
+                         DATE_GET(*date, HOUR), DATE_GET(*date, MINUTE), DATE_GET(*date, SECOND));
             if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
             if (!buf_push_str(buf, tmp, (size_t)n)) return false;
 
-            if (date->fractional > 0) {
+            if (DATE_GET(*date, FRACTIONAL) > 0) {
                 n = snprintf(tmp, sizeof(tmp), ".%d", normed_frac);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
                 if (!buf_push_str(buf, tmp, (size_t)n)) return false;
@@ -68,23 +72,23 @@ bool buf_push_toml_date(str_buf *buf, TomlDate *date) {
 
         case TOML_OFFSET_DATETIME:
             n = snprintf(tmp, sizeof(tmp), "%04d-%02d-%02dT%02d:%02d:%02d",
-                         date->year, date->month, date->day,
-                         date->hour, date->minute, date->second);
+                         DATE_GET(*date, YEAR), DATE_GET(*date, MONTH), DATE_GET(*date, DAY),
+                         DATE_GET(*date, HOUR), DATE_GET(*date, MINUTE), DATE_GET(*date, SECOND));
             if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
             if (!buf_push_str(buf, tmp, (size_t)n)) return false;
 
-            if (date->fractional > 0) {
+            if (DATE_GET(*date, FRACTIONAL) > 0) {
                 n = snprintf(tmp, sizeof(tmp), ".%d", normed_frac);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
                 if (!buf_push_str(buf, tmp, (size_t)n)) return false;
             }
 
-            if (date->offset_hour == 0 && date->offset_minute == 0) {
+            if (DATE_GET(*date, OFFSET_HOUR) == 0 && DATE_GET(*date, OFFSET_MINUTE) == 0) {
                 if (!buf_push(buf, 'Z')) return false;
             } else {
-                char sign = (date->offset_hour < 0 || date->offset_minute < 0) ? '-' : '+';
-                int oh = date->offset_hour < 0 ? -date->offset_hour : date->offset_hour;
-                int om = date->offset_minute < 0 ? -date->offset_minute : date->offset_minute;
+                char sign = (DATE_GET(*date, OFFSET_HOUR) < 0 || DATE_GET(*date, OFFSET_MINUTE) < 0) ? '-' : '+';
+                int oh = DATE_GET(*date, OFFSET_HOUR) < 0 ? -DATE_GET(*date, OFFSET_HOUR) : DATE_GET(*date, OFFSET_HOUR);
+                int om = DATE_GET(*date, OFFSET_MINUTE) < 0 ? -DATE_GET(*date, OFFSET_MINUTE) : DATE_GET(*date, OFFSET_MINUTE);
 
                 n = snprintf(tmp, sizeof(tmp), "%c%02d:%02d", sign, oh, om);
                 if (n < 0 || (size_t)n >= sizeof(tmp)) return false;
@@ -119,11 +123,11 @@ static inline bool expect_char(str_iter *iter, char c) {
 }
 
 static bool parse_time(str_iter *src, TomlDate *date) {
-    if (!parse_number(src, 2, &date->hour)) return false;
+    if (!parse_number(src, 2, &DATE_GET(*date, HOUR))) return false;
     if (!expect_char(src, ':')) return false;
-    if (!parse_number(src, 2, &date->minute)) return false;
+    if (!parse_number(src, 2, &DATE_GET(*date, MINUTE))) return false;
     if (!expect_char(src, ':')) return false;
-    if (!parse_number(src, 2, &date->second)) return false;
+    if (!parse_number(src, 2, &DATE_GET(*date, SECOND))) return false;
 
     iter_result dot = iter_peek(src);
     if (dot.ok && dot.v == '.') {
@@ -139,35 +143,35 @@ static bool parse_time(str_iter *src, TomlDate *date) {
             iter_skip(src);
             cur = iter_peek(src);
         }
-        date->fractional = val;
+        DATE_GET(*date, FRACTIONAL) = val;
     }
     return true;
 }
 
 bool parse_toml_date(str_iter *src, TomlDate *date) {
     // Reset struct
-    *date = (TomlDate){0};
+    date_zero(date);
 
     // Parse YYYY-MM-DD
-    if (!parse_number(src, 4, &date->year)) {
+    if (!parse_number(src, 4, &DATE_GET(*date, YEAR))) {
         if (!parse_time(src, date)) return false;
-        date->toml_type = TOML_LOCAL_TIME;
+        DATE_GET(*date, TOML_TYPE) = TOML_LOCAL_TIME;
         return true;
     }
     if (!expect_char(src, '-')) return false;
-    if (!parse_number(src, 2, &date->month)) return false;
+    if (!parse_number(src, 2, &DATE_GET(*date, MONTH))) return false;
     if (!expect_char(src, '-')) return false;
-    if (!parse_number(src, 2, &date->day)) return false;
+    if (!parse_number(src, 2, &DATE_GET(*date, DAY))) return false;
 
     iter_result sep = iter_peek(src);
     if (!sep.ok) {
-        date->toml_type = TOML_LOCAL_DATE;  // just a date, no time
+        DATE_GET(*date, TOML_TYPE) = TOML_LOCAL_DATE;  // just a date, no time
         return true;
     }
 
     // Optional 'T' or space separator
     if (sep.v != 'T' && sep.v != ' ') {
-        date->toml_type = TOML_LOCAL_DATE;  // just a date, no time
+        DATE_GET(*date, TOML_TYPE) = TOML_LOCAL_DATE;  // just a date, no time
         return true;
     }
     iter_skip(src);  // consume separator
@@ -178,10 +182,10 @@ bool parse_toml_date(str_iter *src, TomlDate *date) {
     iter_result off = iter_peek(src);
     if (off.ok && (off.v == 'Z' || off.v == '+' || off.v == '-')) {
         if (off.v == 'Z') {
-            date->offset_hour = 0;
-            date->offset_minute = 0;
+            DATE_GET(*date, OFFSET_HOUR) = 0;
+            DATE_GET(*date, OFFSET_MINUTE) = 0;
             iter_skip(src);
-            date->toml_type = TOML_OFFSET_DATETIME;  // just a date, no time
+            DATE_GET(*date, TOML_TYPE) = TOML_OFFSET_DATETIME;  // just a date, no time
             return true;
         } else {
             int sign = (off.v == '-') ? -1 : 1;
@@ -190,15 +194,174 @@ bool parse_toml_date(str_iter *src, TomlDate *date) {
             if (!parse_number(src, 2, &oh)) return false;
             if (!expect_char(src, ':')) return false;
             if (!parse_number(src, 2, &om)) return false;
-            date->offset_hour = sign * oh;
-            date->offset_minute = sign * om;
-            date->toml_type = TOML_OFFSET_DATETIME;  // just a date, no time
+            DATE_GET(*date, OFFSET_HOUR) = sign * oh;
+            DATE_GET(*date, OFFSET_MINUTE) = sign * om;
+            DATE_GET(*date, TOML_TYPE) = TOML_OFFSET_DATETIME;  // just a date, no time
             return true;
         }
     }
 
-    date->toml_type = TOML_LOCAL_DATETIME;
+    DATE_GET(*date, TOML_TYPE) = TOML_LOCAL_DATETIME;
     return true;
+}
+
+static const int DAYS_IN_MONTH[12] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+
+static inline bool is_leap_year(int year) {
+    return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
+}
+
+static inline int days_in_month(int year, int month) {
+    if (month == 2 && is_leap_year(year)) return 29;
+    return DAYS_IN_MONTH[month-1];
+}
+
+static uint64_t days_since_year0(int year, int month, int day) {
+    // Count all days in previous years
+    uint64_t y = (uint64_t)year;
+    uint64_t total_days = y * 365ULL;          // base days
+    total_days += y / 4;                       // leap years every 4 years
+    total_days -= y / 100;                     // subtract century years
+    total_days += y / 400;                     // add back 400-year multiples
+
+    // Add days for previous months in current year
+    for (int m = 1; m < month; m++) {
+        total_days += DAYS_IN_MONTH[m-1];
+    }
+    // Add one more day if past February and leap year
+    if (month > 2 && is_leap_year(year)) total_days += 1;
+
+    // Add days in current month
+    total_days += (day - 1); // days are 1-based
+    return total_days;
+}
+
+// Convert TomlDate to a uint64_t "timestamp" in microseconds since 0000-01-01T00:00:00 UTC
+static uint64_t tomldate_to_utc_timestamp(const TomlDate *d) {
+    int y = DATE_GET(*d, YEAR);
+    int m = DATE_GET(*d, MONTH);
+    int day = DATE_GET(*d, DAY);
+    int hour = DATE_GET(*d, HOUR) - DATE_GET(*d, OFFSET_HOUR);
+    int minute = DATE_GET(*d, MINUTE) - DATE_GET(*d, OFFSET_MINUTE);
+    int second = DATE_GET(*d, SECOND);
+    int frac = DATE_GET(*d, FRACTIONAL);
+
+    // Normalize minutes/hours/days
+    minute += hour * 60;
+    hour = minute / 60;
+    minute %= 60;
+    if (minute < 0) { minute += 60; hour -= 1; }
+    day += hour / 24;
+    hour %= 24;
+    if (hour < 0) { hour += 24; day -= 1; }
+
+    // Normalize day/month/year
+    while (day <= 0) {
+        m -= 1;
+        if (m <= 0) { m = 12; y -= 1; }
+        day += days_in_month(y, m);
+    }
+    while (day > days_in_month(y, m)) {
+        day -= days_in_month(y, m);
+        m += 1;
+        if (m > 12) { m = 1; y += 1; }
+    }
+
+    // Count total days since year 0
+    uint64_t total_days = days_since_year0(y, m, day);
+
+    uint64_t total_seconds = total_days * 86400ULL + hour * 3600ULL + minute * 60ULL + second;
+    int digits = digits_in_int(frac);
+    uint64_t microseconds = frac;
+    while (digits < 6) { microseconds *= 10; digits++; } // scale to microseconds
+    while (digits > 6) { microseconds /= 10; digits--; } // truncate if too many digits
+    uint64_t timestamp = total_seconds * 1000000ULL + microseconds; // fractional assumed in microseconds
+    return timestamp;
+}
+
+static void utc_timestamp_to_tomldate(uint64_t timestamp, TomlDate *date) {
+    // Reset the date
+    date_zero(date);
+    DATE_GET(*date, TOML_TYPE) = TOML_LOCAL_DATETIME;
+
+    // Split timestamp into seconds and microseconds
+    uint64_t total_seconds = timestamp / 1000000ULL;
+    int microseconds = timestamp % 1000000ULL;
+    DATE_GET(*date, FRACTIONAL) = microseconds;
+
+    // Extract hour, minute, second
+    DATE_GET(*date, SECOND) = total_seconds % 60;
+    total_seconds /= 60;
+    DATE_GET(*date, MINUTE) = total_seconds % 60;
+    total_seconds /= 60;
+    DATE_GET(*date, HOUR) = total_seconds % 24;
+    uint64_t total_days = total_seconds / 24;
+
+    // Compute year
+    int y = 0;
+    while (1) {
+        int days_in_year = is_leap_year(y) ? 366 : 365;
+        if (total_days >= (uint64_t)days_in_year) {
+            total_days -= days_in_year;
+            y++;
+        } else {
+            break;
+        }
+    }
+    DATE_GET(*date, YEAR) = y;
+
+    // Compute month
+    int m = 1;
+    while (1) {
+        int dim = days_in_month(y, m);
+        if (total_days >= (uint64_t)dim) {
+            total_days -= dim;
+            m++;
+        } else {
+            break;
+        }
+    }
+    DATE_GET(*date, MONTH) = m;
+
+    // Remaining days
+    DATE_GET(*date, DAY) = (int)total_days + 1; // days are 1-based
+
+    // No offset by default
+    DATE_GET(*date, OFFSET_HOUR) = 0;
+    DATE_GET(*date, OFFSET_MINUTE) = 0;
+}
+
+static int compare_dates(const TomlDate *a, const TomlDate *b) {
+    uint64_t ts_a = tomldate_to_utc_timestamp(a);
+    uint64_t ts_b = tomldate_to_utc_timestamp(b);
+
+    if (ts_a < ts_b) return -1;
+    if (ts_a > ts_b) return 1;
+    return 0;
+}
+
+// Equality: return true if timestamps are equal
+static int ldate_eq(lua_State *L) {
+    TomlDate *a = (TomlDate *)lua_touserdata(L, 1);
+    TomlDate *b = (TomlDate *)lua_touserdata(L, 2);
+    lua_pushboolean(L, compare_dates(a, b) == 0);
+    return 1;
+}
+
+// Less than: return true if a < b
+static int ldate_lt(lua_State *L) {
+    TomlDate *a = (TomlDate *)lua_touserdata(L, 1);
+    TomlDate *b = (TomlDate *)lua_touserdata(L, 2);
+    lua_pushboolean(L, compare_dates(a, b) < 0);
+    return 1;
+}
+
+// Less than or equal: return true if a <= b
+static int ldate_le(lua_State *L) {
+    TomlDate *a = (TomlDate *)lua_touserdata(L, 1);
+    TomlDate *b = (TomlDate *)lua_touserdata(L, 2);
+    lua_pushboolean(L, compare_dates(a, b) <= 0);
+    return 1;
 }
 
 static int ldate_tostring(lua_State *L) {
@@ -239,9 +402,12 @@ static int ldate_index(lua_State *L) {
             lua_pushnil(L);
             return 1;
     }
-    date_result dr = date_field_by_idx(date, key);
-    if (dr.ok) {
-        lua_pushnumber(L, dr.v);
+    if (0 <= key && key < TOMLDATE_DATE_LENGTH) {
+        if (key == TOMLDATE_TOML_TYPE) {
+            lua_pushstring(L, toml_type_names[DATE_GET(*date, TOML_TYPE)]);
+        } else {
+            lua_pushnumber(L, (*date)[key]);
+        }
     } else {
         lua_settop(L, 0);
         lua_pushnil(L);
@@ -271,19 +437,22 @@ static int ldate_newindex(lua_State *L) {
             return luaL_error(L, "invalid key type for TomlDate");
     }
 
-    if (key < 0 || key >= DATE_LENGTH) {
+    if (key < 0 || key >= TOMLDATE_DATE_LENGTH) {
         return luaL_error(L, "invalid field index");
     }
 
-    if (!lua_isnumber(L, 3)) {
+    int vtype = lua_type(L, 3);
+    int value;
+    if (key == TOMLDATE_TOML_TYPE && vtype == LUA_TSTRING) {
+        value = toml_type_from_name(lua_tostring(L, 3));
+    } else if (vtype == LUA_TNUMBER) {
+        value = (int)lua_tointeger(L, 3);
+    } else {
         return luaL_error(L, "value must be a number");
     }
-    int value = (int)lua_tointeger(L, 3);
 
     // Actually set the field
-    if (!date_field_set_by_idx(date, key, value)) {
-        return luaL_error(L, "failed to set TomlDate field");
-    }
+    (*date)[key] = value;
 
     return 0; // __newindex returns nothing
 }
@@ -313,7 +482,7 @@ static int ldate_iter(lua_State *L, bool is_ipairs) {
         key = 0;
         lua_settop(L, 1);
     }
-    if (key < 0 || key >= DATE_LENGTH) {
+    if (key < 0 || key >= TOMLDATE_DATE_LENGTH) {
         lua_settop(L, 0);
         lua_pushnil(L);
         lua_pushnil(L);
@@ -324,9 +493,12 @@ static int ldate_iter(lua_State *L, bool is_ipairs) {
     } else {
         lua_pushstring(L, DATE_FIELD_NAMES[key]);
     }
-    date_result dr = date_field_by_idx(date, key);
-    if (dr.ok) {
-        lua_pushnumber(L, dr.v);
+    if (0 <= key && key < TOMLDATE_DATE_LENGTH) {
+        if (key == TOMLDATE_TOML_TYPE) {
+            lua_pushstring(L, toml_type_names[DATE_GET(*date, TOML_TYPE)]);
+        } else {
+            lua_pushnumber(L, (*date)[key]);
+        }
     } else {
         lua_settop(L, 0);
         lua_pushnil(L);
@@ -358,165 +530,6 @@ static int ldate_pairs(lua_State *L) {
     return 3;
 }
 
-static const int DAYS_IN_MONTH[12] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
-
-static inline bool is_leap_year(int year) {
-    return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
-}
-
-static inline int days_in_month(int year, int month) {
-    if (month == 2 && is_leap_year(year)) return 29;
-    return DAYS_IN_MONTH[month-1];
-}
-
-static uint64_t days_since_year0(int year, int month, int day) {
-    // Count all days in previous years
-    uint64_t y = (uint64_t)year;
-    uint64_t total_days = y * 365ULL;          // base days
-    total_days += y / 4;                       // leap years every 4 years
-    total_days -= y / 100;                     // subtract century years
-    total_days += y / 400;                     // add back 400-year multiples
-
-    // Add days for previous months in current year
-    for (int m = 1; m < month; m++) {
-        total_days += DAYS_IN_MONTH[m-1];
-    }
-    // Add one more day if past February and leap year
-    if (month > 2 && is_leap_year(year)) total_days += 1;
-
-    // Add days in current month
-    total_days += (day - 1); // days are 1-based
-    return total_days;
-}
-
-// Convert TomlDate to a uint64_t "timestamp" in microseconds since 0000-01-01T00:00:00 UTC
-static uint64_t tomldate_to_utc_timestamp(const TomlDate *d) {
-    int y = d->year;
-    int m = d->month;
-    int day = d->day;
-    int hour = d->hour - d->offset_hour;
-    int minute = d->minute - d->offset_minute;
-    int second = d->second;
-    int frac = d->fractional;
-
-    // Normalize minutes/hours/days
-    minute += hour * 60;
-    hour = minute / 60;
-    minute %= 60;
-    if (minute < 0) { minute += 60; hour -= 1; }
-    day += hour / 24;
-    hour %= 24;
-    if (hour < 0) { hour += 24; day -= 1; }
-
-    // Normalize day/month/year
-    while (day <= 0) {
-        m -= 1;
-        if (m <= 0) { m = 12; y -= 1; }
-        day += days_in_month(y, m);
-    }
-    while (day > days_in_month(y, m)) {
-        day -= days_in_month(y, m);
-        m += 1;
-        if (m > 12) { m = 1; y += 1; }
-    }
-
-    // Count total days since year 0
-    uint64_t total_days = days_since_year0(y, m, day);
-
-    uint64_t total_seconds = total_days * 86400ULL + hour * 3600ULL + minute * 60ULL + second;
-    int digits = digits_in_int(frac);
-    uint64_t microseconds = frac;
-    while (digits < 6) { microseconds *= 10; digits++; } // scale to microseconds
-    while (digits > 6) { microseconds /= 10; digits--; } // truncate if too many digits
-    uint64_t timestamp = total_seconds * 1000000ULL + microseconds; // fractional assumed in microseconds
-    return timestamp;
-}
-
-static void utc_timestamp_to_tomldate(uint64_t timestamp, TomlDate *date) {
-    // Reset the date
-    *date = (TomlDate){0};
-    date->toml_type = TOML_LOCAL_DATETIME;
-
-    // Split timestamp into seconds and microseconds
-    uint64_t total_seconds = timestamp / 1000000ULL;
-    int microseconds = timestamp % 1000000ULL;
-    date->fractional = microseconds;
-
-    // Extract hour, minute, second
-    date->second = total_seconds % 60;
-    total_seconds /= 60;
-    date->minute = total_seconds % 60;
-    total_seconds /= 60;
-    date->hour = total_seconds % 24;
-    uint64_t total_days = total_seconds / 24;
-
-    // Compute year
-    int y = 0;
-    while (1) {
-        int days_in_year = is_leap_year(y) ? 366 : 365;
-        if (total_days >= (uint64_t)days_in_year) {
-            total_days -= days_in_year;
-            y++;
-        } else {
-            break;
-        }
-    }
-    date->year = y;
-
-    // Compute month
-    int m = 1;
-    while (1) {
-        int dim = days_in_month(y, m);
-        if (total_days >= (uint64_t)dim) {
-            total_days -= dim;
-            m++;
-        } else {
-            break;
-        }
-    }
-    date->month = m;
-
-    // Remaining days
-    date->day = (int)total_days + 1; // days are 1-based
-
-    // No offset by default
-    date->offset_hour = 0;
-    date->offset_minute = 0;
-}
-
-static int compare_dates(const TomlDate *a, const TomlDate *b) {
-    uint64_t ts_a = tomldate_to_utc_timestamp(a);
-    uint64_t ts_b = tomldate_to_utc_timestamp(b);
-
-    if (ts_a < ts_b) return -1;
-    if (ts_a > ts_b) return 1;
-    return 0;
-}
-
-// Equality: return true if timestamps are equal
-static int ldate_eq(lua_State *L) {
-    TomlDate *a = (TomlDate *)lua_touserdata(L, 1);
-    TomlDate *b = (TomlDate *)lua_touserdata(L, 2);
-    lua_pushboolean(L, compare_dates(a, b) == 0);
-    return 1;
-}
-
-// Less than: return true if a < b
-static int ldate_lt(lua_State *L) {
-    TomlDate *a = (TomlDate *)lua_touserdata(L, 1);
-    TomlDate *b = (TomlDate *)lua_touserdata(L, 2);
-    lua_pushboolean(L, compare_dates(a, b) < 0);
-    return 1;
-}
-
-// Less than or equal: return true if a <= b
-static int ldate_le(lua_State *L) {
-    TomlDate *a = (TomlDate *)lua_touserdata(L, 1);
-    TomlDate *b = (TomlDate *)lua_touserdata(L, 2);
-    lua_pushboolean(L, compare_dates(a, b) <= 0);
-    return 1;
-}
-
 // __call metamethod:
 // if arg is a string, set the current TomlDate from the string
 // if arg is a userdata of TomluaDate type, set the current TomlDate from the table
@@ -542,19 +555,11 @@ static int ldate_call(lua_State *L) {
             return 1;
         } break;
         case LUA_TTABLE: {
-            *date = (TomlDate){0};
-            date->toml_type = TOML_OFFSET_DATETIME;
+            date_zero(date);
+            DATE_GET(*date, TOML_TYPE) = TOML_OFFSET_DATETIME;
             lua_pushnil(L);
             while (lua_next(L, 2) != 0) {
                 int key_idx = -1;
-                int field_val = 0;
-                // handle value
-                if (lua_isnumber(L, -1)) {
-                    field_val = (int)lua_tointeger(L, -1);
-                } else {
-                    lua_pop(L, 1); // discard value
-                    continue; // skip non-numeric values
-                }
                 // handle key
                 if (lua_type(L, -2) == LUA_TSTRING) {
                     key_idx = string_2_date_field_idx(lua_tostring(L, -2));
@@ -564,8 +569,19 @@ static int ldate_call(lua_State *L) {
                         key_idx = (int)k - 1; // convert 1-based to 0-based
                     }
                 }
-                if (key_idx >= 0 && key_idx < DATE_LENGTH) {
-                    date_field_set_by_idx(date, key_idx, field_val);
+                int field_val = 0;
+                // handle value
+                int vtype = lua_type(L, -1);
+                if (key_idx == TOMLDATE_TOML_TYPE && vtype == LUA_TSTRING) {
+                    field_val = toml_type_from_name(lua_tostring(L, -1));
+                } else if (vtype == LUA_TNUMBER) {
+                    field_val = (int)lua_tointeger(L, -1);
+                } else {
+                    lua_pop(L, 1); // discard value
+                    continue; // skip non-numeric values
+                }
+                if (key_idx >= 0 && key_idx < TOMLDATE_DATE_LENGTH) {
+                    (*date)[key_idx] = field_val;
                 }
                 lua_pop(L, 1); // remove value, keep key for next iteration
             }
@@ -575,16 +591,7 @@ static int ldate_call(lua_State *L) {
         case LUA_TUSERDATA:
             if(udata_is_of_type(L, 2, "TomluaDate")) {
                 TomlDate *date2 = (TomlDate *)lua_touserdata(L, 2);
-                date->toml_type = date2->toml_type;
-                date->year = date2->year;
-                date->month = date2->month;
-                date->day = date2->day;
-                date->hour = date2->hour;
-                date->minute = date2->minute;
-                date->second = date2->second;
-                date->fractional = date2->fractional;
-                date->offset_hour = date2->offset_hour;
-                date->offset_minute = date2->offset_minute;
+                memcpy(date, date2, sizeof(TomlDate));
                 lua_settop(L, 1);
                 return 1;
             }
@@ -603,7 +610,7 @@ static int ldate_call(lua_State *L) {
 
 bool push_new_toml_date(lua_State *L, TomlDate date) {
     TomlDate *udate = (TomlDate *)lua_newuserdata(L, sizeof(TomlDate));
-    *udate = date;
+    memcpy(*udate, date, sizeof(TomlDate));
     if (luaL_newmetatable(L, "TomluaDate")) {
         lua_pushcfunction(L, ldate_tostring);
         lua_setfield(L, -2, "__tostring");
@@ -632,7 +639,7 @@ bool push_new_toml_date(lua_State *L, TomlDate date) {
 // and if provided any arguments, forwards them to __call or ldate_call on the object first
 int lnew_date(lua_State *L) {
     TomlDate new_date = {0};
-    new_date.toml_type = TOML_OFFSET_DATETIME;
+    DATE_GET(new_date, TOML_TYPE) = TOML_OFFSET_DATETIME;
     push_new_toml_date(L, new_date);
     lua_insert(L, 1);
     ldate_call(L);
