@@ -16,9 +16,14 @@
 
 // NOTE: just for debugging
 #include <stdio.h>
-static void print_lua_stack(lua_State *L, const char *label) {
+static void print_lua_stack(lua_State *L, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    printf("=== Stack: ");
+    vprintf(fmt, args);
+    printf(" ===\n");
+    va_end(args);
     int top = lua_gettop(L);
-    printf("=== Stack: %s ===\n", label);
     for (int i = top; i >= 1; i--) {
         int t = lua_type(L, i);
         const char *type_name = lua_typename(L, t);
