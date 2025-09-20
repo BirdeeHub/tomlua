@@ -1,5 +1,5 @@
 return function(define, test_dir)
-    -- TODO: A more tests
+    -- TODO: more tests
 
     local tomlua_default = require("tomlua")
     local tomlua_strict = require("tomlua")({ strict = true })
