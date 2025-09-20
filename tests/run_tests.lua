@@ -17,6 +17,7 @@ local function run_test_file(path)
 	if ok then assert(pcall(run, define, tomlua_test_dir)) end
 end
 
-run_test_file('tests')
+run_test_file('decode_tests')
+run_test_file('encode_tests')
 
 define.end_tests()

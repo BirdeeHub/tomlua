@@ -57,23 +57,26 @@ return setmetatable({
 	tests_passed = 0,
 	tests_failed = 0,
 	gambiarrahandler = function(self, e, desc, msg, err)
-		local suffix = tostring(desc) .. ': ' .. tostring(msg) .. (err and "\n(with error: " .. err .. ")" or "")
+		local suffix = tostring(msg) .. (err and "\n(with error: " .. err .. ")" or "")
 		if e == 'pass' then
-			print("[32m✔[0m " .. suffix)
+			print("   [32m✔[0m " .. suffix)
 			self.tests_passed = self.tests_passed + 1
 		elseif e == 'fail' then
-			print("[31m✘[0m " .. suffix)
+			print("   [31m✘[0m " .. suffix)
 			self.tests_failed = self.tests_failed + 1
 		elseif e == 'except' then
-			print("[35m‼[0m " .. suffix)
+			print("   [35m‼[0m " .. suffix)
 			self.tests_failed = self.tests_failed + 1
+		elseif e == 'begin' then
+			print(" \x1b[36m▶\x1b[0m " .. desc)
+		elseif e == 'end' then
 		end
 	end,
 }, {
 	__index = function(self, key)
 		if key == 'end_tests' then
 			return function()
-				if self.tests_failed > 0 then os.exit(1) end
+				if (self.tests_failed or 0) > 0 then os.exit(1) end
 			end
 		end
 	end,
