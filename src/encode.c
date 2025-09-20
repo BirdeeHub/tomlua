@@ -297,7 +297,7 @@ static inline bool buf_push_heading(lua_State *L, str_buf *buf, const Keys *keys
     return true;
 }
 
-static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, int level) {
+static bool buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
     int val_idx = lua_gettop(L);
     int vtype = lua_type(L, val_idx);
     switch (vtype) {
@@ -318,12 +318,12 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
         case LUA_TTABLE: {
             // cycle detection
             lua_pushvalue(L, val_idx);
-            lua_rawget(L, visited_idx);
+            lua_rawget(L, ENCODE_VISITED_IDX);
             if (!lua_isnil(L, -1)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "Circular reference in table");
             lua_pop(L, 1);
             lua_pushvalue(L, val_idx);
             lua_pushboolean(L, true);
-            lua_rawset(L, visited_idx);
+            lua_rawset(L, ENCODE_VISITED_IDX);
 
             if (is_lua_array(L, val_idx)) {
                 int len = lua_arraylen(L, val_idx);
@@ -336,7 +336,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
                     if (!buf_push_str(buf, indent, inlen)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 30, "failed to push indent to array");
                     for (int i = 1; i <= len; i++) {
                         lua_rawgeti(L, val_idx, i);
-                        if(!buf_push_inline_value(L, buf, visited_idx, (level >= 0) ? level + 1 : -1)) return false;
+                        if(!buf_push_inline_value(L, buf, (level >= 0) ? level + 1 : -1)) return false;
                         if (i != len) {
                             if (!buf_push(buf, ',')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 30, "failed to push array separator");
                             if (!buf_push_str(buf, indent, inlen)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 30, "failed to push indent to array");
@@ -365,7 +365,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
                     lua_pop(L, 1);
                     if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "failed to push table equals");
                     // pop and push value to buffer (-1 because no newlines allowed)
-                    if (!buf_push_inline_value(L, buf, visited_idx, -1)) return false;
+                    if (!buf_push_inline_value(L, buf, -1)) return false;
                 }
                 if (!first) {
                     if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 35, "failed to push table trailing space");
@@ -374,7 +374,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
             }
             lua_settop(L, val_idx);
             lua_pushnil(L);
-            lua_rawset(L, visited_idx);
+            lua_rawset(L, ENCODE_VISITED_IDX);
         } break;
         case LUA_TUSERDATA:
             if (udata_is_of_type(L, val_idx, "TomluaDate")) {
@@ -409,7 +409,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
 //---@field key string
 //---@field value any
 // leaves stack how it found it, writes entries to residx list
-static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx, const int visited_idx) {
+static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx) {
     lua_newtable(L);
     int residx = lua_gettop(L);
     int result_len = 0;
@@ -434,7 +434,7 @@ static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx,
             if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in table heading entry");
             if (!buf_push_esc_key(buf, &lstr)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push table heading key");
             if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in table heading entry");
-            if (!buf_push_inline_value(L, buf, visited_idx, 0)) return false;
+            if (!buf_push_inline_value(L, buf, 0)) return false;
             if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 48, "failed to push newline after table heading entry");
         }
         lua_settop(L, key_idx);
@@ -443,7 +443,7 @@ static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx,
     return true;
 }
 
-static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
+static bool flush_q(lua_State *L, str_buf *buf, Keys *keys) {
     int input_idx = lua_gettop(L);
     size_t inlen = lua_arraylen(L, input_idx);
     for (size_t i = 1; i <= inlen; i++) {
@@ -476,7 +476,7 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
                     lua_pop(L, 1);
                     if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in array heading entry");
                     // pops value, leaves key for next lua_next
-                    if (!buf_push_inline_value(L, buf, visited_idx, 0)) return false;
+                    if (!buf_push_inline_value(L, buf, 0)) return false;
                     if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 48, "failed to push newline after array heading entry");
                 }
             }
@@ -485,20 +485,20 @@ static bool flush_q(lua_State *L, str_buf *buf, int visited_idx, Keys *keys) {
             if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 54, "failed to push newline before processing table heading");
             // cycle detection
             lua_pushvalue(L, deferred);
-            lua_rawget(L, visited_idx);
+            lua_rawget(L, ENCODE_VISITED_IDX);
             if (!lua_isnil(L, -1)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "Circular reference in table");
             lua_pop(L, 1);
             lua_pushvalue(L, deferred);
             lua_pushboolean(L, true);
-            lua_rawset(L, visited_idx);
+            lua_rawset(L, ENCODE_VISITED_IDX);
 
             if(!buf_push_heading(L, buf, keys, false)) return false;
-            if(!buf_push_heading_table(L, buf, deferred, visited_idx)) return false;
-            if(!flush_q(L, buf, ENCODE_VISITED_IDX, keys)) return false;
+            if(!buf_push_heading_table(L, buf, deferred)) return false;
+            if(!flush_q(L, buf, keys)) return false;
 
             lua_settop(L, deferred);
             lua_pushnil(L);
-            lua_rawset(L, visited_idx);
+            lua_rawset(L, ENCODE_VISITED_IDX);
         }
         // frees and removes last key
         pop_key(keys);
@@ -532,8 +532,8 @@ int encode(lua_State *L) {
     // NOTE: ENCODE_VISITED_IDX; // 2
     // This will also be where our error ends up if we get one.
     lua_newtable(L);
-    if(!buf_push_heading_table(L, &buf, 1, ENCODE_VISITED_IDX)) goto fail;
-    if(!flush_q(L, &buf, ENCODE_VISITED_IDX, &keys)) goto fail;
+    if(!buf_push_heading_table(L, &buf, 1)) goto fail;
+    if(!flush_q(L, &buf, &keys)) goto fail;
     free_keys(&keys);
     lua_settop(L, 0);
     push_buf_to_lua_string(L, &buf);
