@@ -36,29 +36,31 @@ typedef bool TomluaUserOpts[TOMLOPTS_LENGTH];
 static inline TomluaUserOpts *get_opts_upval(lua_State *L) {
     return (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
 }
-static inline TomluaUserOpts *toml_user_opts_copy(TomluaUserOpts *dst, TomluaUserOpts *src) {
-    return memcpy(dst, *src, sizeof(TomluaUserOpts));
+static inline TomluaUserOpts *toml_user_opts_copy(TomluaUserOpts dst, TomluaUserOpts src) {
+    return memcpy(dst, src, sizeof(TomluaUserOpts));
 }
 
 // negative taridx means all false
-static TomluaUserOpts *opts_parse(lua_State *L, TomluaUserOpts *dst, int taridx, int optidx) {
+static bool opts_parse(lua_State *L, TomluaUserOpts dst, int taridx, int optidx) {
     if (taridx > 0) {
         luaL_checktype(L, taridx, LUA_TTABLE);
         for (int i = 0; i < TOMLOPTS_LENGTH; i++) {
             lua_getfield(L, taridx, toml_opts_names[i]);
-            (*dst)[i] = lua_toboolean(L, -1);
+            dst[i] = lua_toboolean(L, -1);
             lua_pop(L, 1);
         }
+    } else {
+        memset(dst, false, sizeof(TomluaUserOpts));
     }
     for (int i = 0; i < TOMLOPTS_LENGTH; i++) {
-        lua_pushboolean(L, (*dst)[i]);
+        lua_pushboolean(L, dst[i]);
         lua_setfield(L, optidx, toml_opts_names[i]);
     }
-    return dst;
+    return false;
 }
 static int opts_call(lua_State *L) {
     TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
-    opts_parse(L, opts, 2, 1);
+    opts_parse(L, *opts, 2, 1);
     return 0;
 }
 static int opts_index(lua_State *L) {

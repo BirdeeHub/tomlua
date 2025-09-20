@@ -50,9 +50,9 @@ static TOMLDATE_FIELDS string_2_date_field_idx(const char *str) {
     return TOMLDATE_DATE_LENGTH;
 }
 
-bool parse_toml_date(str_iter *src, TomlDate *date);
+bool parse_toml_date(str_iter *src, TomlDate date);
 bool push_new_toml_date(lua_State *L, TomlDate date);
-bool buf_push_toml_date(str_buf *buf, TomlDate *date);
+bool buf_push_toml_date(str_buf *buf, TomlDate date);
 // NOTE: for lua
 int lnew_date(lua_State *L);
 

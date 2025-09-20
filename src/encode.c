@@ -378,7 +378,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int visited_idx, i
         } break;
         case LUA_TUSERDATA:
             if (udata_is_of_type(L, val_idx, "TomluaDate")) {
-                if (!buf_push_toml_date(buf, (TomlDate *)lua_touserdata(L, val_idx)))
+                if (!buf_push_toml_date(buf, *(TomlDate *)lua_touserdata(L, val_idx)))
                     return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 19, "failed to push date");
                 break;
             } else if (udata_is_of_type(L, val_idx, "TomluaMultiStr")) {

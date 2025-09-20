@@ -156,9 +156,9 @@ int luaopen_tomlua(lua_State *L) {
     {
         TomluaUserOpts *uopts = lua_newuserdata(L, sizeof(TomluaUserOpts));
         if (lua_istable(L, 2)) {
-            opts_parse(L, uopts, 2, argtop + 1);
+            opts_parse(L, *uopts, 2, argtop + 1);
         } else {
-            opts_parse(L, uopts, -1, argtop + 1);
+            opts_parse(L, *uopts, -1, argtop + 1);
         }
     }
     lua_pushvalue(L, -1);
