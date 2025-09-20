@@ -104,10 +104,10 @@ data, err = tomlua.decode(some_string, { some = "defaults" })
 -- and you may decide to make some strings multiline with tomlua.str_2_mul
 -- and you may make arrays appear as tables, or empty tables appear as arrays,
 -- local empty_toml_array = setmetatable({}, {
---   toml_type = tomlua.types.ARRAY
+--   toml_type = "ARRAY"
 -- })
 -- local a_toml_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
---   toml_type = tomlua.types.TABLE
+--   toml_type = tomlua.types.TABLE -- it also accepts the numbers
 -- })
 -- you may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline
 local str, err = tomlua.encode(some_table)
