@@ -76,6 +76,7 @@ return setmetatable({
 	__index = function(self, key)
 		if key == 'end_tests' then
 			return function()
+				runpending()
 				if (self.tests_failed or 0) > 0 then os.exit(1) end
 			end
 		end
@@ -140,13 +141,10 @@ return setmetatable({
 			end
 		end
 
-		if not async then
-			testfn()
-		else
+		if async then
 			table.insert(pendingtests, testfn)
-			if #pendingtests == 1 then
-				runpending()
-			end
+		else
+			testfn()
 		end
 	end
 })
