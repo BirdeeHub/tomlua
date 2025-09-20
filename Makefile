@@ -32,7 +32,7 @@ build: $(SRC)/src/*
 	@mkdir -p $(DESTDIR)
 	$(CC) $(CFLAGS) -o $(DESTDIR)/tomlua.so $(SRCS)
 
-bear:
+bear:   # used to generate compile_commands.json, required for detecting library functions by clangd and ccls
 	$(check_lua_incdir)
 	$(BEAR) -- $(CC) -### $(CFLAGS) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
