@@ -1,3 +1,6 @@
+-- I ended up finding this script in https://github.com/zserge/luash
+-- I like it. I modified it a bit.
+
 local function deepeq(a, b)
 	-- Different types: false
 	if type(a) ~= type(b) then return false end
