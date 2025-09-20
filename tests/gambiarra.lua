@@ -1,5 +1,6 @@
 -- I ended up finding this script in https://github.com/zserge/luash
--- I like it. I modified it a bit.
+-- which liked so much I forked it and made https://github.com/BirdeeHub/shelua
+-- I like this part of it too. I modified it a bit.
 
 local function deepeq(a, b)
 	-- Different types: false
