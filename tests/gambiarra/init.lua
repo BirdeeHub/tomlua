@@ -25,8 +25,7 @@ local function args(...)
 end
 
 local function spy(f)
-	local s = {}
-	setmetatable(s, {
+	return setmetatable({}, {
 		__call = function(s, ...)
 			s.called = s.called or {}
 			local a = args(...)
@@ -43,7 +42,6 @@ local function spy(f)
 			end
 		end
 	})
-	return s
 end
 
 local pendingtests = {}
