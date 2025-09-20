@@ -34,9 +34,7 @@ Basic benchmarking shows promising results:
 
 ## Installation
 
-Rockspec is present, but the package is not yet on luarocks.
-
-Better installation instructions are on the roadmap as well.
+Better installation instructions are on the roadmap.
 
 ### Using Make
 
@@ -50,6 +48,12 @@ export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
 
 * Requires a C compiler (GCC, Clang, etc.). If not gcc, set CC variable as well
 * You should be in the root of the repository.
+
+### Using LuaRocks
+
+```bash
+luarocks install tomlua
+```
 
 ### Using Nix
 
