@@ -178,7 +178,7 @@ static bool tmlerr_push_fmt(TMLErr *err, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    // Use vsnprintf with a temporary small buffer first
+    // Use vsnprintf with a temporary fixed size buffer first
     char tmp[256];
     size_t tmplen = sizeof(tmp);
     va_list args_copy;
