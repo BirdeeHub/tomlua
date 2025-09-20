@@ -107,6 +107,42 @@ static bool tmlerr_push_str(TMLErr *err, const char *str, size_t len) {
     return true;
 }
 
+static bool tmlerr_push_fmt(TMLErr *err, const char *fmt, ...) {
+    if (!err || !fmt) return false;
+    va_list args;
+    va_start(args, fmt);
+
+    // Use vsnprintf with a temporary fixed size buffer first
+    char tmp[256];
+    size_t tmplen = sizeof(tmp);
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int n = vsnprintf(tmp, tmplen, fmt, args_copy);
+    va_end(args_copy);
+    if (n < 0) {
+        va_end(args);
+        return false;
+    }
+    if ((size_t)n < tmplen) {
+        // fits in tmp buffer, push directly
+        bool ok = tmlerr_push_str(err, tmp, (size_t)n);
+        va_end(args);
+        return ok;
+    }
+    // larger than tmp, need to allocate buffer
+    char *buf = (char *)malloc((size_t)n + 1);
+    if (!buf) {
+        va_end(args);
+        return false;
+    }
+
+    vsnprintf(buf, (size_t)n + 1, fmt, args);
+    bool ok = tmlerr_push_str(err, buf, (size_t)n);
+    free(buf);
+    va_end(args);
+    return ok;
+}
+
 // position 0 is the start, and otherwise, ends of lines
 // if it reaches the end of src, final position is src_len
 // thus, it is best to always read FROM the current position up UNTIL the next position.
@@ -171,42 +207,6 @@ static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t
     }
     if (!tmlerr_push(err, '\n')) return false;
     return true;
-}
-
-static bool tmlerr_push_fmt(TMLErr *err, const char *fmt, ...) {
-    if (!err || !fmt) return false;
-    va_list args;
-    va_start(args, fmt);
-
-    // Use vsnprintf with a temporary fixed size buffer first
-    char tmp[256];
-    size_t tmplen = sizeof(tmp);
-    va_list args_copy;
-    va_copy(args_copy, args);
-    int n = vsnprintf(tmp, tmplen, fmt, args_copy);
-    va_end(args_copy);
-    if (n < 0) {
-        va_end(args);
-        return false;
-    }
-    if ((size_t)n < tmplen) {
-        // fits in tmp buffer, push directly
-        bool ok = tmlerr_push_str(err, tmp, (size_t)n);
-        va_end(args);
-        return ok;
-    }
-    // larger than tmp, need to allocate buffer
-    char *buf = (char *)malloc((size_t)n + 1);
-    if (!buf) {
-        va_end(args);
-        return false;
-    }
-
-    vsnprintf(buf, (size_t)n + 1, fmt, args);
-    bool ok = tmlerr_push_str(err, buf, (size_t)n);
-    free(buf);
-    va_end(args);
-    return ok;
 }
 
 #include "./types.h"
