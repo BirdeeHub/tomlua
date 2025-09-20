@@ -72,13 +72,18 @@ return setmetatable({
 	end,
 }, {
 	__index = function(self, key)
-		if key == 'report' then
+		if key == 'reset_count' then
+			return function()
+				self.tests_passed = 0
+				self.tests_failed = 0
+			end
+		elseif key == 'report' then
 			return function()
 				print("Tests ran: " .. tostring(self.tests_failed or 0) + tostring(self.tests_passed or 0))
 				print("Tests passed: " .. tostring(self.tests_passed))
 				print("Tests failed: " .. tostring(self.tests_failed))
 			end
-		elseif key == 'end_tests' then
+		elseif key == 'assert_passing' then
 			return function()
 				if (self.tests_failed or 0) > 0 then os.exit(1) end
 			end

@@ -21,4 +21,4 @@ run_test_file('decode_tests')
 run_test_file('encode_tests')
 
 define.report()
-define.end_tests()
+define.assert_passing()
