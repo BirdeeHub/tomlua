@@ -65,7 +65,7 @@ return setmetatable({
 			print("[31m✘[0m " .. suffix)
 			self.tests_failed = self.tests_failed + 1
 		elseif e == 'except' then
-			print("[31m✘[0m " .. suffix)
+			print("[35m‼[0m " .. suffix)
 			self.tests_failed = self.tests_failed + 1
 		end
 	end,
