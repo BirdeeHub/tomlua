@@ -69,7 +69,7 @@ package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
 local tomlua = require("tomlua")
 
--- you can call it like a function and get a copy with different options
+-- you can call it like a function and get a copy of the library with a new options table
 local tomlua2 = tomlua {
     -- fancy_tables allows multiline inline tables with a trailing comma
     -- key = value still must be on the same line
