@@ -3,7 +3,7 @@
 > ⚠️ **Warning:** This is a work-in-progress!
 > The core functionality is present, but it is still extremely new software!
 > It needs more tests, it needs better documentation, it needs luaCats annotations, it might be able to be faster still.
-> When this package is no longer in development, its version will be set to v1.0.0 for the initial release.
+> When this package is no longer in its early development cycle, its version will be set to v1.0.0 for the initial release.
 
 **TOMLUA** is a fast TOML parser and emitter for Lua, implemented in C. It is designed for **hot-path parsing** of TOML files into Lua tables, not for editing existing files.
 
