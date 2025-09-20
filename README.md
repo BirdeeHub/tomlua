@@ -128,10 +128,11 @@ tomlua.types = {
     LOCAL_DATETIME, -- 12  -- string, or userdata with fancy_dates
     OFFSET_DATETIME, -- 13  -- string, or userdata with fancy_dates
 }
-tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
-
 -- get the type tomlua thinks a lua value is
-tomlua.type(value) --> number from tomlua.types
+tomlua.type(value) --> returns one of the names from tomlua.types
+-- get the type tomlua thinks a lua value is
+tomlua.type_of(value) --> returns corresponding number from tomlua.types instead
+tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
 
 local toml_multiline_str = tomlua.str_2_mul("hello\nworld")
 local regular_str = tostring(toml_multiline_str)

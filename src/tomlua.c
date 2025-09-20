@@ -44,6 +44,40 @@ static inline TomlType toml_table_type(lua_State *L, int idx) {
     return is_inline ? TOML_ARRAY_INLINE : TOML_ARRAY;
 }
 
+static int tomlua_type(lua_State *L) {
+    switch (lua_type(L, 1)) {
+        case LUA_TSTRING:
+            lua_pushstring(L, toml_type_names[TOML_STRING]);
+            return 1;
+        case LUA_TNUMBER: {
+            lua_Number num = lua_tonumber(L, 1);
+            if (num == (lua_Number)(lua_Integer)num) {
+                lua_pushstring(L, toml_type_names[TOML_INTEGER]);
+            } else {
+                lua_pushstring(L, toml_type_names[TOML_FLOAT]);
+            }
+            return 1;
+        }
+        case LUA_TBOOLEAN:
+            lua_pushstring(L, toml_type_names[TOML_BOOL]);
+            return 1;
+        case LUA_TTABLE:
+            lua_pushstring(L, toml_type_names[toml_table_type(L, 1)]);
+            return 1;
+        case LUA_TUSERDATA:
+            if(udata_is_of_type(L, 1, "TomluaDate")) {
+                TomlDate *date = (TomlDate *)lua_touserdata(L, 1);
+                lua_pushstring(L, toml_type_names[(*date)[TOMLDATE_TOML_TYPE]]);
+                return 1;
+            } else if (udata_is_of_type(L, 1, "TomluaMultiStr")) {
+                lua_pushstring(L, toml_type_names[TOML_STRING_MULTI]);
+                return 1;
+            }
+        default:
+            lua_pushstring(L, toml_type_names[TOML_UNTYPED]);
+            return 1;
+    }
+}
 static int tomlua_type_of(lua_State *L) {
     switch (lua_type(L, 1)) {
         case LUA_TSTRING:
@@ -151,6 +185,8 @@ int luaopen_tomlua(lua_State *L) {
     lua_pushcfunction(L, lnew_date);
     lua_setfield(L, 1, "new_date");
     lua_pushcfunction(L, tomlua_type_of);
+    lua_setfield(L, 1, "type_of");
+    lua_pushcfunction(L, tomlua_type);
     lua_setfield(L, 1, "type");
     lua_pushcfunction(L, str_2_mul);
     lua_setfield(L, 1, "str_2_mul");
