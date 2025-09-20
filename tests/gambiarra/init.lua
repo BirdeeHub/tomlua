@@ -68,7 +68,7 @@ return setmetatable({
 			print("   [35m‼[0m " .. suffix)
 			self.tests_failed = self.tests_failed + 1
 		elseif e == 'begin' then
-			print(" \x1b[36m▶\x1b[0m " .. desc)
+			print(" [36m▶[0m " .. desc)
 		elseif e == 'end' then
 		end
 	end,
