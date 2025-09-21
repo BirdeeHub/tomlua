@@ -28,6 +28,7 @@ static void print_lua_stack(lua_State *L, const char *fmt, ...) {
     vprintf(fmt, args);
     printf(" ===\n");
     va_end(args);
+    const size_t MAX_DISPLAY_LEN = 256;
     int top = lua_gettop(L);
     for (int i = top; i >= 1; i--) {
         int t = lua_type(L, i);
@@ -37,7 +38,11 @@ static void print_lua_stack(lua_State *L, const char *fmt, ...) {
         if (t == LUA_TSTRING || t == LUA_TNUMBER) {
             size_t len;
             const char *s = lua_tolstring(L, i, &len);
-            printf(" -> '%.*s'", (int)len, s);
+            if (t == LUA_TSTRING && len > MAX_DISPLAY_LEN) {
+                printf(" -> 'string[%zu]'", len);  // just show length for long strings
+            } else {
+                printf(" -> '%.*s'", (int)len, s);
+            }
         }
         printf("\n");
     }
