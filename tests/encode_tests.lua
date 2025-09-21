@@ -1,5 +1,5 @@
 return function(define, test_dir)
-    -- TODO: more tests
+    -- Additional tests for TOMLUA encode functionality
 
     local tomlua_default = require("tomlua")
     local tomlua_strict = require("tomlua")({ strict = true })
@@ -122,5 +122,520 @@ return function(define, test_dir)
 ]]=]) ~= nil, "Encoded string should contain inline array")
         it(string.find(encoded_str, "inline_table = { %a = %d, %a = %d }") ~= nil, "Encoded string should contain inline table")
     end)
+
+    define("encode basic string", function()
+        local test_table = { key = "value" }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = \"value\"", nil, true) ~= nil, "Encoded string should contain correct key-value pair")
+    end)
+
+    define("encode basic integer", function()
+        local test_table = { key = 123 }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = 123", nil, true) ~= nil, "Encoded integer should be correct")
+    end)
+
+    define("encode basic float", function()
+        local test_table = { key = 1.23 }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = 1.23", nil, true) ~= nil, "Encoded float should be correct")
+    end)
+
+    define("encode basic boolean true", function()
+        local test_table = { key = true }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = true", nil, true) ~= nil, "Encoded boolean true should be correct")
+    end)
+
+    define("encode basic boolean false", function()
+        local test_table = { key = false }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = false", nil, true) ~= nil, "Encoded boolean false should be correct")
+    end)
+
+    define("encode array of integers", function()
+        local test_table = { key = { 1, 2, 3 } }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = %[%s*1,%s*2,%s*3%s*]", nil) ~= nil, "Encoded array of integers should be correct")
+    end)
+
+    define("encode array of mixed types", function()
+        local test_table = { key = { 1, "hello", true, 1.2 } }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, [=[key = %[%s*1,%s*"hello",%s*true,%s*1.2%s*]]=], nil) ~= nil, "Encoded array of mixed types should be correct")
+    end)
+
+    define("encode empty array", function()
+        local test_table = { key = setmetatable({}, { toml_type = "ARRAY_INLINE"}) }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = []", nil, true) ~= nil, "Encoded empty array should be correct")
+    end)
+
+    define("encode nested tables", function()
+        local test_table = {
+            owner = {
+                name = "Tom",
+                dob = "1979-05-27T07:32:00-07:00"
+            },
+            database = {
+                server = "192.168.1.1",
+                ports = { 8001, 8002 },
+                enabled = true
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[owner]", nil, true) ~= nil, "Should contain owner table heading")
+        it(string.find(encoded_str, "name = \"Tom\"", nil, true) ~= nil, "Should contain owner name")
+        it(string.find(encoded_str, "[database]", nil, true) ~= nil, "Should contain database table heading")
+        it(string.find(encoded_str, "ports = %[%s*8001,%s*8002%s*]", nil) ~= nil, "Should contain database ports")
+    end)
+
+    define("encode dotted keys", function()
+        local test_table = {
+            ["name.first"] = "Tom",
+            ["name.last"] = "Preston-Werner"
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "\"name.first\" = \"Tom\"", nil, true) ~= nil, "Should encode dotted key correctly")
+    end)
+
+    define("encode array of tables", function()
+        local test_table = {
+            products = {
+                { name = "Laptop", price = 1200 },
+                { name = "Mouse", price = 25 }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[[products]]", nil, true) ~= nil, "Should contain array of tables heading")
+        it(string.find(encoded_str, "name = \"Laptop\"", nil, true) ~= nil, "Should contain first product name")
+        it(string.find(encoded_str, "name = \"Mouse\"", nil, true) ~= nil, "Should contain second product name")
+    end)
+
+    define("encode fancy_dates: offset datetime", function()
+        local date_obj = tomlua_default.new_date({
+            toml_type = tomlua_default.types.OFFSET_DATETIME,
+            year = 1979, month = 5, day = 27,
+            hour = 7, minute = 32, second = 0, fractional = 0,
+            offset_hour = -7, offset_minute = 0
+        })
+        local test_table = { event_date = date_obj }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "event_date = 1979-05-27T07:32:00-07:00", nil, true) ~= nil, "Encoded offset datetime should be correct")
+    end)
+
+    define("encode fancy_dates: local datetime", function()
+        local date_obj = tomlua_default.new_date({
+            toml_type = tomlua_default.types.LOCAL_DATETIME,
+            year = 1979, month = 5, day = 27,
+            hour = 7, minute = 32, second = 0, fractional = 0
+        })
+        local test_table = { event_date = date_obj }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "event_date = 1979-05-27T07:32:00", nil, true) ~= nil, "Encoded local datetime should be correct")
+    end)
+
+    define("encode fancy_dates: local date", function()
+        local date_obj = tomlua_default.new_date({
+            toml_type = tomlua_default.types.LOCAL_DATE,
+            year = 1979, month = 5, day = 27
+        })
+        local test_table = { event_date = date_obj }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "event_date = 1979-05-27", nil, true) ~= nil, "Encoded local date should be correct")
+    end)
+
+    define("encode fancy_dates: local time", function()
+        local date_obj = tomlua_default.new_date({
+            toml_type = tomlua_default.types.LOCAL_TIME,
+            hour = 7, minute = 32, second = 0, fractional = 0
+        })
+        local test_table = { event_date = date_obj }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "event_date = 07:32:00", nil, true) ~= nil, "Encoded local time should be correct")
+    end)
+
+    define("encode multi_strings: basic multiline string", function()
+        local mul_str = tomlua_default.str_2_mul("Hello\nWorld")
+        local test_table = { message = mul_str }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, [=[message = """Hello
+World"""]=], nil, true) ~= nil, "Encoded multiline string should be correct")
+    end)
+
+    define("encode multi_strings: literal multiline string", function()
+        local mul_str = tomlua_default.str_2_mul('C:\\Users\\Tom', true) -- true for literal
+        local test_table = { path = mul_str }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        -- TODO: I think this is a bug, it should be path = """C:\\\\Users\\\\Tom""" I think
+        it(string.find(encoded_str, [=[path = """C:\\Users\\Tom""" ]=], nil, true) ~= nil, "Encoded literal multiline string should be correct")
+    end)
+
+    define("encode mark_inline: inline table", function()
+        local inline_tbl = setmetatable({ a = 1, b = 2 }, { toml_type = tomlua_default.types.TABLE_INLINE })
+        local test_table = { config = inline_tbl }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "config = { %a = %d, %a = %d }", nil) ~= nil, "Encoded inline table should be correct")
+    end)
+
+    define("encode mark_inline: inline array", function()
+        local inline_arr = setmetatable({ 1, 2, 3 }, { toml_type = tomlua_default.types.ARRAY_INLINE })
+        local test_table = { data = inline_arr }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "data = %[%s*1,%s*2,%s*3%s*]", nil) ~= nil, "Encoded inline array should be correct")
+    end)
+
+    define("encode empty table with toml_type", function()
+        local empty_toml_table = setmetatable({}, { toml_type = tomlua_default.types.TABLE })
+        local test_table = { empty_tbl = empty_toml_table }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[empty_tbl]", nil, true) ~= nil, "Encoded string should contain empty table heading")
+    end)
+
+    define("encode empty array with toml_type", function()
+        local empty_toml_array = setmetatable({}, { toml_type = tomlua_default.types.ARRAY })
+        local test_table = { empty_arr = empty_toml_array }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "empty_arr = []", nil, true) ~= nil, "Encoded string should contain empty array")
+    end)
+
+    define("encode complex nested structure", function()
+        local test_table = {
+            general = {
+                title = "TOML Example",
+                enabled = true
+            },
+            owner = {
+                name = "John Doe",
+                email = "john.doe@example.com",
+                address = setmetatable({ street = "123 Main St", city = "Anytown" }, { toml_type = tomlua_default.types.TABLE_INLINE })
+            },
+            servers = {
+                { name = "alpha", ip = "192.168.1.1", ports = setmetatable({ 8001, 8002 }, { toml_type = tomlua_default.types.ARRAY_INLINE }) },
+                { name = "beta", ip = "192.168.1.2", ports = setmetatable({ 8003 }, { toml_type = tomlua_default.types.ARRAY_INLINE }), config = setmetatable({ max_connections = 100, timeout = 30 }, { toml_type = tomlua_default.types.TABLE_INLINE }) }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding complex structure")
+        it(string.find(encoded_str, "[general]", nil, true) ~= nil, "Should contain general table heading")
+        it(string.find(encoded_str, "title = \"TOML Example\"", nil, true) ~= nil, "Should contain general title")
+        it(string.find(encoded_str, "address = { %S+ = \".*\", %S+ = \".*\" }", nil) ~= nil, "Should contain inline address table")
+        it(string.find(encoded_str, "[[servers]]", nil, true) ~= nil, "Should contain servers array of tables heading")
+        it(string.find(encoded_str, "name = \"alpha\"", nil, true) ~= nil, "Should contain first server name")
+        it(string.find(encoded_str, "ports = %[%s*8001,%s*8002%s*]", nil) ~= nil, "Should contain first server ports")
+        it(string.find(encoded_str, "config = { %S+ = %d+, %S+ = %d+ }", nil) ~= nil, "Should contain second server config")
+    end)
+
+    define("encode table with mixed array and table values", function()
+        local test_table = {
+            data = {
+                numbers = { 1, 2, 3 },
+                info = { name = "test", version = 1.0 },
+                flags = { true, false }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[data]", nil, true) ~= nil, "Should contain data table heading")
+        it(string.find(encoded_str, "numbers = %[%s+1,%s+2,%s+3%s+]", nil) ~= nil, "Should contain numbers array")
+        it(string.find(encoded_str, "name = \"test\"", nil, true) ~= nil, "Should contain info name")
+        it(string.find(encoded_str, "flags = %[%s+true,%s+false%s+]", nil) ~= nil, "Should contain flags array")
+    end)
+
+    -- TODO: I am not sure about this one. Because points is an array and isnt marked inline,
+    -- x and y of each get printed like entries under points heading.
+    -- children of those would get printed inline though?
+    -- decide what this should be
+    define("encode table with array of inline tables", function()
+        local test_table = {
+            points = {
+                setmetatable({ x = 1, y = 3 }, { toml_type = "TABLE_INLINE" }),
+                setmetatable({ x = 3, y = 4 }, { toml_type = tomlua_default.types.TABLE_INLINE })
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "points = %[%s+{ [xy] = [12], [xy] = [12] },%s+{ [xy] = [34], [xy] = [34] }%s+]", nil) ~= nil, "Encoded array of inline tables should be correct")
+    end)
+
+    define("encode table with array of arrays", function()
+        local test_table = {
+            matrix = setmetatable({
+                { 1, 2 },
+                { 3, 4 }
+            }, { toml_type = tomlua_default.types.ARRAY_INLINE })
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "matrix = %[%s+%[%s+1,%s+2%s+],%s+%[%s+3,%s+4%s+]%s+]", nil) ~= nil, "Encoded array of arrays should be correct")
+    end)
+
+    define("encode table with mixed array of tables and arrays", function()
+        local test_table = {
+            items = setmetatable({
+                { id = 1, value = "A" },
+                { 10, 20 },
+                { id = 2, value = "B" },
+            }, { toml_type = tomlua_default.types.ARRAY_INLINE })
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "items = %[%s+{ %S+ = %S+, %S+ = %S+ },%s+%[%s+10,%s+20%s+],%s+{ %S+ = %S+, %S+ = %S+ }%s+]", nil) ~= nil, "Encoded mixed array of tables and arrays should be correct")
+    end)
+
+    define("encode table with complex key names", function()
+        local test_table = {
+            ["key.with.dots"] = 1,
+            ["key-with-dashes"] = 2,
+            ["key with spaces"] = 3,
+            ["123"] = 4
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "\"key.with.dots\" = 1", nil, true) ~= nil, "Key with dots should be encoded correctly")
+        it(string.find(encoded_str, "key-with-dashes = 2", nil, true) ~= nil, "Key with dashes should be encoded correctly")
+        it(string.find(encoded_str, "\"key with spaces\" = 3", nil, true) ~= nil, "Key with spaces should be encoded correctly")
+        it(string.find(encoded_str, "123 = 4", nil, true) ~= nil, "Numeric key as string should be encoded correctly")
+    end)
+
+    define("encode table with unicode keys and values", function()
+        local test_table = {
+            unicode_key = "你好世界",
+            ["emoji_key"] = "👋🌍"
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "unicode_key = \"你好世界\"", nil, true) ~= nil, "Unicode key and value should be encoded correctly")
+        it(string.find(encoded_str, "emoji_key = \"👋🌍\"", nil, true) ~= nil, "Emoji key and value should be encoded correctly")
+    end)
+
+    define("encode table with escaped strings", function()
+        local test_table = {
+            escaped_quotes = "He said \"Hello!\"",
+            escaped_backslash = "C:\\Users\\",
+            escaped_newline = "Line1\nLine2",
+            escaped_tab = "Col1\tCol2"
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "escaped_quotes = \"He said \\\"Hello!\\\"\"", nil, true) ~= nil, "Escaped quotes should be encoded correctly")
+        it(string.find(encoded_str, "escaped_backslash = \"C:\\\\Users\\\\\"", nil, true) ~= nil, "Escaped backslash should be encoded correctly")
+        it(string.find(encoded_str, "escaped_newline = \"Line1\\nLine2\"", nil, true) ~= nil, "Escaped newline should be encoded correctly")
+        it(string.find(encoded_str, [=[escaped_tab = "Col1\tCol2"]=], nil, true) ~= nil, "Escaped tab should be encoded correctly")
+    end)
+
+    define("encode table with empty values", function()
+        local test_table = {
+            empty_string = "",
+            empty_array = setmetatable({}, { toml_type = "ARRAY_INLINE" }),
+            -- TODO: this doesnt make a heading. Figure out what to do here
+            empty_array_heading = setmetatable({}, { toml_type = "ARRAY" }),
+            empty_table = setmetatable({}, { toml_type = tomlua_default.types.TABLE_INLINE }),
+            empty_table_heading = {},
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "empty_string = \"\"", nil, true) ~= nil, "Empty string should be encoded correctly")
+        it(string.find(encoded_str, "empty_array = []", nil, true) ~= nil, "Empty array should be encoded correctly")
+        it(string.find(encoded_str, "empty_table = {}", nil, true) ~= nil, "Empty inline table should be encoded correctly")
+    end)
+
+    define("encode table with comments (not preserved)", function()
+        local test_table = {
+            key = "value" -- This comment will not be preserved
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "key = \"value\"", nil, true) ~= nil, "Key-value pair should be encoded correctly")
+        it(string.find(encoded_str, "-- This comment will not be preserved", nil, true) == nil, "Comment should not be preserved")
+    end)
+
+    -- TODO:
+    -- define("encode table with array of tables and nested arrays of tables", function()
+    --     local test_table = {
+    --         companies = {
+    --             { name = "Company A", departments = { { name = "Sales", employees = 10 }, { name = "Marketing", employees = 5 } } },
+    --             { name = "Company B", departments = { { name = "HR", employees = 3 } } }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[companies]]", nil, true) ~= nil, "Should contain companies array of tables heading")
+    --     it(string.find(encoded_str, "name = \"Company A\"", nil, true) ~= nil, "First company name should be correct")
+    --     it(string.find(encoded_str, "[[companies.departments]]", nil, true) ~= nil, "Should contain nested array of tables heading")
+    --     it(string.find(encoded_str, "name = \"Sales\"", nil, true) ~= nil, "First department name should be correct")
+    --     it(string.find(encoded_str, "name = \"HR\"", nil, true) ~= nil, "Second company department name should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and mixed key types", function()
+    --     local test_table = {
+    --         settings = {
+    --             { ["key-with-dash"] = 1, ["key with spaces"] = 2 },
+    --             { bare_key = 3, ["123"] = 4 }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[settings]]", nil, true) ~= nil, "Should contain settings array of tables heading")
+    --     it(string.find(encoded_str, "\"key-with-dash\" = 1", nil, true) ~= nil, "First setting key-with-dash should be correct")
+    --     it(string.find(encoded_str, "\"key with spaces\" = 2", nil, true) ~= nil, "First setting key with spaces should be correct")
+    --     it(string.find(encoded_str, "bare_key = 3", nil, true) ~= nil, "Second setting bare_key should be correct")
+    --     it(string.find(encoded_str, "123 = 4", nil, true) ~= nil, "Second setting numeric key as string should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and unicode keys and values", function()
+    --     local test_table = {
+    --         products = {
+    --             { name = "Laptop", ["型号"] = "XPS 15" },
+    --             { name = "Mouse", ["颜色"] = "黑色" }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[products]]", nil, true) ~= nil, "Should contain products array of tables heading")
+    --     it(string.find(encoded_str, "name = \"Laptop\"", nil, true) ~= nil, "First product name should be correct")
+    --     it(string.find(encoded_str, "\"型号\" = \"XPS 15\"", nil, true) ~= nil, "First product unicode key should be correct")
+    --     it(string.find(encoded_str, "\"颜色\" = \"黑色\"", nil, true) ~= nil, "Second product unicode key should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and escaped strings in values", function()
+    --     local test_table = {
+    --         messages = {
+    --             { sender = "Alice", content = "Hello\nWorld" },
+    --             { sender = "Bob", content = "He said \"Hi!\" again." }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[messages]]", nil, true) ~= nil, "Should contain messages array of tables heading")
+    --     it(string.find(encoded_str, "content = \"Hello\\nWorld\"", nil, true) ~= nil, "First message content with newline should be correct")
+    --     it(string.find(encoded_str, "content = \"He said \\\"Hi!\\\" again.\"", nil, true) ~= nil, "Second message content with escaped quotes should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and empty values", function()
+    --     local test_table = {
+    --         config = {
+    --             { name = "Config A", value = "" },
+    --             { name = "Config B", value = "some value" }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[config]]", nil, true) ~= nil, "Should contain config array of tables heading")
+    --     it(string.find(encoded_str, "value = \"\"", nil, true) ~= nil, "First config value should be empty string")
+    --     it(string.find(encoded_str, "value = \"some value\"", nil, true) ~= nil, "Second config value should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and boolean values", function()
+    --     local test_table = {
+    --         features = {
+    --             { name = "Feature A", enabled = true },
+    --             { name = "Feature B", enabled = false }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[features]]", nil, true) ~= nil, "Should contain features array of tables heading")
+    --     it(string.find(encoded_str, "enabled = true", nil, true) ~= nil, "First feature enabled should be true")
+    --     it(string.find(encoded_str, "enabled = false", nil, true) ~= nil, "Second feature enabled should be false")
+    -- end)
+    --
+    -- define("encode table with array of tables and integer/float values", function()
+    --     local test_table = {
+    --         metrics = {
+    --             { name = "Metric A", value = 100 },
+    --             { name = "Metric B", value = 10.5 }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[metrics]]", nil, true) ~= nil, "Should contain metrics array of tables heading")
+    --     it(string.find(encoded_str, "value = 100", nil, true) ~= nil, "First metric value should be integer")
+    --     it(string.find(encoded_str, "value = 10.5", nil, true) ~= nil, "Second metric value should be float")
+    -- end)
+    --
+    -- define("encode table with array of tables and date/time values", function()
+    --     local date_obj_offset = tomlua_default.new_date({ toml_type = tomlua_default.types.OFFSET_DATETIME, year = 1979, month = 5, day = 27, hour = 7, minute = 32, second = 0, fractional = 0, offset_hour = -7, offset_minute = 0 })
+    --     local date_obj_local = tomlua_default.new_date({ toml_type = tomlua_default.types.LOCAL_DATE, year = 1979, month = 5, day = 27 })
+    --     local test_table = {
+    --         logs = {
+    --             { timestamp = date_obj_offset, message = "Log entry 1" },
+    --             { timestamp = date_obj_local, message = "Log entry 2" }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[logs]]", nil, true) ~= nil, "Should contain logs array of tables heading")
+    --     it(string.find(encoded_str, "timestamp = 1979-05-27T07:32:00-07:00", nil, true) ~= nil, "First log timestamp should be correct")
+    --     it(string.find(encoded_str, "timestamp = 1979-05-27", nil, true) ~= nil, "Second log timestamp should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and multiline strings", function()
+    --     local mul_str1 = tomlua_default.str_2_mul("Line 1\nLine 2")
+    --     local mul_str2 = tomlua_default.str_2_mul("Another\nMultiline\nString", true)
+    --     local test_table = {
+    --         docs = {
+    --             { title = "Doc 1", content = mul_str1 },
+    --             { title = "Doc 2", content = mul_str2 }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[docs]]", nil, true) ~= nil, "Should contain docs array of tables heading")
+    --     it(string.find(encoded_str, [[content = \"""Line 1\nLine 2"""]], nil, true) ~= nil, "First doc content should be correct")
+    --     it(string.find(encoded_str, "content = '''Another\nMultiline\nString'''", nil, true) ~= nil, "Second doc content should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and mixed options", function()
+    --     local test_table = {
+    --         data = {
+    --             { key = 1, ["123"] = "value" },
+    --             { key = 2, ["key-with-dash"] = true }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[data]]", nil, true) ~= nil, "Should contain data array of tables heading")
+    --     it(string.find(encoded_str, "key = 1", nil, true) ~= nil, "First data key should be correct")
+    --     it(string.find(encoded_str, "\"123\" = \"value\"", nil, true) ~= nil, "First data numeric key should be correct")
+    --     it(string.find(encoded_str, "\"key-with-dash\" = true", nil, true) ~= nil, "Second data dashed key should be correct")
+    -- end)
+    --
+    -- define("encode table with array of tables and complex nested structures", function()
+    --     local test_table = {
+    --         servers = {
+    --             { name = "Web Server", config = setmetatable({ ip = "192.168.1.1", ports = setmetatable({80, 443}, { toml_type = tomlua_default.types.ARRAY_INLINE }), admin = setmetatable({ user = "admin", pass = "secret" }, { toml_type = tomlua_default.types.TABLE_INLINE }) }, { toml_type = tomlua_default.types.TABLE_INLINE }), status = "running" },
+    --             { name = "DB Server", config = setmetatable({ ip = "192.168.1.2", port = 5432 }, { toml_type = tomlua_default.types.TABLE_INLINE }), status = "stopped", logs = { setmetatable({ timestamp = tomlua_default.new_date({ toml_type = tomlua_default.types.OFFSET_DATETIME, year = 1979, month = 5, day = 27, hour = 7, minute = 32, second = 0, fractional = 0, offset_hour = -7, offset_minute = 0 }), message = "Error" }, { toml_type = tomlua_default.types.TABLE_INLINE }) } }
+    --         }
+    --     }
+    --     local encoded_str, err = tomlua_default.encode(test_table)
+    --     it(err == nil, "Should not error during encoding")
+    --     it(string.find(encoded_str, "[[servers]]", nil, true) ~= nil, "Should contain servers array of tables heading")
+    --     it(string.find(encoded_str, "name = \"Web Server\"", nil, true) ~= nil, "First server name should be correct")
+    --     it(string.find(encoded_str, "config = { ip = \"192.168.1.1\", ports = [80, 443], admin = { user = \"admin\", pass = \"secret\" } }", nil, true) ~= nil, "First server config should be correct")
+    --     it(string.find(encoded_str, "name = \"DB Server\"", nil, true) ~= nil, "Second server name should be correct")
+    --     it(string.find(encoded_str, "logs = [{ timestamp = 1979-05-27T07:32:00-07:00, message = \"Error\" }]", nil, true) ~= nil, "Second server logs should be correct")
+    -- end)
 
 end
