@@ -59,7 +59,7 @@ return setmetatable({
 	tests_passed = 0,
 	tests_failed = 0,
 	gambiarrahandler = function(self, e, desc, msg, err)
-		local suffix = tostring(msg) .. (err and "\n(with error: " .. err .. ")" or "")
+		local suffix = tostring(msg) .. (err and "\n   (with error: " .. err .. ")" or "")
 		if e == 'pass' then
 			print("   [32m✔[0m " .. suffix)
 			self.tests_passed = self.tests_passed + 1
