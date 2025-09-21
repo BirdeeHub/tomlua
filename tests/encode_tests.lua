@@ -38,6 +38,21 @@ return function(define, test_dir)
         it(eq(test_table, decoded_data), "Encoded and decoded table with nested array should be equal")
     end)
 
+    define("encode mixed array/table lua tables", function()
+        local val = { c = 123456, b = { "hi", a = "b" } }
+        local encoded_str, err = tomlua_default.encode(val)
+        it(err == nil, "Should not error during encoding mixed tables")
+        it(tomlua_default.type(val.b) == "TABLE", "Encode should detect as table type")
+        it(function()
+            if encoded_str:find("%[b]") == nil then
+                error("b was not printed as a table heading")
+            end
+            if encoded_str:find([[1 = "hi"]]) == nil then
+                error("array type value in mixed table was not encoded with integer key")
+            end
+        end, "Should print table b as a table heading with some integer keys.")
+    end)
+
     define("encode table with fancy date", function()
         local date_obj = tomlua_default.new_date({
             toml_type = tomlua_default.types.OFFSET_DATETIME,

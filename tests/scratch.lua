@@ -196,3 +196,7 @@ do
     ]=]
     print(toml.decode(errtoml))
 end
+
+local val = { c = 123456, b = { "hi", a = "b" } }
+print(tomlua.type(val.b))
+print(tomlua.encode(val))

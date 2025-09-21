@@ -430,9 +430,11 @@ static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx)
             lua_setfield(L, -2, "value");
             lua_rawseti(L, residx, ++result_len);
         } else {
-            str_iter lstr = lua_str_to_iter(L, key_idx);
+            lua_pushvalue(L, key_idx);
+            str_iter lstr = lua_str_to_iter(L, -1);
             if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in table heading entry");
             if (!buf_push_esc_key(buf, &lstr)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push table heading key");
+            lua_pop(L, 1);
             if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in table heading entry");
             if (!buf_push_inline_value(L, buf, 0)) return false;
             if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 48, "failed to push newline after table heading entry");
