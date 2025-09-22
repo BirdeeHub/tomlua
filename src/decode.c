@@ -38,7 +38,7 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
         lua_remove(L, parent_idx);  // remove parent table, keep child on top
         lua_pushvalue(L, -1);
         lua_rawget(L, DECODE_DEFINED_IDX);
-        // note: if DECODE_DEFINED_IDX has no entry, lua_tointeger returns 0
+        // NOTE: if DECODE_DEFINED_IDX has no entry, lua_tointeger returns 0
         // we only care about -1 or > 1
         lua_Integer len = lua_tointeger(L, -1);
         lua_pop(L, 1);
@@ -95,6 +95,7 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx, int erridx)
             return set_tmlerr(new_tmlerr(L, erridx), false, 18, "key is not a table");
         }
         lua_remove(L, parent_idx);
+        // NOTE: set_kv in decode_inline_value does not do the next 3 lines
         lua_pushvalue(L, -1);
         lua_pushinteger(L, -1);
         lua_rawset(L, DECODE_DEFINED_IDX);
