@@ -1489,7 +1489,7 @@ String'''
     end)
 
     -- TODO: fix this weird extra space thing
-    define("decode table with array of tables and date/time values and comments", function()
+    define("date/time values in array headings with fancy dates", function()
         local toml_str = [=[
 [[logs]] # Log entry 1
   timestamp = 1979-05-27T07:32:00Z # Offset datetime
@@ -1499,7 +1499,30 @@ String'''
   timestamp = 1979-05-27 # Local date
   message = "Log entry 2"
 ]=]
-        local data, err = tomlua_default.decode(toml_str)
+        local data, err = tomlua_fancy_dates.decode(toml_str)
+        print(toml_str, err)
+        print(require("inspect")(data))
+        it(err == nil, "Should not error")
+        it(#data.logs == 2, "Should have two logs")
+        it(tostring(data.logs[1].timestamp) == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
+        print("?"..data.logs[2].timestamp.."?")
+        it(tostring(data.logs[2].timestamp) == "1979-05-27", "Second log timestamp should be correct")
+    end)
+
+    -- TODO: fix this error for invalid date type
+    define("date/time values in array headings without fancy dates", function()
+        local toml_str = [=[
+[[logs]] # Log entry 1
+  timestamp = 1979-05-27T07:32:00Z # Offset datetime
+  message = "Log entry 1"
+
+[[logs]] # Log entry 2
+  timestamp = 1979-05-27 # Local date
+  message = "Log entry 2"
+]=]
+        local data, err = tomlua_fancy_dates.decode(toml_str)
+        print(toml_str, err)
+        print(require("inspect")(data))
         it(err == nil, "Should not error")
         it(#data.logs == 2, "Should have two logs")
         it(data.logs[1].timestamp == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
