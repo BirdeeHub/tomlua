@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/BirdeeHub/tomlua/compare/v0.0.4...v0.0.5) (2025-09-22)
+
+
+### Bug Fixes
+
+* **spec:** inline properly prevents further setting in all cases now ([d20dd52](https://github.com/BirdeeHub/tomlua/commit/d20dd5277df3683bfb200310b87eeb6e56a95152))
+
 ## [0.0.4](https://github.com/BirdeeHub/tomlua/compare/v0.0.3...v0.0.4) (2025-09-22)
 
 
