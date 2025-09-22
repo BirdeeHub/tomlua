@@ -1500,8 +1500,6 @@ String'''
   message = "Log entry 2"
 ]=]
         local data, err = tomlua_fancy_dates.decode(toml_str)
-        print(toml_str, err)
-        print(require("inspect")(data))
         it(err == nil, "Should not error")
         it(#data.logs == 2, "Should have two logs")
         it(tostring(data.logs[1].timestamp) == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
@@ -1521,8 +1519,6 @@ String'''
   message = "Log entry 2"
 ]=]
         local data, err = tomlua_fancy_dates.decode(toml_str)
-        print(toml_str, err)
-        print(require("inspect")(data))
         it(err == nil, "Should not error")
         it(#data.logs == 2, "Should have two logs")
         it(data.logs[1].timestamp == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
