@@ -1,6 +1,5 @@
 package.cpath = "./lib/?.so;" .. package.cpath
-local tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
-local tomlua_strict = require("tomlua") { fancy_tables = false, strict = true, fancy_dates = false }
+local tomlua = require("tomlua") { fancy_tables = false, fancy_dates = false }
 
 local inspect = require('inspect')
 local cjson = require("cjson.safe")
@@ -51,22 +50,6 @@ print(stats("TOML", elapsed))
 
 start_time = os.clock()
 
-for _ = 1, iterations do
-    local data, err = tomlua_strict.decode(contents)
-    last_result = data
-    if err then
-        print("ERROR:", err)
-        break
-    end
-end
-
-local elapsed1 = os.clock() - start_time
-
--- print("Last result:", inspect(last_result))
--- print("Last error:", last_error)
-print(stats("TOML", elapsed1))
-print(rate_compare("tomlua/tomlua_strict", elapsed, elapsed1))
-
 local jsonstr = cjson.encode(last_result)
 
 -- Benchmark against cjson
@@ -103,7 +86,7 @@ if run_toml_edit then
     print(stats("TOML", elapsed3))
     print(rate_compare("tomlua/toml_edit", elapsed, elapsed3))
 end
-tomlua = require("tomlua") { fancy_tables = false, strict = false, fancy_dates = false }
+tomlua = require("tomlua") { fancy_tables = false, fancy_dates = false }
 local to_encode = tomlua.decode(contents)
 
 -- ENCODE

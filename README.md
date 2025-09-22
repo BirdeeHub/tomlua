@@ -1,7 +1,6 @@
 # TOMLUA
 
-> ⚠️ **Warning:** This is a work-in-progress!
-> It needs major work done as it is not yet fully spec compliant.
+> ⚠️ **Warning:** This is a work-in-progress! It still has known bugs.
 > When this package is no longer in its early development cycle, its version will be set to v1.0.0 for the initial release.
 
 **TOMLUA** is a fast TOML parser and emitter for Lua, implemented in C. It is designed for **hot-path parsing** of TOML files into Lua tables, not for editing existing files.
@@ -16,7 +15,7 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 * Emits TOML from Lua tables (also quickly).
 * Compatible with Lua 5.1+.
 * Supports embedding in Lua C modules or Nix packaging.
-* Some advanced TOML compliance features are optional (`strict` mode, `fancy_dates`, etc.).
+* Some advanced TOML compliance features are optional (`fancy_dates`, etc.).
 
 ## Limitations
 
@@ -28,7 +27,7 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 
 Basic benchmarking shows promising results:
 
-* Slightly slower than `cjson` (1.2–2.0x), despite parsing TOML instead of JSON.
+* Slightly slower than `cjson` (1.5x), despite parsing TOML instead of JSON.
 * Around **10x faster** than `toml_edit` for parsing.
 
 ## Installation
@@ -74,8 +73,6 @@ local tomlua2 = tomlua {
     -- key = value still must be on the same line
     -- the tables, much like arrays, must still start on the same line as their key as well
     fancy_tables = false,
-    -- adds further uniqueness checking to be fully compliant with the toml spec
-    strict = false,
     -- causes keys that parse as lua integers to be interpreted as integer keys
     -- unless they were enclosed in "" or ''
     int_keys = false,
@@ -100,9 +97,6 @@ local tomlua2 = tomlua {
 tomlua.opts.fancy_dates = true
 
 local data, err = tomlua.decode(some_string)
-
--- or read into an existing table
-data, err = tomlua.decode(some_string, { some = "defaults" })
 
 -- encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
 -- instead you may customize dates by replacing them with tomlua date types

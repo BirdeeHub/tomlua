@@ -11,6 +11,7 @@ CFLAGS       += -x c -fPIC -shared -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
 SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/decode_str.c \
+                $(SRC)/src/decode_inline_value.c \
                 $(SRC)/src/decode.c \
                 $(SRC)/src/encode.c \
                 $(SRC)/src/dates.c

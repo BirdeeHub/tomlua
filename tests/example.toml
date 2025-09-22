@@ -51,9 +51,6 @@ trailing should not!
 
 '''
 
-# should fail on strict mode later at database heading
-# database.replica_backup = { host = "replica2.local", port = 5434 }
-
 [[test]]
 names.hello = "h\u1234i"
 key = "\U0001F600 value"

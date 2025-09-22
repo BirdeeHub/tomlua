@@ -2,7 +2,6 @@ return function(define, test_dir)
     -- Additional tests for TOMLUA encode functionality
 
     local tomlua_default = require("tomlua")
-    local tomlua_strict = require("tomlua")({ strict = true })
     local tomlua_fancy_dates = require("tomlua")({ fancy_dates = true })
     local tomlua_int_keys = require("tomlua")({ int_keys = true })
     local tomlua_multi_strings = require("tomlua")({ multi_strings = true })

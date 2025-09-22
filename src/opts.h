@@ -11,7 +11,6 @@
 #endif
 
 typedef enum {
-    TOMLOPTS_STRICT,
     TOMLOPTS_INT_KEYS,
     TOMLOPTS_FANCY_DATES,
     TOMLOPTS_FANCY_TABLES,
@@ -22,7 +21,6 @@ typedef enum {
     TOMLOPTS_LENGTH
 } TOMLOPTS;
 static const char *toml_opts_names[TOMLOPTS_LENGTH] = {
-    "strict",
     "int_keys",
     "fancy_dates",
     "fancy_tables",

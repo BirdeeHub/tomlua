@@ -2,7 +2,6 @@ return function(define, test_dir)
     -- Additional tests for TOMLUA decode functionality
 
     local tomlua_default = require("tomlua")
-    local tomlua_strict = require("tomlua")({ strict = true })
     local tomlua_fancy_dates = require("tomlua")({ fancy_dates = true })
     local tomlua_int_keys = require("tomlua")({ int_keys = true })
     local tomlua_multi_strings = require("tomlua")({ multi_strings = true })
@@ -17,7 +16,7 @@ return function(define, test_dir)
             contents = f:read("*a")
             f:close()
         end
-        local data, err = tomlua_strict.decode(contents)
+        local data, err = tomlua_default.decode(contents)
         it(data ~= nil, "Data should not be nil")
         it(err == nil, "Should not error on valid TOML")
     end)
@@ -115,25 +114,42 @@ enabled = true
         it(eq(data.database.ports, { 8001, 8001, 8002 }), "Nested table database.ports should be correct")
     end)
 
-    -- Strict mode
-    define("strict mode duplicate key error", function()
+    define("duplicate key error", function()
         local toml_str = [[
 key = 1
 key = 2
 ]]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Strict mode should error on duplicate key")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "should error on duplicate key")
     end)
 
-    define("strict mode duplicate table error", function()
+    define("duplicate table error", function()
         local toml_str = [[
 [table]
 key = 1
 [table]
 key = 2
 ]]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Strict mode should error on duplicate table")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "should error on duplicate table")
+    end)
+
+    define("table defined by key is defined", function()
+        local data, err = tomlua_default.decode([=[
+database.replica_backup = { host = "replica2.local", port = 5434 }
+[database]
+type = "postgres"
+host = "localhost"
+port = 5432
+username = "dbuser"
+password = "secret"
+pool_size = 10
+
+[database.replica]
+host = "replica1.local"
+port = 5433
+]=])
+        it(err ~= nil, "Should error")
     end)
 
     -- Fancy Dates
@@ -261,28 +277,6 @@ neg_huge_int = -9999999999999999999999999999999999999999999999999999999999999999
         local data, err = tomlua_default.decode("hehe = 'haha'", "ignored")
         it(data.hehe == "haha", "Value should be parsed correctly")
         it(err == nil, "Should ignore extra arguments")
-    end)
-
-    define("overlay defaults", function()
-        local testdata = {
-            a = { b = { "1b", "2b" } },
-            c = "hello",
-            e = { f = { "1f", "2f" } },
-        }
-
-        local testtoml = [=[
-a.b = [ "3b", "4b" ]
-d = "hahaha"
-[[e.f]]
-testtable.value = true
-[a]
-newval = "nope"
-]=]
-
-        local data, err = tomlua_default.decode(testtoml, testdata)
-        it(data.a.b[1] == "3b", "a.b should be overwritten")
-        it(data.d == "hahaha", "d should be added")
-        it(err == nil, "Should not error")
     end)
 
     -- Basic Types
@@ -435,8 +429,7 @@ key = "value" # This is an end-of-line comment
         it(#data.fruit[2].varieties == 1, "Second fruit should have one variety")
     end)
 
-    -- TODO: This does not error for some reason?
-    define("strict mode: duplicate table array error", function()
+    define("duplicate table array error", function()
         local toml_str = [=[
 [[table]]
 key = 1
@@ -445,8 +438,8 @@ key = 2
 [table]
 key = 3
 ]=]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Strict mode should error on duplicate table array and then table")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "should error on duplicate table array and then table")
     end)
 
     -- TODO: errors on time only date type
@@ -775,15 +768,13 @@ bare_key = 1
         it(data.groups[2].users[1].name == "Charlie", "Second group first user name should be correct")
     end)
 
-    -- TODO: this actually results in an array with 1 empty table in it.
-    -- Verify which is correct
-    define("decode table with empty array of tables", function()
+    define("decode table with empty heading array of tables", function()
         local toml_str = [=[
 [[empty_array_of_tables]]
 ]=]
         local data, err = tomlua_default.decode(toml_str)
         it(err == nil, "Should not error")
-        it(eq(data.empty_array_of_tables, {}), "Empty array of tables should be correct")
+        it(eq(data.empty_array_of_tables, { {} }), "Empty array of tables should be correct")
     end)
 
     define("decode table with empty inline table", function()
@@ -1330,14 +1321,14 @@ String'''
         it(err ~= nil, "Should error on underflow in array of tables")
     end)
 
-    define("decode table with array of tables and strict mode errors", function()
+    define("decode table with array of tables and errors", function()
         local toml_str = [=[
 [[items]]
   key = 1
   key = 2
 ]=]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Should error on duplicate key in array of tables in strict mode")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "Should error on duplicate key in array of tables")
 
         local toml_str_2 = [=[
 [[items]]
@@ -1346,8 +1337,8 @@ String'''
   [items.sub]
     val = 2
 ]=]
-        data, err = tomlua_strict.decode(toml_str_2)
-        it(err ~= nil, "Should error on duplicate table in array of tables in strict mode")
+        data, err = tomlua_default.decode(toml_str_2)
+        it(err ~= nil, "Should error on duplicate table in array of tables")
     end)
 
     define("decode table with array of tables and mixed types and comments", function()
@@ -1589,14 +1580,14 @@ String''' # Another multiline content
         it(err ~= nil, "Should error on underflow in array of tables")
     end)
 
-    define("decode table with array of tables and strict mode errors and comments", function()
+    define("decode table with array of tables and errors and comments", function()
         local toml_str = [=[
 [[items]] # Item 1
   key = 1
   key = 2 # Duplicate key
 ]=]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Should error on duplicate key in array of tables in strict mode")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "Should error on duplicate key in array of tables")
 
         local toml_str_2 = [=[
 [[items]] # Item 1
@@ -1605,8 +1596,8 @@ String''' # Another multiline content
   [items.sub]
     val = 2 # Duplicate table
 ]=]
-        data, err = tomlua_strict.decode(toml_str_2)
-        it(err ~= nil, "Should error on duplicate table in array of tables in strict mode")
+        data, err = tomlua_default.decode(toml_str_2)
+        it(err ~= nil, "Should error on duplicate table in array of tables")
     end)
 
     define("decode table with array of tables and mixed types and comments and empty lines", function()
@@ -1875,7 +1866,7 @@ String''' # Another multiline content
         it(err ~= nil, "Should error on underflow in array of tables")
     end)
 
-    define("decode table with array of tables and strict mode errors and comments and empty lines", function()
+    define("decode table with array of tables and errors and comments and empty lines", function()
         local toml_str = [=[
 # Item configurations
 
@@ -1890,8 +1881,8 @@ String''' # Another multiline content
   [items.sub]
     val = 2 # Duplicate table
 ]=]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Should error on duplicate key in array of tables in strict mode")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "Should error on duplicate key in array of tables")
 
         local toml_str_2 = [=[
 [[items]] # Item 1
@@ -1900,8 +1891,8 @@ String''' # Another multiline content
   [items.sub]
     val = 2 # Duplicate table
 ]=]
-        data, err = tomlua_strict.decode(toml_str_2)
-        it(err ~= nil, "Should error on duplicate table in array of tables in strict mode")
+        data, err = tomlua_default.decode(toml_str_2)
+        it(err ~= nil, "Should error on duplicate table in array of tables")
     end)
 
     define("decode table with array of tables and mixed types and comments and empty lines and complex nested structures", function()
@@ -2179,9 +2170,9 @@ String''' # Another multiline content
         it(err ~= nil, "Should error on underflow in array of tables")
     end)
 
-    define("decode table with array of tables and strict mode errors and comments and empty lines and complex nested structures", function()
+    define("decode table with array of tables and errors and comments and empty lines and complex nested structures", function()
         local toml_str = [=[
-# Item configurations with strict mode errors
+# Item configurations with errors
 
 [[items]] # Item 1
   key = 1
@@ -2196,8 +2187,8 @@ String''' # Another multiline content
     val = 2 # Duplicate table
   details = { name = "Item B" }
 ]=]
-        local data, err = tomlua_strict.decode(toml_str)
-        it(err ~= nil, "Should error on duplicate key in array of tables in strict mode")
+        local data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "Should error on duplicate key in array of tables")
 
         local toml_str_2 = [=[
 [[items]] # Item 1
@@ -2207,8 +2198,8 @@ String''' # Another multiline content
     val = 2 # Duplicate table
   details = { name = "Item B" }
 ]=]
-        data, err = tomlua_strict.decode(toml_str_2)
-        it(err ~= nil, "Should error on duplicate table in array of tables in strict mode")
+        data, err = tomlua_default.decode(toml_str_2)
+        it(err ~= nil, "Should error on duplicate table in array of tables")
     end)
 
 end

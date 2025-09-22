@@ -20,8 +20,9 @@
 #endif
 
 // NOTE: just for debugging
+// REQUIRES inspect package to be in the lua path!!
 #include <stdio.h>
-static void print_lua_stack(lua_State *L, const char *fmt, ...) {
+static void print_lua_stack(lua_State *L, bool inspect, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     printf("=== Stack: ");
@@ -43,6 +44,29 @@ static void print_lua_stack(lua_State *L, const char *fmt, ...) {
             } else {
                 printf(" -> '%.*s'", (int)len, s);
             }
+        } else if (inspect && t == LUA_TTABLE) {
+            // Make sure the value is on the stack at `value_index`
+            lua_getglobal(L, "require");       // push require function
+            lua_pushstring(L, "inspect");      // push module name
+            if (lua_pcall(L, 1, 1, 0) != LUA_OK) { // call require("inspect")
+                printf("Error requiring inspect: %s\n", lua_tostring(L, -1));
+                lua_pop(L, 1);
+                return;
+            }
+            // Now the inspect function is on top of the stack
+
+            lua_pushvalue(L, i);     // push the value to inspect
+            if (lua_pcall(L, 1, 1, 0) != LUA_OK) { // call inspect(value)
+                printf("Error calling inspect: %s\n", lua_tostring(L, -1));
+                lua_pop(L, 1);
+                return;
+            }
+
+            // The result string is on top of the stack
+            const char *result = lua_tostring(L, -1);
+            printf(" -> %s\n", result);
+
+            lua_pop(L, 1); // pop the result
         }
         printf("\n");
     }
