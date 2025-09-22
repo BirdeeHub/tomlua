@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/BirdeeHub/tomlua/compare/v0.0.1...v0.0.2) (2025-09-22)
+
+
+### Bug Fixes
+
+* **array_headings:** ok, biggest bug down ([9a99364](https://github.com/BirdeeHub/tomlua/commit/9a9936469610dce128bdc60990f20ae9e3dfca85))
+
 ## [0.0.1](https://github.com/BirdeeHub/tomlua/compare/v0.0.0...v0.0.1) (2025-09-21)
 
 
