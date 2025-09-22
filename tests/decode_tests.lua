@@ -429,6 +429,23 @@ key = "value" # This is an end-of-line comment
         it(#data.fruit[2].varieties == 1, "Second fruit should have one variety")
     end)
 
+    define("inline stuff should block later headings", function()
+        local errtoml = [=[
+        fruits = []
+        [[fruits]]
+        name = "apple"
+        ]=]
+        local _, err = tomlua_default.decode(errtoml)
+        it(err ~= nil, "Array version should error")
+        errtoml = [=[
+        database = {}
+        [database]
+        type = "postgres"
+        ]=]
+        _, err = tomlua_default.decode(errtoml)
+        it(err ~= nil, "Table version should error")
+    end)
+
     define("duplicate table array error", function()
         local toml_str = [=[
 [[table]]
@@ -451,7 +468,6 @@ date_only = 1979-05-27
 time_only = 07:32:00
 ]]
         local data, err = tomlua_fancy_dates.decode(toml_str)
-        print((data or {}).time_only, err)
         it(err == nil, "Should not error")
         it(type(data.date_offset) == "userdata", "Offset datetime should be userdata")
         it(data.date_offset.year == 1979 and data.date_offset.month == 5 and data.date_offset.day == 27, "Offset datetime components should be correct")
