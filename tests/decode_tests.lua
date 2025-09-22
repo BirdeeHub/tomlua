@@ -397,7 +397,6 @@ key = "value" # This is an end-of-line comment
         it(data.key == "value", "Key-value pair with comments should be parsed correctly")
     end)
 
-    -- TODO: this finds an actual bug. keep this test, highest priority
     define("decode table array of tables with dotted keys", function()
         local toml_str = [=[
 [[fruit]]
@@ -459,7 +458,6 @@ key = 3
         it(err ~= nil, "should error on duplicate table array and then table")
     end)
 
-    -- TODO: errors on time only date type
     define("fancy_dates option: various date types", function()
         local toml_str = [[
 date_offset = 1979-05-27T07:32:00Z
@@ -760,7 +758,6 @@ bare_key = 1
         it(data.products[2].details.available == true, "Second product details available should be correct")
     end)
 
-    -- TODO: basically the same as the fruits test. Fix the array heading pickup
     define("decode table with array of arrays of tables", function()
         local toml_str = [=[
 [[groups]]
@@ -1021,7 +1018,6 @@ key1 = 1
         it(eq(data.items[2].tags, {"tag1", "tag2"}), "Second item tags should be correct")
     end)
 
-    -- TODO: same as the fruits thing
     define("decode table with array of tables and nested array of tables", function()
         local toml_str = [=[
 [[companies]]
@@ -1505,7 +1501,6 @@ String'''
         it(data.metrics[2].value == 10.5, "Second metric value should be float")
     end)
 
-    -- TODO: fix this weird extra space thing
     define("date/time values in array headings with fancy dates", function()
         local toml_str = [=[
 [[logs]] # Log entry 1
@@ -1523,7 +1518,6 @@ String'''
         it(tostring(data.logs[2].timestamp) == "1979-05-27", "Second log timestamp should be correct")
     end)
 
-    -- TODO: fix this error for invalid date type
     define("date/time values in array headings without fancy dates", function()
         local toml_str = [=[
 [[logs]] # Log entry 1
