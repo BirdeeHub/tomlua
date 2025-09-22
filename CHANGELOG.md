@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/BirdeeHub/tomlua/compare/v0.0.2...v0.0.3) (2025-09-22)
+
+
+### Bug Fixes
+
+* **debug_method:** debug method doesnt build everywhere apparently ([080e933](https://github.com/BirdeeHub/tomlua/commit/080e933274d8e5805a59fde38f8e557c1bbb441e))
+
 ## [0.0.2](https://github.com/BirdeeHub/tomlua/compare/v0.0.1...v0.0.2) (2025-09-22)
 
 
