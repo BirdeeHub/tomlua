@@ -42,12 +42,16 @@ test: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
 	$(LUA) "$(TESTDIR)/run_tests.lua" -- "$(TESTDIR)" "$(DESTDIR)"
 
-install:
+install: $(SRC)/meta.lua
 ifdef LIBDIR
 	$(check_so_was_built)
 	@mkdir -p "$(LIBDIR)";
 	cp "$(DESTDIR)/tomlua.so" "$(LIBDIR)/";
 	@echo "Installed to $(LIBDIR)";
+ifdef LUADIR
+	@mkdir -p "$(LUADIR)/tomlua";
+	cp "$(SRC)/meta.lua" "$(LUADIR)/tomlua/";
+endif
 else
 	@echo "LIBDIR not set, skipping install"
 endif

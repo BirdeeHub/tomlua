@@ -1,5 +1,6 @@
 package.cpath = "./lib/?.so;" .. package.cpath
 local inspect = require('inspect')
+---@type Tomlua
 local tomlua = require("tomlua")
 
 print(inspect(tomlua))
@@ -100,7 +101,7 @@ print(date < date2) -- false
 print("date1", date)
 
 print(date.toml_type)
-print(tomlua.typename(tomlua.type(date)))
+print(tomlua.typename(tomlua.type_of(date)))
 date.toml_type = "LOCAL_TIME"
 print(date.toml_type)
 print(date)
