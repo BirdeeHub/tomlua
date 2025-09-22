@@ -48,7 +48,7 @@ static void print_lua_stack(lua_State *L, bool inspect, const char *fmt, ...) {
             // Make sure the value is on the stack at `value_index`
             lua_getglobal(L, "require");       // push require function
             lua_pushstring(L, "inspect");      // push module name
-            if (lua_pcall(L, 1, 1, 0) != LUA_OK) { // call require("inspect")
+            if (!lua_pcall(L, 1, 1, 0)) { // call require("inspect")
                 printf("Error requiring inspect: %s\n", lua_tostring(L, -1));
                 lua_pop(L, 1);
                 return;
@@ -56,7 +56,7 @@ static void print_lua_stack(lua_State *L, bool inspect, const char *fmt, ...) {
             // Now the inspect function is on top of the stack
 
             lua_pushvalue(L, i);     // push the value to inspect
-            if (lua_pcall(L, 1, 1, 0) != LUA_OK) { // call inspect(value)
+            if (!lua_pcall(L, 1, 1, 0)) { // call inspect(value)
                 printf("Error calling inspect: %s\n", lua_tostring(L, -1));
                 lua_pop(L, 1);
                 return;
