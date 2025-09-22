@@ -24,5 +24,6 @@ build = {
    },
    install_variables = {
       LIBDIR="$(LIBDIR)",
+      LUADIR="$(LUADIR)",
    },
 }
