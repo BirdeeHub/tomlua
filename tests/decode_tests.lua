@@ -1503,7 +1503,6 @@ String'''
         it(err == nil, "Should not error")
         it(#data.logs == 2, "Should have two logs")
         it(tostring(data.logs[1].timestamp) == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
-        print("?"..data.logs[2].timestamp.."?")
         it(tostring(data.logs[2].timestamp) == "1979-05-27", "Second log timestamp should be correct")
     end)
 
@@ -1518,11 +1517,10 @@ String'''
   timestamp = 1979-05-27 # Local date
   message = "Log entry 2"
 ]=]
-        local data, err = tomlua_fancy_dates.decode(toml_str)
+        local data, err = tomlua_default.decode(toml_str)
         it(err == nil, "Should not error")
         it(#data.logs == 2, "Should have two logs")
         it(data.logs[1].timestamp == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
-        print("?"..data.logs[2].timestamp.."?")
         it(data.logs[2].timestamp == "1979-05-27", "Second log timestamp should be correct")
     end)
 
@@ -1795,8 +1793,6 @@ String''' # Another multiline content
         it(err == nil, "Should not error")
         it(#data.logs == 2, "Should have two logs")
         it(tostring(data.logs[1].timestamp) == "1979-05-27T07:32:00Z", "First log timestamp should be correct")
-        print("!"..data.logs[2].timestamp.."!")
-        -- TODO: figure out why this is getting an extra space added to it?!
         it(tostring(data.logs[2].timestamp) == "1979-05-27", "Second log timestamp should be correct")
     end)
 

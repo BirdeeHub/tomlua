@@ -320,6 +320,7 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
             bool is_float = false;
             bool is_date = false;
             bool t_used = false;
+            bool last_was_T_space = false;
             bool z_used = false;
             bool was_underscore = true;
             if (curr.v == '+') {
@@ -351,13 +352,13 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
             }
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
-                if (ch == '_') {
+                if (ch == '_' && !last_was_T_space) {
                     iter_skip(src);
                     if (was_underscore) {
                         return set_tmlerr(new_tmlerr(L, erridx), false, 46, "consecutive underscores not allowed in numbers");
                     }
                     was_underscore = true;
-                } else if (ch == 'e' || ch == 'E') {
+                } else if ((ch == 'e' || ch == 'E') && !last_was_T_space) {
                     is_float = true;
                     buf_push(buf, ch);
                     iter_skip(src);
@@ -367,37 +368,47 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                         iter_skip(src);
                     }
                     was_underscore = false;
-                } else if (ch == ':') {
+                } else if (ch == ':' && !last_was_T_space) {
                     is_date = true;
                     was_underscore = false;
                     buf_push(buf, ch);
                     iter_skip(src);
-                } else if (ch == '-') {
+                } else if (ch == '-' && !last_was_T_space) {
                     is_date = true;
                     was_underscore = false;
                     buf_push(buf, ch);
                     iter_skip(src);
-                } else if (is_date && !t_used && (ch == 'T' || ch == ' ')) {
+                } else if (is_date && !t_used && ch == 'T' && !last_was_T_space) {
                     t_used = true;
                     was_underscore = false;
                     buf_push(buf, ch);
                     iter_skip(src);
-                } else if (is_date && !z_used && ch == 'Z') {
+                } else if (is_date && !t_used && ch == ' ' && !last_was_T_space) {
+                    t_used = true;
+                    was_underscore = false;
+                    last_was_T_space = true;
+                    iter_skip(src);
+                } else if (is_date && !z_used && ch == 'Z' && !last_was_T_space) {
                     z_used = true;
                     was_underscore = false;
                     buf_push(buf, ch);
                     iter_skip(src);
-                } else if (ch == '.') {
+                } else if (ch == '.' && !last_was_T_space) {
                     is_float = true;
                     was_underscore = false;
                     buf_push(buf, ch);
                     iter_skip(src);
                 } else if (ch >= '0' && ch <= '9') {
+                    if (last_was_T_space) {
+                        if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, erridx), false, 56, "failed to push space to date");
+                    }
+                    last_was_T_space = false;
                     was_underscore = false;
                     buf_push(buf, ch);
                     iter_skip(src);
                 } else {
                     was_underscore = false;
+                    last_was_T_space = false;
                     break;
                 }
             }
