@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6](https://github.com/BirdeeHub/tomlua/compare/v0.0.5...v0.0.6) (2025-09-22)
+
+
+### Bug Fixes
+
+* **dates:** dates fixed ([5a5bfd3](https://github.com/BirdeeHub/tomlua/commit/5a5bfd3354e77d48dfa985bbfd0cc770c59f176f))
+
 ## [0.0.5](https://github.com/BirdeeHub/tomlua/compare/v0.0.4...v0.0.5) (2025-09-22)
 
 
