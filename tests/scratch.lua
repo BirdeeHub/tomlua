@@ -118,6 +118,9 @@ do
     }
     local errtoml = [=[
 
+    time_now = 06:22:05
+    time_next = 06:22:05.1234
+
     # INVALID TOML DOC
     fruits = []
     database = { duplicate = { hehe = "haha" }}
@@ -126,6 +129,7 @@ do
     next_release = 2028-08-24T12:00:00.666Z
     last_backup = 2025-08-23T23:45:12-07:00
     last_modified = 2025-08-24 12:00:00Z
+    date_today = 2025-08-24
 
     [[fruits]]
     name = "apple"

@@ -154,6 +154,7 @@ bool parse_toml_date(str_iter *src, TomlDate date) {
 
     // Parse YYYY-MM-DD
     if (!parse_number(src, 4, &DATE_GET(date, YEAR))) {
+        iter_reset_pos(src);
         if (!parse_time(src, date)) return false;
         DATE_GET(date, TOML_TYPE) = TOML_LOCAL_TIME;
         return true;
