@@ -279,12 +279,11 @@ World"""]=], nil, true) ~= nil, "Encoded multiline string should be correct")
     end)
 
     define("encode multi_strings: literal multiline string", function()
-        local mul_str = tomlua_default.str_2_mul('C:\\Users\\Tom', true) -- true for literal
+        local mul_str = tomlua_default.str_2_mul([[C:\\Users\\Tom]], true) -- true for literal
         local test_table = { path = mul_str }
         local encoded_str, err = tomlua_default.encode(test_table)
         it(err == nil, "Should not error during encoding")
-        -- TODO: I think this is a bug, it should be path = """C:\\\\Users\\\\Tom""" I think
-        it(string.find(encoded_str, [=[path = """C:\\Users\\Tom""" ]=], nil, true) ~= nil, "Encoded literal multiline string should be correct")
+        it(string.find(encoded_str, [=[path = """C:\\\\Users\\\\Tom"""]=], nil, true) ~= nil, "Encoded literal multiline string should be correct")
     end)
 
     define("encode mark_inline: inline table", function()
