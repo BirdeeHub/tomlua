@@ -451,6 +451,7 @@ date_only = 1979-05-27
 time_only = 07:32:00
 ]]
         local data, err = tomlua_fancy_dates.decode(toml_str)
+        print((data or {}).time_only, err)
         it(err == nil, "Should not error")
         it(type(data.date_offset) == "userdata", "Offset datetime should be userdata")
         it(data.date_offset.year == 1979 and data.date_offset.month == 5 and data.date_offset.day == 27, "Offset datetime components should be correct")

@@ -245,7 +245,7 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 char ch = iter_peek(src).v;
                 if (is_hex_char(ch)) {
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
@@ -271,7 +271,7 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 char ch = iter_peek(src).v;
                 if ((ch >= '0' && ch <= '7')) {
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
@@ -296,7 +296,7 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 char ch = iter_peek(src).v;
                 if ((ch == '0' || ch == '1')) {
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                 } else if (ch == '_') {
                     if (was_underscore) {
@@ -333,7 +333,7 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                     lua_pushnumber(L, NAN);
                     return true;
                 } else {
-                    buf_push(buf, curr.v);
+                    if (!buf_push(buf, curr.v)) return set_tmlerr(new_tmlerr(L, erridx), false, 51, "failed to push leading + character to number buffer");
                     iter_skip(src);
                 }
             } else if (curr.v == '-') {
@@ -346,42 +346,44 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                     lua_pushnumber(L, -NAN);
                     return true;
                 } else {
-                    buf_push(buf, curr.v);
+                    if (!buf_push(buf, curr.v)) return set_tmlerr(new_tmlerr(L, erridx), false, 51, "failed to push leading - character to number buffer");
                     iter_skip(src);
                 }
             }
             while (iter_peek(src).ok) {
                 char ch = iter_peek(src).v;
                 if (ch == '_' && !last_was_T_space) {
+                    if (is_date) return set_tmlerr(new_tmlerr(L, erridx), false, 44, "date literal not allowed to have underscores");
                     iter_skip(src);
                     if (was_underscore) {
                         return set_tmlerr(new_tmlerr(L, erridx), false, 46, "consecutive underscores not allowed in numbers");
                     }
                     was_underscore = true;
                 } else if ((ch == 'e' || ch == 'E') && !last_was_T_space) {
+                    if (is_date) return set_tmlerr(new_tmlerr(L, erridx), false, 41, "date literal not allowed to have exponent");
                     is_float = true;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                     iter_result next = iter_peek(src);
                     if (next.ok && (next.v == '+' || next.v == '-')) {
-                        buf_push(buf, next.v);
+                        if (!buf_push(buf, next.v)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                         iter_skip(src);
                     }
                     was_underscore = false;
                 } else if (ch == ':' && !last_was_T_space) {
                     is_date = true;
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 29, "failed to push date character");
                     iter_skip(src);
                 } else if (ch == '-' && !last_was_T_space) {
                     is_date = true;
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                 } else if (is_date && !t_used && ch == 'T' && !last_was_T_space) {
                     t_used = true;
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 29, "failed to push date character");
                     iter_skip(src);
                 } else if (is_date && !t_used && ch == ' ' && !last_was_T_space) {
                     t_used = true;
@@ -391,20 +393,20 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 } else if (is_date && !z_used && ch == 'Z' && !last_was_T_space) {
                     z_used = true;
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 29, "failed to push date character");
                     iter_skip(src);
                 } else if (ch == '.' && !last_was_T_space) {
                     is_float = true;
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                 } else if (ch >= '0' && ch <= '9') {
                     if (last_was_T_space) {
-                        if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, erridx), false, 56, "failed to push space to date");
+                        if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, erridx), false, 29, "failed to push date character");
                     }
                     last_was_T_space = false;
                     was_underscore = false;
-                    buf_push(buf, ch);
+                    if (!buf_push(buf, ch)) return set_tmlerr(new_tmlerr(L, erridx), false, 31, "failed to push number character");
                     iter_skip(src);
                 } else {
                     was_underscore = false;
