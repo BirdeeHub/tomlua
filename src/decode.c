@@ -63,9 +63,9 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
         } else if (len > 0) { // it was an array, grab latest
             lua_rawgeti(L, -1, len);
             lua_remove(L, -2);
+            if (!lua_istable(L, -1))
+                return set_tmlerr(new_tmlerr(L, DECODE_ERR_IDX), false, 33, "cannot navigate through non-table");
         }
-        if (!lua_istable(L, -1))
-            return set_tmlerr(new_tmlerr(L, DECODE_ERR_IDX), false, 33, "cannot navigate through non-table");
     }
     lua_insert(L, keys_start);
     lua_settop(L, keys_start);
