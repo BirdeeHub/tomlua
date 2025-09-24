@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7](https://github.com/BirdeeHub/tomlua/compare/v0.0.6...v0.0.7) (2025-09-24)
+
+
+### Bug Fixes
+
+* **encode:** should now output more headings rather than inline toml ([9cf77a7](https://github.com/BirdeeHub/tomlua/commit/9cf77a7868d196fd6676cb08c6410963af084195))
+
 ## [0.0.6](https://github.com/BirdeeHub/tomlua/compare/v0.0.5...v0.0.6) (2025-09-22)
 
 
