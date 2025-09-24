@@ -180,3 +180,31 @@ end
 local val = { c = 123456, b = { "hi", a = "b" } }
 print(tomlua.type(val.b))
 print(tomlua.encode(val))
+
+do
+
+    local errtoml = [=[
+        [[fruits]]
+        name = "apple"
+
+        [fruits.physical]  # subtable
+        color = "red"
+        shape = "round"
+
+        [[fruits.varieties]]  # nested array of tables
+        name = "red delicious"
+
+        [[fruits.varieties]]
+        name = "granny smith"
+
+
+        [[fruits]]
+        name = "banana"
+
+        [[fruits.varieties]]
+        name = "plantain"
+    ]=]
+
+    local d, e = tomlua.decode(errtoml)
+    print(tomlua.encode(d))
+end

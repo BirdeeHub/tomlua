@@ -462,25 +462,26 @@ static bool flush_q(lua_State *L, str_buf *buf, Keys *keys) {
         lua_replace(L, deferred);
         if (is_heading_array) {
             size_t array_len = lua_arraylen(L, deferred);
-            if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 54, "failed to push newline before processing array heading");
             for (size_t i = 1; i <= array_len; i++) {
+                if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 54, "failed to push newline before processing array heading");
                 if (!buf_push_heading(L, buf, keys, true)) return false;
                 lua_rawgeti(L, deferred, i);
                 int tidx = lua_gettop(L);
+                // cycle detection
+                lua_pushvalue(L, tidx);
+                lua_rawget(L, ENCODE_VISITED_IDX);
+                if (!lua_isnil(L, -1)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "Circular reference in table");
+                lua_pop(L, 1);
+                lua_pushvalue(L, tidx);
+                lua_pushboolean(L, true);
+                lua_rawset(L, ENCODE_VISITED_IDX);
+
+                if(!buf_push_heading_table(L, buf, tidx)) return false;
+                if(!flush_q(L, buf, keys)) return false;
+
+                lua_settop(L, tidx);
                 lua_pushnil(L);
-                while (lua_next(L, tidx) != 0) {
-                    // push necessary to avoid stringifying the key
-                    lua_pushvalue(L, -2);
-                    str_iter lstr = lua_str_to_iter(L, -1);
-                    if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in array heading entry");
-                    if (!buf_push_esc_key(buf, &lstr)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push array heading key");
-                    // pop string AFTER writing to output buffer
-                    lua_pop(L, 1);
-                    if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in array heading entry");
-                    // pops value, leaves key for next lua_next
-                    if (!buf_push_inline_value(L, buf, 0)) return false;
-                    if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 48, "failed to push newline after array heading entry");
-                }
+                lua_rawset(L, ENCODE_VISITED_IDX);
             }
             lua_settop(L, deferred - 1);
         } else {
