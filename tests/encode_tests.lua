@@ -366,8 +366,6 @@ World"""]=], nil, true) ~= nil, "Encoded multiline string should be correct")
     -- children of those would get printed inline though?
     -- decide what this should be
     -- This might actually be the correct behavior
-    -- But first I need to work on encode + arrays with headings more generally and then I can come back to this.
-    -- It already outputs too much inline toml.
     define("encode table with array of inline tables", function()
         local test_table = {
             points = {
