@@ -5,9 +5,10 @@ CC           ?= gcc
 LUA          ?= lua
 BEAR         ?= bear
 GREP         ?= grep
-CFLAGS       ?= -O3 -flto -Wl,-s -Winline
+CFLAGS       ?= -x c -O3 -flto -Wl,-s -Winline
+LIBFLAG      ?= -fPIC -shared
 
-CFLAGS       += -x c -fPIC -shared -I"$(LUA_INCDIR)"
+CFLAGS       += $(LIBFLAG) -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
 SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/decode_str.c \
