@@ -39,7 +39,7 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
             return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 18, "key is not a table");
         }
         lua_remove(L, parent_idx);
-        // NOTE: erridx is secretly also our defined table when no error
+        // NOTE: We need to check if it was defined inline, because if it was defined by key in the same heading we can redefine but inline we can't
         lua_pushvalue(L, -1);
         lua_rawget(L, DECODE_DEFINED_IDX);
         if (lua_tointeger(L, -1) == -2) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 36, "Keys may not redefine inline tables!");
