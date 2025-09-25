@@ -368,14 +368,16 @@ World"""]=], nil, true) ~= nil, "Encoded multiline string should be correct")
     -- This might actually be the correct behavior
     define("encode table with array of inline tables", function()
         local test_table = {
-            points = {
-                setmetatable({ x = 1, y = 3 }, { toml_type = "TABLE_INLINE" }),
-                setmetatable({ x = 3, y = 4 }, { toml_type = tomlua_default.types.TABLE_INLINE })
-            }
+            points = setmetatable({
+                { x = 1, y = 3 },
+                { x = 3, y = 4 }
+            }, {
+                toml_type = "ARRAY_INLINE"
+            })
         }
         local encoded_str, err = tomlua_default.encode(test_table)
         it(err == nil, "Should not error during encoding")
-        it(string.find(encoded_str, "points = %[%s+{ [xy] = [12], [xy] = [12] },%s+{ [xy] = [34], [xy] = [34] }%s+]", nil) ~= nil, "Encoded array of inline tables should be correct")
+        it(string.find(encoded_str, "points = %[%s+{ [xy] = [1234], [xy] = [1234] },%s+{ [xy] = [1234], [xy] = [1234] }%s+]") ~= nil, "Encoded array of inline tables should be correct")
     end)
 
     define("encode table with array of arrays", function()
