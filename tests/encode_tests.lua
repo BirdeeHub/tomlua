@@ -361,11 +361,6 @@ World"""]=], nil, true) ~= nil, "Encoded multiline string should be correct")
         it(string.find(encoded_str, "flags = %[%s+true,%s+false%s+]", nil) ~= nil, "Should contain flags array")
     end)
 
-    -- TODO: I am not sure about this one. Because points is an array and isnt marked inline,
-    -- x and y of each get printed like entries under points heading.
-    -- children of those would get printed inline though?
-    -- decide what this should be
-    -- This might actually be the correct behavior
     define("encode table with array of inline tables", function()
         local test_table = {
             points = setmetatable({
