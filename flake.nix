@@ -75,11 +75,11 @@
     });
     devShells = forAllSys (system: let
       pkgs = getpkgs system;
-      lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson lp.toml-edit]);
+      lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson lp.toml-edit lp.luarocks]);
     in {
       default = pkgs.mkShell {
         name = "${APPNAME}-dev";
-        packages = [ lua pkgs.luarocks ];
+        packages = [ lua ];
         LUA_INCDIR = "${lua}/include";
         LUA = lua.interpreter;
         GREP = "${pkgs.gnugrep}/bin/grep";
