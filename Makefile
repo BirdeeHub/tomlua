@@ -1,4 +1,5 @@
-SRC          ?= .
+src          ?= .
+SRC          ?= $(src)
 SRC          := $(abspath $(SRC))
 DESTDIR      ?= $(SRC)/lib
 CC           ?= gcc
@@ -39,11 +40,11 @@ bear:   # used to generate compile_commands.json, which editor tools such as cla
 	$(BEAR) -- $(CC) -### $(CFLAGS) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
-test: $(SRC)/src/* $(TESTDIR)/*
+test: $(SRC)/src/* $(TESTDIR)/* $(SRC)/test.lua
 	$(check_so_was_built)
-	$(LUA) "$(TESTDIR)/run_tests.lua" "$(DESTDIR)"
+	$(LUA) "$(SRC)/test.lua" "$(DESTDIR)"
 
-install: $(SRC)/meta.lua
+install: $(SRC)/tomlua/meta.lua
 ifdef LIBDIR
 	$(check_so_was_built)
 	@mkdir -p "$(LIBDIR)";
@@ -51,7 +52,7 @@ ifdef LIBDIR
 	@echo "Installed to $(LIBDIR)";
 ifdef LUADIR
 	@mkdir -p "$(LUADIR)/tomlua";
-	cp "$(SRC)/meta.lua" "$(LUADIR)/tomlua/";
+	cp "$(SRC)/tomlua/meta.lua" "$(LUADIR)/tomlua/";
 endif
 else
 	@echo "LIBDIR not set, skipping install"

@@ -37,10 +37,10 @@
     in l_pkg_main // l_pkg_sets // {
       vimPlugins = prev.vimPlugins // {
         ${APPNAME} = (final.neovimUtils.buildNeovimPlugin { pname = APPNAME; }).overrideAttrs {
-          extraConfig = ''
-            lua_modules_path = "lua"
-            lib_modules_path = "lua"
-          '';
+          luarocksConfig = {
+            lua_modules_path = "lua";
+            lib_modules_path = "lua";
+          };
         };
       };
     };
@@ -51,11 +51,11 @@
       mkCheck = luaname: _: pkgs.runCommandCC ("tests-tom" + luaname) (let
         lua = pkgs.${luaname}; # .withPackages (lp: [lp.inspect]);
       in {
-        SRC = self;
+        src = self;
         LUA_INCDIR = "${lua}/include";
         LUA = lua.interpreter;
       }) ''
-        mkdir -p "$out" && cd "$SRC" && {
+        mkdir -p "$out" && cd "$src" && {
           make build test DESTDIR="$out" | tee "$out/test.log";
         }
       '';

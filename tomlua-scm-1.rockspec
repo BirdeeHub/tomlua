@@ -27,12 +27,3 @@ build = {
       LUADIR="$(LUADIR)",
    },
 }
-
--- test_dependencies = {
---    "lua >= 5.1"
--- }
--- test = {
---    type = "command",
---    script = "tests/run_tests.lua",
---    flags = { "$(LIBDIR)" }
--- }
