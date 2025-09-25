@@ -47,18 +47,11 @@
   in {
     overlays.default = overlay;
     checks = forAllSys (system: let
-      pkgs = getpkgs system;
-      mkCheck = luaname: _: pkgs.runCommandCC ("tests-tom" + luaname) (let
-        lua = pkgs.${luaname}; # .withPackages (lp: [lp.inspect]);
-      in {
+      pkgs = getpkgswithoverlay system;
+      mkCheck = luaname: _: pkgs.runCommandCC ("tests-tom" + luaname) {
         src = self;
-        LUA_INCDIR = "${lua}/include";
-        LUA = lua.interpreter;
-      }) ''
-        mkdir -p "$out" && cd "$src" && {
-          make build test DESTDIR="$out" | tee "$out/test.log";
-        }
-      '';
+        lua = (pkgs.${luaname}.withPackages (lp: [lp.${APPNAME}])).interpreter;
+      } "$lua $src/test.lua | tee $out";
     in builtins.mapAttrs mkCheck l_pkg_enum);
     packages = forAllSys (system: let
       pkgs = getpkgswithoverlay system;
