@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8](https://github.com/BirdeeHub/tomlua/compare/v0.0.7...v0.0.8) (2025-09-25)
+
+
+### Bug Fixes
+
+* **inline_decode:** inline tables are closed in all situations ([d553817](https://github.com/BirdeeHub/tomlua/commit/d553817db9691d04a3bc66937b9f5775916e73dd))
+
 ## [0.0.7](https://github.com/BirdeeHub/tomlua/compare/v0.0.6...v0.0.7) (2025-09-24)
 
 
