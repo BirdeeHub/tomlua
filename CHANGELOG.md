@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.9](https://github.com/BirdeeHub/tomlua/compare/v0.0.8...v0.0.9) (2025-09-25)
+
+
+### Bug Fixes
+
+* **types:** type info now accessible ([a38e9a0](https://github.com/BirdeeHub/tomlua/commit/a38e9a0d7e07bd61603ba40880cbf5327ffcf912))
+
 ## [0.0.8](https://github.com/BirdeeHub/tomlua/compare/v0.0.7...v0.0.8) (2025-09-25)
 
 
