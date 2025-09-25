@@ -40,7 +40,7 @@ bear:   # used to generate compile_commands.json, which editor tools such as cla
 
 test: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
-	$(LUA) "$(TESTDIR)/run_tests.lua" -- "$(TESTDIR)" "$(DESTDIR)"
+	$(LUA) "$(TESTDIR)/run_tests.lua" "$(DESTDIR)"
 
 install: $(SRC)/meta.lua
 ifdef LIBDIR
