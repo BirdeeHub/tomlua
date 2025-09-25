@@ -6,8 +6,8 @@ CC           ?= gcc
 LUA          ?= lua
 BEAR         ?= bear
 GREP         ?= grep
-CFLAGS       ?= -x c -O3 -flto -Wl,-s -Winline
-LIBFLAG      ?= -fPIC -shared
+CFLAGS       ?= -fPIC -x c -O3 -flto -Wl,-s -Winline
+LIBFLAG      ?= -shared
 
 CFLAGS       += $(LIBFLAG) -I"$(LUA_INCDIR)"
 TESTDIR      := $(SRC)/tests
