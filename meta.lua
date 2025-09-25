@@ -68,3 +68,7 @@ error("Cannot import a meta module")
 ---@field new_date fun(src:string|number|Tomlua.DateTable|Tomlua.Date?):Tomlua.Date
 
 ---@alias Tomlua Tomlua.main | fun(opts?:TomluaOptions):Tomlua
+
+---@type Tomlua
+local tomlua = require('tomlua')
+return tomlua

@@ -65,6 +65,8 @@ luarocks install tomlua
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
+-- mark it like this for lsp type info! (sorry, C compiled module)
+---@module 'tomlua.meta'
 local tomlua = require("tomlua")
 
 -- you can call it like a function and get a copy of the library with a new options table
