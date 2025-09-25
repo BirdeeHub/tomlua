@@ -188,6 +188,8 @@ This means that it makes a lot of sense to use a simple but fast parser to parse
 
 And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
 
+Randomly selected benchmark run of 100_000 parses of the example toml file:
+
 ```
 -- tomlua
 Parsed TOML 100000 times in 2.142739 seconds, avg. 46669.239697 iterations per second, avg. 21.43 µs/iteration
