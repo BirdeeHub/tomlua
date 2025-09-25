@@ -36,10 +36,12 @@
       }) l_pkg_enum);
     in l_pkg_main // l_pkg_sets // {
       vimPlugins = prev.vimPlugins // {
-        ${APPNAME} = final.neovimUtils.buildNeovimPlugin {
-          pname = APPNAME;
-          version = "dev";
-          src = self;
+        ${APPNAME} = (final.neovimUtils.buildNeovimPlugin { pname = APPNAME; }).overrideAttrs {
+          extraConfig = ''
+            -- to create a flat hierarchy
+            lua_modules_path = "lua"
+            lib_modules_path = "lua"
+          '';
         };
       };
     };
