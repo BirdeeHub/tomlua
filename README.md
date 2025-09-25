@@ -187,3 +187,18 @@ As a result of that, editing existing toml files, or emitting them at all, only 
 This means that it makes a lot of sense to use a simple but fast parser to parse config files on startup.
 
 And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
+
+```
+-- tomlua
+Parsed TOML 100000 times in 2.142739 seconds, avg. 46669.239697 iterations per second, avg. 21.43 µs/iteration
+-- cjson, parsing output of tomlua decode
+Parsed JSON 100000 times in 1.284222 seconds, avg. 77868.156752 iterations per second, avg. 12.84 µs/iteration
+speed tomlua/cjson: 59.93%, duration tomlua/cjson: 166.85%
+-- toml_edit
+Parsed TOML 100000 times in 15.833271 seconds, avg. 6315.814338 iterations per second, avg. 158.33 µs/iteration
+speed tomlua/toml_edit: 738.93%, duration tomlua/toml_edit: 13.53%
+-- tomlua encode
+Emitted TOML 100000 times in 2.307145 seconds, avg. 43343.612994 iterations per second, avg. 23.07 µs/iteration
+-- cjson encode
+Emitted JSON 100000 times in 1.479101 seconds, avg. 67608.635245 iterations per second, avg. 14.79 µs/iteration
+```

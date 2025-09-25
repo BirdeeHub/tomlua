@@ -134,6 +134,17 @@ key = 2
         it(err ~= nil, "should error on duplicate table")
     end)
 
+
+    define("redefining inline table via key should fail", function()
+        local errtoml = [=[
+[product]
+type = { name = "Nail" }
+type.edible = false
+        ]=]
+        local data, err = tomlua_default.decode(errtoml)
+        it(err ~= nil, "should error on redefining inline table")
+    end)
+
     define("table defined by key is defined", function()
         local data, err = tomlua_default.decode([=[
 database.replica_backup = { host = "replica2.local", port = 5434 }
