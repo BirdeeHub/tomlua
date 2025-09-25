@@ -38,7 +38,6 @@
       vimPlugins = prev.vimPlugins // {
         ${APPNAME} = (final.neovimUtils.buildNeovimPlugin { pname = APPNAME; }).overrideAttrs {
           extraConfig = ''
-            -- to create a flat hierarchy
             lua_modules_path = "lua"
             lib_modules_path = "lua"
           '';
