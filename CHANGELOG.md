@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.12](https://github.com/BirdeeHub/tomlua/compare/v0.0.11...v0.0.12) (2025-09-26)
+
+
+### Bug Fixes
+
+* **headings:** tricky case of lua table arrays ([357e459](https://github.com/BirdeeHub/tomlua/commit/357e4599686877f3ae12fd007b7b21bc1dc7b643))
+
 ## [0.0.11](https://github.com/BirdeeHub/tomlua/compare/v0.0.10...v0.0.11) (2025-09-26)
 
 
