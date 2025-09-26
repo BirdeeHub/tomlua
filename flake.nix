@@ -51,7 +51,7 @@
       mkCheck = luaname: _: pkgs.runCommandCC ("tests-tom" + luaname) {
         src = self;
         lua = (pkgs.${luaname}.withPackages (lp: [lp.${APPNAME}])).interpreter;
-      } "$lua $src/test.lua | tee $out";
+      } "$lua $src/tests/test.lua | tee $out";
     in builtins.mapAttrs mkCheck l_pkg_enum);
     packages = forAllSys (system: let
       pkgs = getpkgswithoverlay system;

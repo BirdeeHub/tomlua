@@ -1,6 +1,6 @@
 local cfg = string.gmatch(package.config, "(%S+)")
 local dirsep, pathsep, pathmark = cfg() or "/", cfg() or ";", cfg() or "?"
-local tomlua_test_dir = (debug.getinfo(1, 'S').source:sub(2):match("(.*)"..dirsep..".-") or ".")..dirsep.."tests"
+local tomlua_test_dir = debug.getinfo(1, 'S').source:sub(2):match("(.*)"..dirsep..".-") or "."
 package.path = ("%s%s%s.lua%s"):format(tomlua_test_dir, dirsep, pathmark, pathsep) .. package.path
 
 if arg[1] then

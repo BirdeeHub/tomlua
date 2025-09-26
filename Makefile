@@ -40,11 +40,11 @@ bear:   # used to generate compile_commands.json, which editor tools such as cla
 	$(BEAR) -- $(CC) -### $(CFLAGS) -o $(DESTDIR)/tomlua.so $(SRCS) > /dev/null 2>&1
 	$(GREP) -v -- "-###" compile_commands.json > compile_commands.tmp && mv compile_commands.tmp compile_commands.json
 
-test: $(SRC)/src/* $(TESTDIR)/* $(SRC)/test.lua
+test: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
-	$(LUA) "$(SRC)/test.lua" "$(DESTDIR)"
+	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)"
 
-install: $(SRC)/tomlua/meta.lua
+install: $(SRC)/lua/tomlua/meta.lua
 ifdef LIBDIR
 	$(check_so_was_built)
 	@mkdir -p "$(LIBDIR)";
@@ -52,7 +52,7 @@ ifdef LIBDIR
 	@echo "Installed to $(LIBDIR)";
 ifdef LUADIR
 	@mkdir -p "$(LUADIR)/tomlua";
-	cp "$(SRC)/tomlua/meta.lua" "$(LUADIR)/tomlua/";
+	cp "$(SRC)/lua/tomlua/meta.lua" "$(LUADIR)/tomlua/";
 endif
 else
 	@echo "LIBDIR not set, skipping install"
