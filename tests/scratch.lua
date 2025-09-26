@@ -184,9 +184,8 @@ print(tomlua.encode(val))
 do
     local errtoml = [=[
 [product]
-type = { name = "Nail" }
-type.edible = false
-    ]=]
+type.bleh =
+]=]
 
     local d, e = tomlua.decode(errtoml)
     print(tomlua.encode(d), e)

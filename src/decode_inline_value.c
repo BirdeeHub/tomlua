@@ -46,6 +46,7 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx, int erridx)
     lua_pushvalue(L, -2);
     lua_rawget(L, -2);
     if (!lua_isnil(L, -1)) {
+        // TODO: print keys
         return set_tmlerr(new_tmlerr(L, erridx), false, 20, "key already defined!");
     }
     lua_pop(L, 1);

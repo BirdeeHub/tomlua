@@ -32,8 +32,6 @@ Basic benchmarking shows promising results:
 
 ## Installation
 
-Better installation instructions are on the roadmap.
-
 ### Using Make
 
 ```bash
@@ -55,8 +53,8 @@ luarocks install tomlua
 
 ### Using Nix
 
-* Flake or flakeless support.
-* Overlay and packages available for Lua versions 5.1+.
+* Flake or flakeless support, both methods return according to the [flake outputs schema](https://wiki.nixos.org/wiki/Flakes).
+* Overlay and packages available for Lua versions 5.1+, as well as a neovim plugin.
 * Dev shell included for building via `make`.
 * Not yet on nixpkgs
 

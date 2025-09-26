@@ -26,7 +26,10 @@ static inline uint32_t hex_to_codepoint(const char src[], int len, int erridx) {
 
 static inline bool push_unicode(lua_State *L, str_buf *dst, char src[], int len, int erridx) {
     for (size_t i = 0; i < len; i++) {
-        if (!is_hex_char(src[i])) return set_tmlerr(new_tmlerr(L, erridx), false, 33, "unexpected unicode specifier char");
+        if (!is_hex_char(src[i])) {
+            tmlerr_push_fmt(new_tmlerr(L, erridx), "Unexpected unicode specifier character '%c'", src[i]);
+            return false;
+        }
     }
     uint32_t cp = hex_to_codepoint(src, len, erridx);
     if (!buf_push_utf8(dst, cp)) return set_tmlerr(new_tmlerr(L, erridx), false, 3, "OOM");
