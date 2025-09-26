@@ -34,7 +34,9 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx, int erridx)
             lua_pushvalue(L, -2);  // copy so we can continue with it after rawset
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            return set_tmlerr(new_tmlerr(L, erridx), false, 18, "key is not a table");
+            TMLErr *err = new_tmlerr(L, erridx);
+            set_tmlerr(err, false, 29, "key is not a table! Key was: ");
+            return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
         }
         lua_remove(L, parent_idx);
         // NOTE: erridx is secretly also our defined table when no error
@@ -46,8 +48,9 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx, int erridx)
     lua_pushvalue(L, -2);
     lua_rawget(L, -2);
     if (!lua_isnil(L, -1)) {
-        // TODO: print keys
-        return set_tmlerr(new_tmlerr(L, erridx), false, 20, "key already defined!");
+        TMLErr *err = new_tmlerr(L, erridx);
+        set_tmlerr(err, false, 30, "key already defined! Key was: ");
+        return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
     }
     lua_pop(L, 1);
 

@@ -183,8 +183,7 @@ print(tomlua.encode(val))
 
 do
     local errtoml = [=[
-[product]
-type.bleh =
+[[product]]sdadas
 ]=]
 
     local d, e = tomlua.decode(errtoml)

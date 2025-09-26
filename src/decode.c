@@ -36,15 +36,19 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
             lua_pushvalue(L, -2);  // copy so we can continue with it after rawset
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            // TODO: print keys
-            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 18, "key is not a table");
+            TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+            set_tmlerr(err, false, 29, "key is not a table! Key was: ");
+            return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
         }
         lua_remove(L, parent_idx);
         // NOTE: We need to check if it was defined inline, because if it was defined by key in the same heading we can redefine but inline we can't
         lua_pushvalue(L, -1);
         lua_rawget(L, DECODE_DEFINED_IDX);
-        // TODO: print keys
-        if (lua_tointeger(L, -1) == -2) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 36, "Keys may not redefine inline tables!");
+        if (lua_tointeger(L, -1) == -2) {
+            TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+            set_tmlerr(err, false, 46, "Keys may not redefine inline tables! Key was: ");
+            return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
+        }
         lua_pop(L, 1);
         lua_pushvalue(L, -1);
         lua_pushinteger(L, -1);
@@ -54,8 +58,9 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
     lua_pushvalue(L, -2);
     lua_rawget(L, -2);
     if (!lua_isnil(L, -1)) {
-        // TODO: print keys
-        return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 20, "key already defined!");
+        TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+        set_tmlerr(err, false, 30, "key already defined! Key was: ");
+        return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
     }
     lua_pop(L, 1);
 
@@ -68,7 +73,7 @@ static inline bool set_kv(lua_State *L, int keys_len, int value_idx) {
 }
 
 // pops keys, leaves new root on top
-static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
+static bool heading_nav(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
     lua_pushvalue(L, DECODE_RESULT_IDX);
@@ -84,8 +89,9 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
             lua_pushvalue(L, -2);
             lua_rawset(L, parent_idx);   // t[key] = new table
         } else if (vtype != LUA_TTABLE) {
-            // TODO: print keys
-            return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 33, "cannot navigate through non-table");
+            TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+            set_tmlerr(err, false, 44, "cannot navigate through non-table! Key was: ");
+            return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
         }
         lua_remove(L, parent_idx);  // remove parent table, keep child on top
         lua_pushvalue(L, -1);
@@ -106,8 +112,9 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
                 lua_rawseti(L, parent_idx, len);
                 lua_remove(L, parent_idx);  // remove parent table, keep child on top
             } else if (len != 0) {
-                // TODO: print keys
-                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 22, "table already defined!");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 32, "table already defined! Key was: ");
+                return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
             } else {
                 lua_pushvalue(L, -1);
                 lua_pushinteger(L, -1);
@@ -116,9 +123,11 @@ static inline bool heading_nav(lua_State *L, int keys_len, bool array_type) {
         } else if (len > 0) { // it was an array, grab latest
             lua_rawgeti(L, -1, len);
             lua_remove(L, -2);
-            if (!lua_istable(L, -1))
-                // TODO: print keys
-                return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 33, "cannot navigate through non-table");
+            if (!lua_istable(L, -1)) {
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 44, "cannot navigate through non-table! Key was: ");
+                return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);
+            }
         }
     }
     lua_insert(L, keys_start);
@@ -169,14 +178,20 @@ int tomlua_decode(lua_State *L) {
             int keys_len = parse_keys(L, &src, &scratch, int_keys, DECODE_DEFINED_IDX);
             if (!keys_len) goto fail;
             if (!iter_starts_with(&src, "]]", 2)) {
-                // TODO: print keys
-                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 30, "table heading must end with ]]");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 14, "array heading ");
+                int top = lua_gettop(L);
+                err_push_keys(L, err, absindex(top, -keys_len), top);
+                tmlerr_push_str(err, " must end with ]]", 17);
                 goto fail;
             }
             iter_skip_n(&src, 2);  // consume ]]
             if (!consume_whitespace_to_line(&src)) {
-                // TODO: print keys
-                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 56, "array [[headers]] must have a new line before new values");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 8, "array [[");
+                int top = lua_gettop(L);
+                err_push_keys(L, err, absindex(top, -keys_len), top);
+                tmlerr_push_str(err, "]] must have a new line before new values", 41);
                 goto fail;
             }
             if (!heading_nav(L, keys_len, true)) goto fail;
@@ -186,14 +201,20 @@ int tomlua_decode(lua_State *L) {
             int keys_len = parse_keys(L, &src, &scratch, int_keys, DECODE_DEFINED_IDX);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != ']') {
-                // TODO: print keys
-                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 29, "table heading must end with ]");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 14, "table heading ");
+                int top = lua_gettop(L);
+                err_push_keys(L, err, absindex(top, -keys_len), top);
+                tmlerr_push_str(err, " must end with ]", 16);
                 goto fail;
             }
             iter_skip(&src);  // consume ]
             if (!consume_whitespace_to_line(&src)) {
-                // TODO: print keys
-                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 54, "table [headers] must have a new line before new values");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 7, "table [");
+                int top = lua_gettop(L);
+                err_push_keys(L, err, absindex(top, -keys_len), top);
+                tmlerr_push_str(err, "] must have a new line before new values", 40);
                 goto fail;
             }
             if (!heading_nav(L, keys_len, false)) goto fail;
@@ -203,14 +224,19 @@ int tomlua_decode(lua_State *L) {
             int keys_len = parse_keys(L, &src, &scratch, int_keys, DECODE_DEFINED_IDX);
             if (!keys_len) goto fail;
             if (iter_peek(&src).v != '=') {
-                // TODO: print keys
-                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 35, "keys for assignment must end with =");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 20, "keys for assignment ");
+                int top = lua_gettop(L);
+                err_push_keys(L, err, absindex(top, -keys_len), top);
+                tmlerr_push_str(err, " must end with =", 16);
                 goto fail;
             }
             iter_skip(&src);  // consume =
             if (consume_whitespace_to_line(&src)) {
-                // TODO: print keys
-                set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 76, "the value in key = value expressions must begin on the same line as the key!");
+                TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
+                set_tmlerr(err, false, 86, "the value in key = value expressions must begin on the same line as the key! Key was: ");
+                int top = lua_gettop(L);
+                err_push_keys(L, err, absindex(top, -keys_len), top);
                 goto fail;
             }
             if (!decode_inline_value(L, &src, &scratch, uopts, DECODE_DEFINED_IDX)) goto fail;

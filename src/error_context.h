@@ -232,6 +232,16 @@ static bool tmlerr_push_buf(TMLErr *err, const str_buf *buf) {
 
 #include <lua.h>
 #include <lauxlib.h>
+static bool err_push_keys(lua_State *L, TMLErr *err, int keys_start, int keys_end) {
+    size_t l;
+    while (keys_start <= keys_end) {
+        const char *str = lua_tolstring(L, keys_start, &l);
+        tmlerr_push_str(err, str, l);
+        if (keys_start != keys_end) tmlerr_push(err, '.');
+        keys_start++;
+    }
+    return false;
+}
 static int push_tmlerr_string(lua_State *L, TMLErr *err) {
     if (!err || !err->msg) {
         lua_pushliteral(L, "Error: (no message)");
