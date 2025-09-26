@@ -77,6 +77,7 @@ static bool heading_nav(lua_State *L, int keys_len, bool array_type) {
     if (keys_len <= 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 28, "no keys provided to navigate");
     int keys_start = absindex(lua_gettop(L), -keys_len);
     lua_pushvalue(L, DECODE_RESULT_IDX);
+    bool is_new = false;
     for (int key_idx = keys_start; key_idx < keys_start + keys_len; key_idx++) {
         int parent_idx = lua_gettop(L);
         lua_pushvalue(L, key_idx);
@@ -88,6 +89,7 @@ static bool heading_nav(lua_State *L, int keys_len, bool array_type) {
             lua_pushvalue(L, key_idx);
             lua_pushvalue(L, -2);
             lua_rawset(L, parent_idx);   // t[key] = new table
+            is_new = true;
         } else if (vtype != LUA_TTABLE) {
             TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
             set_tmlerr(err, false, 44, "cannot navigate through non-table! Key was: ");
@@ -101,7 +103,7 @@ static bool heading_nav(lua_State *L, int keys_len, bool array_type) {
         lua_Integer len = lua_tointeger(L, -1);
         lua_pop(L, 1);
         if (key_idx == keys_start + keys_len - 1) {
-            if (len >= 0 && array_type) {
+            if ((len > 0 || is_new) && array_type) {
                 len++;
                 parent_idx = lua_gettop(L);
                 lua_pushvalue(L, parent_idx);
@@ -111,7 +113,7 @@ static bool heading_nav(lua_State *L, int keys_len, bool array_type) {
                 lua_pushvalue(L, -1);
                 lua_rawseti(L, parent_idx, len);
                 lua_remove(L, parent_idx);  // remove parent table, keep child on top
-            } else if (len != 0) {
+            } else if (!is_new) {
                 TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
                 set_tmlerr(err, false, 32, "table already defined! Key was: ");
                 return err_push_keys(L, err, keys_start, keys_start + keys_len - 1);

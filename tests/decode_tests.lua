@@ -132,6 +132,14 @@ key = 2
 ]]
         local data, err = tomlua_default.decode(toml_str)
         it(err ~= nil, "should error on duplicate table")
+        toml_str = [=[
+[fruit.oops]
+oops = "hmmmm"
+[[fruit]]
+name = "banana"
+]=]
+        data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "should error on duplicate table defined in a tricky way with headings")
     end)
 
 

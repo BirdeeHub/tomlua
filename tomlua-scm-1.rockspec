@@ -27,3 +27,17 @@ build = {
       LUADIR="$(LUADIR)",
    },
 }
+-- -- How do I specify CFLAGS and make them compile in 1 command?
+-- build = {
+--    type = "builtin",
+--    modules = {
+--       tomlua = {
+--           "./src/tomlua.c",
+--           "./src/decode_str.c",
+--           "./src/decode_inline_value.c",
+--           "./src/decode.c",
+--           "./src/encode.c",
+--           "./src/dates.c",
+--       },
+--    }
+-- }
