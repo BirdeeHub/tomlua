@@ -199,7 +199,7 @@ static bool tmlerr_push_positions(TMLErr *err, const size_t errpos, const size_t
                         if (s < caret_pos) {
                             if (!tmlerr_push(err, ' ')) return false;
                         } else {
-                            s = src_len;
+                            s = src_len + 4;
                         }
                 }
             }

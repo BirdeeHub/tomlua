@@ -234,7 +234,7 @@ int tomlua_decode(lua_State *L) {
 fail:
     lua_settop(L, DECODE_DEFINED_IDX);
     free_str_buf(&scratch);
-    // TODO: figure out why this does not add context when pos == len
+    src.pos = (src.pos >= src.len) ? src.len - 1 : src.pos;
     tmlerr_push_ctx_from_iter(get_err_val(L, DECODE_DEFINED_IDX), 7, &src);
     lua_pushnil(L);
     push_tmlerr_string(L, get_err_val(L, DECODE_DEFINED_IDX));
