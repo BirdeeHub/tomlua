@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.10](https://github.com/BirdeeHub/tomlua/compare/v0.0.9...v0.0.10) (2025-09-26)
+
+
+### Bug Fixes
+
+* **errors:** better error messages at EOF ([f122628](https://github.com/BirdeeHub/tomlua/commit/f12262866191bbc843290988f6dc80830bfaad80))
+
 ## [0.0.9](https://github.com/BirdeeHub/tomlua/compare/v0.0.8...v0.0.9) (2025-09-25)
 
 
