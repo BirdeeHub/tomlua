@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.11](https://github.com/BirdeeHub/tomlua/compare/v0.0.10...v0.0.11) (2025-09-26)
+
+
+### Bug Fixes
+
+* **errors:** better error messages for decode ([4917d5b](https://github.com/BirdeeHub/tomlua/commit/4917d5bbb435a0fe2a6cff26b848bf98cde4a5b1))
+
 ## [0.0.10](https://github.com/BirdeeHub/tomlua/compare/v0.0.9...v0.0.10) (2025-09-26)
 
 
