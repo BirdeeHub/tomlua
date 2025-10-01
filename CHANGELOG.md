@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.13](https://github.com/BirdeeHub/tomlua/compare/v0.0.12...v0.0.13) (2025-10-01)
+
+
+### Bug Fixes
+
+* **decode_to_defaults:** == to != ([a4d4c85](https://github.com/BirdeeHub/tomlua/commit/a4d4c8522ed31ffc96b4da424e153086b66fe9cf))
+
 ## [0.0.12](https://github.com/BirdeeHub/tomlua/compare/v0.0.11...v0.0.12) (2025-10-01)
 
 
