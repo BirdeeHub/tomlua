@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.12](https://github.com/BirdeeHub/tomlua/compare/v0.0.11...v0.0.12) (2025-10-01)
+
+
+### Bug Fixes
+
+* **decode:** all decode bugs fixed, but unsure about API again ([54769b4](https://github.com/BirdeeHub/tomlua/commit/54769b4abe2a67051eb21dde93785ffddc8b1f97))
+* **decode:** all decode bugs fixed, but unsure about API again ([c0ea87e](https://github.com/BirdeeHub/tomlua/commit/c0ea87e8349737343ba776df27e16a0d039cac74))
+
 ## [0.0.11](https://github.com/BirdeeHub/tomlua/compare/v0.0.10...v0.0.11) (2025-09-26)
 
 
