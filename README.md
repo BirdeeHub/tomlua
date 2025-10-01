@@ -116,6 +116,7 @@ local data, err = tomlua.decode(some_string, {
 --   toml_type = tomlua.types.TABLE -- it also accepts the numbers
 -- })
 -- you may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline
+-- there are some circumstances where this doesn't make sense, however. In that case, set it 1 level higher.
 local str, err = tomlua.encode(some_table)
 
 tomlua.types = {
