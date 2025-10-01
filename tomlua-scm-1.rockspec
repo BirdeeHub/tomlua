@@ -27,3 +27,15 @@ build = {
       LUADIR="$(LUADIR)",
    },
 }
+-- How do I specify CFLAGS -O3 and maybe -flto here?
+-- build = {
+--    type = "builtin",
+--    modules = {
+--       tomlua = {
+--           "./src/tomlua.c",
+--           "./src/decode.c",
+--           "./src/encode.c",
+--           "./src/dates.c",
+--       },
+--    }
+-- }

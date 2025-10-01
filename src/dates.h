@@ -43,7 +43,7 @@ static const char *DATE_FIELD_NAMES[TOMLDATE_DATE_LENGTH] = {
 };
 typedef int TomlDate[TOMLDATE_DATE_LENGTH];
 
-static TOMLDATE_FIELDS string_2_date_field_idx(const char *str) {
+static inline TOMLDATE_FIELDS string_2_date_field_idx(const char *str) {
     for (uint8_t i = 0; i < TOMLDATE_DATE_LENGTH; i++) {
         if (strcmp(str, DATE_FIELD_NAMES[i]) == 0) return i;
     }

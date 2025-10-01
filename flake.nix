@@ -78,7 +78,7 @@
         GREP = "${pkgs.gnugrep}/bin/grep";
         BEAR = "${pkgs.bear}/bin/bear";
         shellHook = ''
-          make clean build bear
+          make clean bear build
           [ "$(whoami)" == "birdee" ] && exec zsh
         '';
       };
