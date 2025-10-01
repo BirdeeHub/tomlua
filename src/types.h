@@ -38,12 +38,14 @@ static void print_lua_stack(lua_State *L, bool inspect, const char *fmt, ...) {
         printf("%d (%d): %s", i, neg_index, type_name);
         if (t == LUA_TSTRING || t == LUA_TNUMBER) {
             size_t len;
-            const char *s = lua_tolstring(L, i, &len);
+            lua_pushvalue(L, i);                   // duplicate the value
+            const char *s = lua_tolstring(L, -1, &len);
             if (t == LUA_TSTRING && len > MAX_DISPLAY_LEN) {
-                printf(" -> 'string[%zu]'", len);  // just show length for long strings
+                printf(" -> 'string[%zu]'", len);
             } else {
                 printf(" -> '%.*s'", (int)len, s);
             }
+            lua_pop(L, 1);  // remove duplicate
         } else if (inspect && t == LUA_TTABLE) {
             // Make sure the value is on the stack at `value_index`
             lua_getglobal(L, "require");       // push require function

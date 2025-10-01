@@ -182,10 +182,16 @@ print(tomlua.type(val.b))
 print(tomlua.encode(val))
 
 do
+    local toml_edit = require("toml_edit")
     local errtoml = [=[
-[[product]]sdadas
+# test = { a.TEST = [ 1, 2, 3 ], a.HA = "hmmmm" }
+# test2 = { a = [ 1, 2, 3 ], a.HA = "hmmmm" }
 ]=]
 
     local d, e = tomlua.decode(errtoml)
+    local ok, data = pcall(toml_edit.parse_as_tbl, errtoml)
+    print(ok, require("inspect")(data))
+    -- print(require("inspect")(d))
+    print(errtoml)
     print(tomlua.encode(d), e)
 end

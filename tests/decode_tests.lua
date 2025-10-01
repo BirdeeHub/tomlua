@@ -18,7 +18,7 @@ return function(define, test_dir)
         end
         local data, err = tomlua_default.decode(contents)
         it(data ~= nil, "Data should not be nil")
-        it(err == nil, "Should not error on valid TOML")
+        it(function() assert(err == nil, err) end, "Should not error on valid TOML")
     end)
 
     define("decode basic integer", function()
@@ -132,6 +132,21 @@ key = 2
 ]]
         local data, err = tomlua_default.decode(toml_str)
         it(err ~= nil, "should error on duplicate table")
+        toml_str = [=[
+[fruit.oops]
+whelp = "hmmmm"
+[[fruit]]
+name = "banana"
+]=]
+        data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "should error on redefining inline array with table indexing")
+        toml_str = [=[
+[testing.a]
+[testing]
+b = 1
+]=]
+        data, err = tomlua_default.decode(toml_str)
+        it(function() assert(err == nil, err) end, "This should NOT error though")
     end)
 
 
@@ -143,6 +158,16 @@ type.edible = false
         ]=]
         local data, err = tomlua_default.decode(errtoml)
         it(err ~= nil, "should error on redefining inline table")
+        errtoml = [=[
+test = { a = [ 1, 2, 3 ], a.HA = "hmmmm" }
+]=]
+        data, err = tomlua_default.decode(errtoml)
+        it(err ~= nil, "should error on redefining inline array with table indexing")
+        errtoml = [=[
+test = { a.TEST = [ 1, 2, 3 ], a.HA = "hmmmm" }
+]=]
+        data, err = tomlua_default.decode(errtoml)
+        it(function() assert(err == nil, err) end, "This should NOT error though")
     end)
 
     define("table defined by key is defined", function()
@@ -448,7 +473,7 @@ key = "value" # This is an end-of-line comment
         local _, err = tomlua_default.decode(errtoml)
         it(err ~= nil, "Array version should error")
         errtoml = [=[
-        database = {}
+        database = { tval = true }
         [database]
         type = "postgres"
         ]=]

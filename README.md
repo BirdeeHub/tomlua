@@ -14,8 +14,8 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 * Fast parsing of TOML files into Lua tables.
 * Emits TOML from Lua tables (also quickly).
 * Compatible with Lua 5.1+.
-* Supports embedding in Lua C modules or Nix packaging.
 * Some advanced TOML compliance features are optional (`fancy_dates`, etc.).
+* Allows you to read directly into an existing lua table of defaults. This cuts out the step of merging them yourself, making it even more performant and easier to use!
 
 ## Limitations
 
@@ -27,8 +27,8 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 
 Basic benchmarking shows promising results:
 
-* Slightly slower than `cjson` (1.5x), despite parsing TOML instead of JSON.
-* Around **10x faster** than `toml_edit` for parsing.
+* Slightly slower than `cjson` (2x longer), despite parsing TOML instead of JSON.
+* Around 7x faster than `toml_edit` for parsing (not accounting for the added ability to read directly into an existing lua table).
 
 ## Installation
 
@@ -97,6 +97,13 @@ local tomlua2 = tomlua {
 tomlua.opts.fancy_dates = true
 
 local data, err = tomlua.decode(some_string)
+
+local data, err = tomlua.decode(some_string, {
+    some = "defaults",
+    can_go = "here",
+    and = "tables and arrays defined in headings will extend the associated value",
+    and_inline = "values from the toml will override it instead",
+})
 
 -- encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
 -- instead you may customize dates by replacing them with tomlua date types
@@ -187,20 +194,3 @@ As a result of that, editing existing toml files, or emitting them at all, only 
 This means that it makes a lot of sense to use a simple but fast parser to parse config files on startup.
 
 And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
-
-Randomly selected benchmark run of 100_000 parses of the example toml file:
-
-```
--- tomlua
-Parsed TOML 100000 times in 2.142739 seconds, avg. 46669.239697 iterations per second, avg. 21.43 µs/iteration
--- cjson, parsing output of tomlua decode
-Parsed JSON 100000 times in 1.284222 seconds, avg. 77868.156752 iterations per second, avg. 12.84 µs/iteration
-speed tomlua/cjson: 59.93%, duration tomlua/cjson: 166.85%
--- toml_edit
-Parsed TOML 100000 times in 15.833271 seconds, avg. 6315.814338 iterations per second, avg. 158.33 µs/iteration
-speed tomlua/toml_edit: 738.93%, duration tomlua/toml_edit: 13.53%
--- tomlua encode
-Emitted TOML 100000 times in 2.307145 seconds, avg. 43343.612994 iterations per second, avg. 23.07 µs/iteration
--- cjson encode
-Emitted JSON 100000 times in 1.479101 seconds, avg. 67608.635245 iterations per second, avg. 14.79 µs/iteration
-```
