@@ -98,27 +98,45 @@ tomlua.opts.fancy_dates = true
 
 local data, err = tomlua.decode(some_string)
 
-local data, err = tomlua.decode(some_string, {
-    some = "defaults",
-    can_go = "here",
+local defaults = {
     tables_and_arrays = "defined in headings will extend the associated value",
-    and_inline = "values from the toml will override it instead",
-})
+    and_inline = "values from the toml will override it instead", -- NOTE: <-- subject to change?
+    example = {
+        if_defined = "as a heading",
+        the_values_here = "will be recursively updated",
+    },
+    example2 = {
+        "if defined as a heading",
+        "it will append",
+    },
+}
+local data, err = tomlua.decode(some_string, defaults)
 
--- encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
--- instead you may customize dates by replacing them with tomlua date types
--- and you may decide to make some strings multiline with tomlua.str_2_mul
--- and you may make arrays appear as tables, or empty tables appear as arrays,
--- local empty_toml_array = setmetatable({}, {
---   toml_type = "ARRAY"
--- })
--- local a_toml_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
---   toml_type = tomlua.types.TABLE -- it also accepts the numbers
--- })
--- you may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline
--- there are some circumstances where this doesn't make sense, however. In that case, set it 1 level higher.
 local str, err = tomlua.encode(some_table)
+```
 
+
+encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
+
+Instead you may customize the values themselves.
+
+You may create date objects, and you may decide to make some strings multiline with tomlua.str_2_mul
+
+You may make arrays appear as tables, or empty tables appear as arrays.
+
+```lua
+local empty_toml_array = setmetatable({}, {
+  toml_type = "ARRAY"
+})
+local a_toml_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
+  toml_type = tomlua.types.TABLE -- it also accepts the numbers
+})
+```
+
+you may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline
+there are some circumstances where this doesn't make sense, however. In that case, set it 1 level higher.
+
+```lua
 tomlua.types = {
     UNTYPED, -- 0  -- Untyped TOML Item
     STRING, -- 1  -- lua string
