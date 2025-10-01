@@ -101,7 +101,7 @@ local data, err = tomlua.decode(some_string)
 local data, err = tomlua.decode(some_string, {
     some = "defaults",
     can_go = "here",
-    and = "tables and arrays defined in headings will extend the associated value",
+    tables_and_arrays = "defined in headings will extend the associated value",
     and_inline = "values from the toml will override it instead",
 })
 
