@@ -182,16 +182,23 @@ print(tomlua.type(val.b))
 print(tomlua.encode(val))
 
 do
-    local toml_edit = require("toml_edit")
-    local errtoml = [=[
-# test = { a.TEST = [ 1, 2, 3 ], a.HA = "hmmmm" }
-# test2 = { a = [ 1, 2, 3 ], a.HA = "hmmmm" }
+    local appendtoml = [=[
+[example]
+test = "this is a test"
+[[example2]]
+test = "this is a test"
 ]=]
+    local defaults = {
+        example = {
+            if_defined = "as a heading",
+            the_values_here = "will be recursively updated",
+        },
+        example2 = {
+            { test = "if defined as a heading", },
+            { test = "it will append", }
+        },
+    }
 
-    local d, e = tomlua.decode(errtoml)
-    local ok, data = pcall(toml_edit.parse_as_tbl, errtoml)
-    print(ok, require("inspect")(data))
-    -- print(require("inspect")(d))
-    print(errtoml)
-    print(tomlua.encode(d), e)
+    local d, e = tomlua.decode(appendtoml, defaults)
+    print(require('inspect')(d), e)
 end

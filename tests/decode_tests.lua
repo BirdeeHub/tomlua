@@ -21,6 +21,30 @@ return function(define, test_dir)
         it(function() assert(err == nil, err) end, "Should not error on valid TOML")
     end)
 
+    define("reading headings to default table", function()
+        local appendtoml = [=[
+[example]
+test = "this is a test"
+[[example2]]
+test = "this is a test"
+]=]
+        local defaults = {
+            example = {
+                if_defined = "as a heading",
+                the_values_here = "will be recursively updated",
+            },
+            example2 = {
+                { test = "if defined as a heading", },
+                { test = "it will append", }
+            },
+        }
+        local data, err = tomlua_default.decode(appendtoml, defaults)
+        it(err == nil, "Should not error")
+        it(#data.example2 == 3, "Should be longer")
+        it(data.example.test ~= nil, "Should have been added")
+        it(data.example.if_defined ~= nil, "Should not have been removed")
+    end)
+
     define("decode basic integer", function()
         local data, err = tomlua_default.decode("key = 123")
         it(err == nil, "Should not error")

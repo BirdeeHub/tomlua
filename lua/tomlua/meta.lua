@@ -59,7 +59,7 @@ error("Cannot import a meta module")
 ---@class Tomlua.main
 ---@field opts TomluaOptions
 ---@field types table<TomlType, TomlTypeNum>
----@field decode fun(str:string):(any, string?): table?, string? -- returns result?, err?
+---@field decode fun(str:string, defaults?:table):(any, string?): table?, string? -- returns result?, err?
 ---@field encode fun(val:any):(string, string?): string?, string? -- returns result?, err?
 ---@field type fun(val:any):TomlType
 ---@field type_of fun(val:any):TomlTypeNum

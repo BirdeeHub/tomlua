@@ -105,7 +105,7 @@ static bool recursive_lua_nav(
                     return err_push_keys(L, err, keys_start, keys_end);
                 }
                 lua_Integer len = lua_tointeger(L, defidx);
-                if (had_defaults && deftype == LUA_TNUMBER) {
+                if (had_defaults && deftype != LUA_TNUMBER) {
                     len = lua_arraylen(L, validx);
                 }
                 lua_pop(L, 1);
