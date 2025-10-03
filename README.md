@@ -75,6 +75,10 @@ local tomlua2 = tomlua {
     fancy_tables = false,
     -- causes keys that parse as lua integers to be interpreted as integer keys
     -- unless they were enclosed in "" or ''
+    -- also allows encode to print a mixed lua table/array or sparse array
+    -- as normally, mixed and sparse tables are not encodable in toml.
+    -- It will print out keys such that decode with int_keys will parse them correctly
+    -- i.e. it will quote integer keys if they weren't previously lua numbers
     int_keys = false,
     -- causes dates to be parsed into a userdata type
     -- encode will write them correctly as well
@@ -116,9 +120,14 @@ local str, err = tomlua.encode(some_table)
 ```
 
 
-encode always accepts fancy dates, never outputs fancy tables, and is unaffected by all opts
+`encode` always accepts fancy dates, never outputs fancy tables, and is unaffected by most options.
 
-Instead you may customize the values themselves.
+The only option which affects encode is `int_keys`
+
+This option will allow tomlua to print mixed table/arrays or sparse arrays
+in such a way that `decode` with `int_keys` set to true will be able to faithfully recreate them.
+
+Outside of that, you may customize the values themselves.
 
 You may create date objects, and you may decide to make some strings multiline with tomlua.str_2_mul
 
