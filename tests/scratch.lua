@@ -189,6 +189,16 @@ test = "this is a test"
 test = "this is a test"
 ]=]
     local defaults = {
+        "test_mixed",
+        ["1"] = "im different",
+        mixed = {
+            "test_mixed",
+            ["1"] = "im different",
+        },
+        mixed_inline = setmetatable({
+            "test_mixed",
+            ["1"] = "im different",
+        }, { toml_type = "TABLE_INLINE" }),
         example = {
             if_defined = "as a heading",
             the_values_here = "will be recursively updated",
@@ -199,6 +209,8 @@ test = "this is a test"
         },
     }
 
-    local d, e = tomlua.decode(appendtoml, defaults)
+    local toml = tomlua { int_keys = true }
+    local d, e = toml.decode(appendtoml, defaults)
     print(require('inspect')(d), e)
+    print(toml.encode(d))
 end

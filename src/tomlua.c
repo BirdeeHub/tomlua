@@ -26,7 +26,7 @@ static inline TomlType toml_table_type(lua_State *L, int idx) {
     while (lua_next(L, idx) != 0) {
         // now at stack: key value
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
-        if (lua_isnumber(L, -1)) {
+        if (lua_type(L, -1) == LUA_TNUMBER) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
                 lua_settop(L, old_top);
@@ -123,7 +123,7 @@ static int tomlua_types(lua_State *L) {
 }
 
 static int tomlua_typename(lua_State *L) {
-    if (!lua_isnumber(L, 1)) {
+    if (lua_type(L, -1) != LUA_TNUMBER) {
         lua_pushnil(L);
     } else {
         lua_pushstring(L, toml_type_to_lua_name(lua_tonumber(L, 1)));
@@ -165,6 +165,9 @@ int luaopen_tomlua(lua_State *L) {
     lua_pushcclosure(L, tomlua_decode, 1);
     lua_setfield(L, 1, "decode");
     lua_pushvalue(L, -1);
+    lua_pushcclosure(L, encode, 1);
+    lua_setfield(L, 1, "encode");
+    lua_pushvalue(L, -1);
     lua_pushcclosure(L, opts_index, 1);
     lua_setfield(L, argtop + 2, "__index");
     lua_pushvalue(L, -1);
@@ -190,8 +193,6 @@ int luaopen_tomlua(lua_State *L) {
     lua_setfield(L, 1, "type");
     lua_pushcfunction(L, str_2_mul);
     lua_setfield(L, 1, "str_2_mul");
-    lua_pushcfunction(L, encode);
-    lua_setfield(L, 1, "encode");
     lua_newtable(L);
     lua_pushcfunction(L, luaopen_tomlua);
     lua_setfield(L, 2, "__call");

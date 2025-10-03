@@ -11,7 +11,7 @@ int encode(lua_State *L);
 // getmetatable(idx).toml_type to allow overriding of representation
 static inline TomlType get_meta_toml_type(lua_State *L, int idx) {
     if (luaL_getmetafield(L, idx, "toml_type")) {
-        if (lua_isnumber(L, -1)) {
+        if (lua_type(L, -1) == LUA_TNUMBER) {
             lua_Number n = lua_tonumber(L, -1);
             if (is_valid_toml_type(n)) {
                 lua_pop(L, 1);

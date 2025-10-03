@@ -4,6 +4,7 @@
 #include <string.h>
 #include "dates.h"
 #include "types.h"
+#include "opts.h"
 #include "encode.h"
 #include "error_context.h"
 
@@ -12,6 +13,7 @@
 typedef struct {
     size_t len;
     char * str;
+    bool wasnum;
 } KeyEntry;
 
 typedef struct {
@@ -31,12 +33,14 @@ static inline Keys new_keys() {
 }
 
 static inline bool push_lua_key(lua_State *L, Keys *keys, int idx) {
+    bool wasnum = lua_type(L, idx) == LUA_TNUMBER;
     size_t klen = 0;
     const char *str = lua_tolstring(L, idx, &klen);
     if (str == NULL) return false;
     KeyEntry k = {
         .str = malloc(klen + 1),
         .len = klen,
+        .wasnum = wasnum
     };
     memcpy(k.str, str, klen);
     k.str[klen] = '\0';
@@ -123,7 +127,7 @@ static inline int toml_heading_type(lua_State *L, int idx) {
         // now at stack: key value
         if (!lua_istable(L, -1)) is_array_heading = false;
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
-        if (lua_isnumber(L, -1)) {
+        if (lua_type(L, -1) == LUA_TNUMBER) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
                 lua_settop(L, old_top);
@@ -158,7 +162,7 @@ static inline bool is_lua_array(lua_State *L, int idx) {
     while (lua_next(L, idx) != 0) {
         // now at stack: key value
         lua_pop(L, 1);  // pop value, keep key to check and for next lua_next
-        if (lua_isnumber(L, -1)) {
+        if (lua_type(L, -1) == LUA_TNUMBER) {
             lua_Number key = lua_tonumber(L, -1);
             if (key < 1 || key != (lua_Number)(lua_Integer)(key)) {
                 lua_settop(L, old_top);
@@ -204,36 +208,28 @@ static bool buf_push_esc_multi(str_buf *dst, str_iter *src) {
 
 static bool buf_push_esc_simple(str_buf *dst, str_iter *src) {
     if (!buf_push(dst, '"')) return false;
-    while (true) {
-        iter_utf8_result res = iter_next_utf8(src);
-        if (!res.ok) break;
-        if (!buf_push_toml_escaped_char(dst, res.v, false)) return false;
+    for (iter_utf8_result curr = iter_next_utf8(src); curr.ok; curr = iter_next_utf8(src)) {
+        if (!buf_push_toml_escaped_char(dst, curr.v, false)) return false;
     }
     if (!buf_push(dst, '"')) return false;
     return true;
 }
 
-static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter) {
-    bool is_safe = false;
-    {
-        iter_result curr = iter_next(iter);
-        while (curr.ok) {
-            if (is_identifier_char(curr.v)) {
-                is_safe = true;
-            } else {
-                is_safe = false;
-                break;
-            }
-            curr = iter_next(iter);
+static inline bool buf_push_esc_key(str_buf *buf, str_iter *iter, bool wasnum) {
+    bool all_digits = true;
+    for (iter_result curr = iter_next(iter); curr.ok; curr = iter_next(iter)) {
+        char c = curr.v;
+        if (c < '0' || '9' < c) all_digits = false;
+        if (!is_identifier_char(c)) {
+            iter_reset_pos(iter);
+            return buf_push_esc_simple(buf, iter);
         }
     }
-    if (is_safe) {
-        if (!buf_push_str(buf, iter->buf, iter->len)) return false;
-    } else {
+    if (all_digits && !wasnum) {
         iter_reset_pos(iter);
-        if (!buf_push_esc_simple(buf, iter)) return false;
+        return buf_push_esc_simple(buf, iter);
     }
-    return true;
+    return buf_push_str(buf, iter->buf, iter->len);
 }
 
 static bool buf_push_keys(str_buf *buf, const Keys *keys) {
@@ -244,7 +240,7 @@ static bool buf_push_keys(str_buf *buf, const Keys *keys) {
             .pos = 0,
             .len = k.len,
         };
-        if (!buf_push_esc_key(buf, &src)) return false;
+        if (!buf_push_esc_key(buf, &src, k.wasnum)) return false;
         if (i != keys->len - 1) {
             if (!buf_push(buf, '.')) return false;
         }
@@ -297,7 +293,7 @@ static inline bool buf_push_heading(lua_State *L, str_buf *buf, const Keys *keys
     return true;
 }
 
-static bool buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
+static bool buf_push_inline_value(lua_State *L, str_buf *buf, bool int_keys, int level) {
     int val_idx = lua_gettop(L);
     int vtype = lua_type(L, val_idx);
     switch (vtype) {
@@ -336,7 +332,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
                     if (!buf_push_str(buf, indent, inlen)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 30, "failed to push indent to array");
                     for (int i = 1; i <= len; i++) {
                         lua_rawgeti(L, val_idx, i);
-                        if(!buf_push_inline_value(L, buf, (level >= 0) ? level + 1 : -1)) return false;
+                        if(!buf_push_inline_value(L, buf, int_keys, (level >= 0) ? level + 1 : -1)) return false;
                         if (i != len) {
                             if (!buf_push(buf, ',')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 30, "failed to push array separator");
                             if (!buf_push_str(buf, indent, inlen)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 30, "failed to push indent to array");
@@ -359,13 +355,17 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
                     if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 37, "failed to push table space before key");
                     // push necessary to avoid stringifying the key
                     lua_pushvalue(L, -2);
+                    bool wasnum = lua_type(L, -1) == LUA_TNUMBER;
+                    if (wasnum && !int_keys) {
+                        return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 100, "Mixed table/array objects or sparse arrays are not encodable in toml without int_keys option enabled");
+                    }
                     str_iter src = lua_str_to_iter(L, -1);
-                    if (src.buf == NULL || !buf_push_esc_key(buf, &src)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 24, "failed to push table key");
+                    if (src.buf == NULL || !buf_push_esc_key(buf, &src, wasnum)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 24, "failed to push table key");
                     // pop string AFTER writing to output buffer
                     lua_pop(L, 1);
                     if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 27, "failed to push table equals");
                     // pop and push value to buffer (-1 because no newlines allowed)
-                    if (!buf_push_inline_value(L, buf, -1)) return false;
+                    if (!buf_push_inline_value(L, buf, int_keys, -1)) return false;
                 }
                 if (!first) {
                     if (!buf_push(buf, ' ')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 35, "failed to push table trailing space");
@@ -409,7 +409,7 @@ static bool buf_push_inline_value(lua_State *L, str_buf *buf, int level) {
 //---@field key string
 //---@field value any
 // leaves stack how it found it, writes entries to residx list
-static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx) {
+static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx, bool int_keys) {
     lua_newtable(L);
     int residx = lua_gettop(L);
     int result_len = 0;
@@ -431,12 +431,16 @@ static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx)
             lua_rawseti(L, residx, ++result_len);
         } else {
             lua_pushvalue(L, key_idx);
+            bool wasnum = lua_type(L, -1) == LUA_TNUMBER;
+            if (wasnum && !int_keys) {
+                return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 100, "Mixed table/array objects or sparse arrays are not encodable in toml without int_keys option enabled");
+            }
             str_iter lstr = lua_str_to_iter(L, -1);
             if (!lstr.buf) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 34, "invalid key in table heading entry");
-            if (!buf_push_esc_key(buf, &lstr)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push table heading key");
+            if (!buf_push_esc_key(buf, &lstr, wasnum)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 32, "failed to push table heading key");
             lua_pop(L, 1);
             if (!buf_push_str(buf, " = ", 3)) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 44, "failed to push equals in table heading entry");
-            if (!buf_push_inline_value(L, buf, 0)) return false;
+            if (!buf_push_inline_value(L, buf, int_keys, 0)) return false;
             if (!buf_push(buf, '\n')) return set_tmlerr(new_tmlerr(L, ENCODE_VISITED_IDX), false, 48, "failed to push newline after table heading entry");
         }
         lua_settop(L, key_idx);
@@ -445,7 +449,7 @@ static bool buf_push_heading_table(lua_State *L, str_buf *buf, const int validx)
     return true;
 }
 
-static bool flush_q(lua_State *L, str_buf *buf, Keys *keys) {
+static bool flush_q(lua_State *L, str_buf *buf, Keys *keys, bool int_keys) {
     int input_idx = lua_gettop(L);
     size_t inlen = lua_arraylen(L, input_idx);
     for (size_t i = 1; i <= inlen; i++) {
@@ -476,8 +480,8 @@ static bool flush_q(lua_State *L, str_buf *buf, Keys *keys) {
                 lua_pushboolean(L, true);
                 lua_rawset(L, ENCODE_VISITED_IDX);
 
-                if(!buf_push_heading_table(L, buf, tidx)) return false;
-                if(!flush_q(L, buf, keys)) return false;
+                if(!buf_push_heading_table(L, buf, tidx, int_keys)) return false;
+                if(!flush_q(L, buf, keys, int_keys)) return false;
 
                 lua_settop(L, tidx);
                 lua_pushnil(L);
@@ -496,8 +500,8 @@ static bool flush_q(lua_State *L, str_buf *buf, Keys *keys) {
             lua_rawset(L, ENCODE_VISITED_IDX);
 
             if(!buf_push_heading(L, buf, keys, false)) return false;
-            if(!buf_push_heading_table(L, buf, deferred)) return false;
-            if(!flush_q(L, buf, keys)) return false;
+            if(!buf_push_heading_table(L, buf, deferred, int_keys)) return false;
+            if(!flush_q(L, buf, keys, int_keys)) return false;
 
             lua_settop(L, deferred);
             lua_pushnil(L);
@@ -511,6 +515,8 @@ static bool flush_q(lua_State *L, str_buf *buf, Keys *keys) {
 }
 
 int encode(lua_State *L) {
+    TomluaUserOpts *opts = get_opts_upval(L);
+    bool int_keys = (*opts)[TOMLOPTS_INT_KEYS];
     if (!lua_istable(L, 1)) {
         lua_settop(L, 0);
         lua_pushnil(L);
@@ -535,8 +541,8 @@ int encode(lua_State *L) {
     // NOTE: ENCODE_VISITED_IDX; // 2
     // This will also be where our error ends up if we get one.
     lua_newtable(L);
-    if(!buf_push_heading_table(L, &buf, 1)) goto fail;
-    if(!flush_q(L, &buf, &keys)) goto fail;
+    if(!buf_push_heading_table(L, &buf, 1, int_keys)) goto fail;
+    if(!flush_q(L, &buf, &keys, int_keys)) goto fail;
     free_keys(&keys);
     lua_settop(L, 0);
     push_buf_to_lua_string(L, &buf);
