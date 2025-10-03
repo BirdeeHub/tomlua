@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.14](https://github.com/BirdeeHub/tomlua/compare/v0.0.13...v0.0.14) (2025-10-03)
+
+
+### Bug Fixes
+
+* **encode:** mixed/sparse tables ([e48cfee](https://github.com/BirdeeHub/tomlua/commit/e48cfee50eded34eb333038480a1bdf858e99c9f))
+* **encode:** mixed/sparse tables ([cc1bb10](https://github.com/BirdeeHub/tomlua/commit/cc1bb10559e8f3679e0900070cd03cfb4219ee3e))
+
 ## [0.0.13](https://github.com/BirdeeHub/tomlua/compare/v0.0.12...v0.0.13) (2025-10-01)
 
 
