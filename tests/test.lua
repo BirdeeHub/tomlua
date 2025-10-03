@@ -14,8 +14,12 @@ local function run_test_file(path)
 	if ok then assert(pcall(run, define, tomlua_test_dir)) end
 end
 
-run_test_file('decode_tests')
-run_test_file('encode_tests')
+if arg[2] ~= "1" then
+	run_test_file('decode_tests')
+	run_test_file('encode_tests')
+else
+	run_test_file('scratch')
+end
 
 define.report()
 define.assert_passing()

@@ -42,6 +42,10 @@ test: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
 	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)"
 
+scratch: $(SRC)/src/* $(TESTDIR)/*
+	$(check_so_was_built)
+	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)" 1
+
 install: $(SRC)/lua/tomlua/meta.lua
 ifdef LIBDIR
 	$(check_so_was_built)
