@@ -156,11 +156,12 @@ static bool recursive_lua_nav(
     return true;
 }
 
-// pops value and keys, does not pop root
-// assumes value to set is on top
-static bool recursive_lua_set(lua_State *L, int keys_start, int root_idx) {
-    int validx = lua_gettop(L);
-    int keys_end = validx - 1;
+// pops keys, does not pop root
+// does the checks for set, but just returns final table and last key onto the stack
+// with the last key on top and final table below it
+// This allows decode_inline_value to set directly into it as well.
+static bool recursive_lua_set_nav(lua_State *L, int keys_start, int root_idx) {
+    int keys_end = lua_gettop(L);
     if (keys_end - keys_start < 0) {
         return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 28, "no keys provided to navigate");
     }
@@ -239,18 +240,20 @@ static bool recursive_lua_set(lua_State *L, int keys_start, int root_idx) {
                 set_tmlerr(err, false, 52, "Tried to use key indexing to set value in array at: ");
                 return err_push_keys(L, err, keys_start, keys_end);
             }
-            // stack: parent_idx, value (top), keys...
+            // stack: parent_idx, keys...
+            // NOTE: push both first so you dont overwrite yourself
+            lua_pushvalue(L, parent_idx);
             lua_pushvalue(L, keys_end);
-            lua_pushvalue(L, validx);
-            lua_rawset(L, parent_idx);
+            lua_replace(L, keys_start + 1);
+            lua_replace(L, keys_start);
+            lua_settop(L, keys_start + 1);
         }
     }
-    lua_settop(L, keys_start - 1);
     return true;
 }
 
 // function is to recieve src iterator starting after the first `=`,
-// and place 1 new item on the stack but otherwise leave the stack unchanged
+// it is also to recieve the table to set into, and the key to use to do it on the top of the stack, with the key on top and table below it.
 static bool decode_inline_value(
     lua_State *L,
     str_iter *src,
@@ -266,7 +269,7 @@ static bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const 
     const bool fancy_tables = opts[TOMLOPTS_FANCY_TABLES];
     while (iter_peek(src).ok) {
         char d = iter_peek(src).v;
-        if (d == '}') {
+        if (d == '}') {  // NOTE: SUCCESSFUL EXIT
             iter_skip(src);
             if (last_was_comma && !fancy_tables) {
                 lua_pop(L, 1);
@@ -300,8 +303,8 @@ static bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const 
         if (consume_whitespace_to_line(src)) {
             return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 76, "the value in key = value expressions must begin on the same line as the key!");
         }
+        if (!recursive_lua_set_nav(L, root_idx + 1, root_idx)) return false;
         if (!decode_inline_value(L, src, buf, opts)) return false;
-        if (!recursive_lua_set(L, root_idx + 1, root_idx)) return false;
         if (fancy_tables) {
             while (consume_whitespace_to_line(src)) {}
         } else if (consume_whitespace_to_line(src)) {
@@ -312,10 +315,6 @@ static bool parse_inline_table(lua_State *L, str_iter *src, str_buf *buf, const 
             return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 65, "toml inline table values must be separated with , or ended with }");
         }
     }
-    // inline uses this to avoid duplicate keys, and then sets it to -1 aferwards
-    lua_pushvalue(L, root_idx);
-    lua_pushinteger(L, -1);
-    lua_rawset(L, DECODE_DEFINED_IDX);
     return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "missing closing }");
 }
 
@@ -350,18 +349,25 @@ static inline bool push_float_or_handle(lua_State *L, str_buf *s, bool throw_on_
 }
 
 // function is to recieve src iterator starting after the first `=`,
-// and place 1 new item on the stack but otherwise leave the stack unchanged
+// it is also to recieve the table to set into, and the key to use to do it on the top of the stack, with the key on top and table below it.
 bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const TomluaUserOpts opts) {
+    // stack is currently: target_key, dest_table (already checked and made ready to be set by recursive_lua_set_nav)
+    int key_idx = lua_gettop(L);
+    int dest_idx = key_idx - 1;
     iter_result curr = iter_peek(src);
     if (!curr.ok) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 34, "expected value, got end of content");
     // --- boolean ---
     if (iter_starts_with(src, "true", 4)) {
         iter_skip_n(src, 4);
         lua_pushboolean(L, 1);
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     } else if (iter_starts_with(src, "false", 5)) {
         iter_skip_n(src, 5);
         lua_pushboolean(L, 0);
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     // --- strings ---
     } else if (iter_starts_with(src, "\"\"\"", 3)) {
@@ -383,6 +389,8 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
             }
         }
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     } else if (curr.v == '"') {
         buf_soft_reset(buf);
@@ -393,6 +401,8 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
         if (!push_buf_to_lua_string(L, buf)) {
             return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
         }
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     } else if (iter_starts_with(src, "'''", 3)) {
         buf_soft_reset(buf);
@@ -413,6 +423,8 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
             }
         }
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     } else if (curr.v == '\'') {
         buf_soft_reset(buf);
@@ -423,15 +435,21 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
         if (!push_buf_to_lua_string(L, buf)) {
             return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 48, "tomlua.decode failed to push string to lua stack");
         }
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     // --- numbers (and dates) ---
     } else if (iter_starts_with(src, "inf", 3)) {
         iter_skip_n(src, 3);
         lua_pushnumber(L, INFINITY);
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     } else if (iter_starts_with(src, "nan", 3)) {
         iter_skip_n(src, 3);
         lua_pushnumber(L, NAN);
+        lua_rawset(L, dest_idx);
+        lua_settop(L, dest_idx - 1);
         return true;
     } else if ((curr.v >= '0' && curr.v <= '9') || curr.v == '-' || curr.v == '+') {
         if (iter_starts_with(src, "0x", 2)) {
@@ -459,6 +477,8 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
             if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "empty hex literal");
             // Convert buffer to integer
             if (!push_integer_or_handle(L, buf, 16, opts[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 41, "Parse error: hex literal integer overflow");
+            lua_rawset(L, dest_idx);
+            lua_settop(L, dest_idx - 1);
             return true;
         } else if (iter_starts_with(src, "0o", 2)) {
             // Octal integer
@@ -484,6 +504,8 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
             }
             if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 19, "empty octal literal");
             if (!push_integer_or_handle(L, buf, 8, opts[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 43, "Parse error: octal literal integer overflow");
+            lua_rawset(L, dest_idx);
+            lua_settop(L, dest_idx - 1);
             return true;
         } else if (iter_starts_with(src, "0b", 2)) {
             // binary integer
@@ -509,6 +531,8 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
             }
             if (buf->len == 0) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 20, "empty binary literal");
             if (!push_integer_or_handle(L, buf, 2, opts[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 44, "Parse error: binary literal integer overflow");
+            lua_rawset(L, dest_idx);
+            lua_settop(L, dest_idx - 1);
             return true;
         } else {
             // detect dates and pass on as strings, and numbers are allowed to have underscores in them (only 1 consecutive underscore at a time)
@@ -525,10 +549,14 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 if (iter_starts_with(src, "+inf", 4)) {
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, INFINITY);
+                    lua_rawset(L, dest_idx);
+                    lua_settop(L, dest_idx - 1);
                     return true;
                 } else if (iter_starts_with(src, "+nan", 4)) {
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, NAN);
+                    lua_rawset(L, dest_idx);
+                    lua_settop(L, dest_idx - 1);
                     return true;
                 } else {
                     if (!buf_push(buf, curr.v)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 51, "failed to push leading + character to number buffer");
@@ -538,10 +566,14 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 if (iter_starts_with(src, "-inf", 4)) {
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, -INFINITY);
+                    lua_rawset(L, dest_idx);
+                    lua_settop(L, dest_idx - 1);
                     return true;
                 } else if (iter_starts_with(src, "-nan", 4)) {
                     iter_skip_n(src, 4);
                     lua_pushnumber(L, -NAN);
+                    lua_rawset(L, dest_idx);
+                    lua_settop(L, dest_idx - 1);
                     return true;
                 } else {
                     if (!buf_push(buf, curr.v)) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 51, "failed to push leading - character to number buffer");
@@ -636,50 +668,104 @@ bool decode_inline_value(lua_State *L, str_iter *src, str_buf *buf, const Tomlua
                 } else {
                     if (!push_integer_or_handle(L, buf, 10, opts[TOMLOPTS_OVERFLOW_ERRORS])) return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 37, "Parse error: integer literal overflow");
                 }
+                lua_rawset(L, dest_idx);
+                lua_settop(L, dest_idx - 1);
                 return true;
             }
         }
     // --- array --- allows trailing comma and multiline
     } else if (curr.v == '[') {
         iter_skip(src);
-        lua_newtable(L);
-        if (opts[TOMLOPTS_MARK_INLINE]) {
+        lua_pushvalue(L, key_idx);
+        lua_rawget(L, dest_idx);
+        int thearray = lua_gettop(L);
+        int idx;
+        if (!lua_istable(L, thearray)) {
+            lua_pop(L, 1);
             lua_newtable(L);
-            lua_pushliteral(L, "ARRAY_INLINE");
-            lua_setfield(L, -2, "toml_type");
-            lua_setmetatable(L, -2);
+            lua_pushvalue(L, key_idx);
+            lua_pushvalue(L, -2);
+            lua_rawset(L, dest_idx);
+            if (opts[TOMLOPTS_MARK_INLINE]) {
+                lua_newtable(L);
+                lua_pushliteral(L, "ARRAY_INLINE");
+                lua_setfield(L, -2, "toml_type");
+                lua_setmetatable(L, thearray);
+            }
+            idx = 1;
+        } else {
+            idx = lua_arraylen(L, thearray) + 1;
+            if (opts[TOMLOPTS_MARK_INLINE]) {
+                lua_getmetatable(L, thearray);
+                if (!lua_istable(L, -1)) {
+                    lua_settop(L, thearray);
+                    lua_newtable(L);
+                    lua_pushliteral(L, "ARRAY_INLINE");
+                    lua_setfield(L, -2, "toml_type");
+                    lua_setmetatable(L, thearray);
+                } else {
+                    lua_pushliteral(L, "ARRAY_INLINE");
+                    lua_setfield(L, -2, "toml_type");
+                    lua_settop(L, thearray);
+                }
+            }
         }
-        lua_pushvalue(L, -1);
+        lua_pushvalue(L, thearray);
         lua_pushinteger(L, -2);
         lua_rawset(L, DECODE_DEFINED_IDX);
-        int idx = 1;
         while (iter_peek(src).ok) {
             char d = iter_peek(src).v;
             if (d == ']') {
                 iter_skip(src);
+                lua_settop(L, dest_idx - 1);
                 return true;
             } else if (d == ',' || d == ' ' || d == '\t' || d == '\n' || d == '\r') {
                 iter_skip(src);
                 continue;
             }
+            lua_pushvalue(L, thearray);
+            lua_pushinteger(L, idx++);
             if (!decode_inline_value(L, src, buf, opts)) return false;
-            lua_rawseti(L, -2, idx++);
         }
         return set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 17, "missing closing ]");
     // --- inline table --- does NOT support multiline or trailing comma (without fancy_tables)
     } else if (curr.v == '{') {
         iter_skip(src);
-        lua_newtable(L);
-        if (opts[TOMLOPTS_MARK_INLINE]) {
+        lua_pushvalue(L, key_idx); // push key
+        lua_rawget(L, dest_idx);   // get current value
+        if (!lua_istable(L, -1)) {
+            lua_pop(L, 1);
             lua_newtable(L);
-            lua_pushliteral(L, "TABLE_INLINE");
-            lua_setfield(L, -2, "toml_type");
-            lua_setmetatable(L, -2);
+            lua_pushvalue(L, key_idx);
+            lua_pushvalue(L, -2);
+            lua_rawset(L, dest_idx);
+            if (opts[TOMLOPTS_MARK_INLINE]) {
+                lua_newtable(L);
+                lua_pushliteral(L, "TABLE_INLINE");
+                lua_setfield(L, -2, "toml_type");
+                lua_setmetatable(L, -2);
+            }
+        } else {
+            if (opts[TOMLOPTS_MARK_INLINE]) {
+                lua_getmetatable(L, -1);
+                if (!lua_istable(L, -1)) {
+                    lua_pop(L, 1);
+                    lua_newtable(L);
+                    lua_pushliteral(L, "TABLE_INLINE");
+                    lua_setfield(L, -2, "toml_type");
+                    lua_setmetatable(L, -2);
+                } else {
+                    lua_pushliteral(L, "TABLE_INLINE");
+                    lua_setfield(L, -2, "toml_type");
+                    lua_pop(L, 1);
+                }
+            }
         }
         if (!parse_inline_table(L, src, buf, opts)) return false;
         lua_pushvalue(L, -1);
         lua_pushinteger(L, -1);
         lua_rawset(L, DECODE_DEFINED_IDX);
+        lua_settop(L, dest_idx - 1);
         return true;
 
     }
@@ -792,8 +878,8 @@ int tomlua_decode(lua_State *L) {
                 err_push_keys(L, err, root_idx + 1, top);
                 goto fail;
             }
+            if (!recursive_lua_set_nav(L, root_idx + 1, root_idx)) goto fail;
             if (!decode_inline_value(L, &src, &scratch, uopts)) goto fail;
-            if (!recursive_lua_set(L, root_idx + 1, root_idx)) goto fail;
             if (!consume_whitespace_to_line(&src)) {
                 set_tmlerr(new_tmlerr(L, DECODE_DEFINED_IDX), false, 66, "key value pairs must be followed by a new line (or end of content)");
                 goto fail;
