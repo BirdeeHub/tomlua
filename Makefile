@@ -16,6 +16,8 @@ SRCS         := $(SRC)/src/tomlua.c \
                 $(SRC)/src/encode.c \
                 $(SRC)/src/dates.c
 
+BENCH_ITERS  ?= 100000
+
 check_lua_incdir = \
 	@if [ -z "$(LUA_INCDIR)" ]; then \
 		echo "Error: LUA_INCDIR not set. Please pass or export LUA_INCDIR=/path/to/lua/include"; \
@@ -48,7 +50,7 @@ scratch: $(SRC)/src/* $(TESTDIR)/*
 
 bench: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
-	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)" 2 100000 $(SKIP_TOML_EDIT)
+	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)" 2 $(BENCH_ITERS) $(SKIP_TOML_EDIT)
 
 install: $(SRC)/lua/tomlua/meta.lua
 ifdef LIBDIR
