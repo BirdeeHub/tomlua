@@ -1,5 +1,4 @@
 ---@meta
-error("Cannot import a meta module")
 
 ---@class Tomlua.DateTable
 ---@field toml_type TomlType|TomlTypeNum -- one of tomlua.types, e.g., OFFSET_DATETIME
@@ -70,5 +69,4 @@ error("Cannot import a meta module")
 ---@alias Tomlua Tomlua.main | fun(opts?:TomluaOptions):Tomlua
 
 ---@type Tomlua
-local tomlua = require('tomlua')
-return tomlua
+return require('tomlua')
