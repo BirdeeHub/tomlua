@@ -132,7 +132,7 @@ local data, err = tomlua.decode(some_string, defaults)
 
 -- and encode, explained further below.
 
-local str, err = tomlua.encode(some_table)
+local str, err = tomlua.encode(data)
 ```
 
 
