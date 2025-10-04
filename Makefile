@@ -46,6 +46,10 @@ scratch: $(SRC)/src/* $(TESTDIR)/*
 	$(check_so_was_built)
 	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)" 1
 
+bench: $(SRC)/src/* $(TESTDIR)/*
+	$(check_so_was_built)
+	$(LUA) "$(TESTDIR)/test.lua" "$(DESTDIR)" 2 100000 $(SKIP_TOML_EDIT)
+
 install: $(SRC)/lua/tomlua/meta.lua
 ifdef LIBDIR
 	$(check_so_was_built)

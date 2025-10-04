@@ -477,170 +477,64 @@ World"""]=], nil, true) ~= nil, "Encoded multiline string should be correct")
     end)
 
     -- TODO:
-    -- define("encode table with array of tables and nested arrays of tables", function()
-    --     local test_table = {
-    --         companies = {
-    --             { name = "Company A", departments = { { name = "Sales", employees = 10 }, { name = "Marketing", employees = 5 } } },
-    --             { name = "Company B", departments = { { name = "HR", employees = 3 } } }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[companies]]", nil, true) ~= nil, "Should contain companies array of tables heading")
-    --     it(string.find(encoded_str, "name = \"Company A\"", nil, true) ~= nil, "First company name should be correct")
-    --     it(string.find(encoded_str, "[[companies.departments]]", nil, true) ~= nil, "Should contain nested array of tables heading")
-    --     it(string.find(encoded_str, "name = \"Sales\"", nil, true) ~= nil, "First department name should be correct")
-    --     it(string.find(encoded_str, "name = \"HR\"", nil, true) ~= nil, "Second company department name should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and mixed key types", function()
-    --     local test_table = {
-    --         settings = {
-    --             { ["key-with-dash"] = 1, ["key with spaces"] = 2 },
-    --             { bare_key = 3, ["123"] = 4 }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[settings]]", nil, true) ~= nil, "Should contain settings array of tables heading")
-    --     it(string.find(encoded_str, "\"key-with-dash\" = 1", nil, true) ~= nil, "First setting key-with-dash should be correct")
-    --     it(string.find(encoded_str, "\"key with spaces\" = 2", nil, true) ~= nil, "First setting key with spaces should be correct")
-    --     it(string.find(encoded_str, "bare_key = 3", nil, true) ~= nil, "Second setting bare_key should be correct")
-    --     it(string.find(encoded_str, "123 = 4", nil, true) ~= nil, "Second setting numeric key as string should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and unicode keys and values", function()
-    --     local test_table = {
-    --         products = {
-    --             { name = "Laptop", ["型号"] = "XPS 15" },
-    --             { name = "Mouse", ["颜色"] = "黑色" }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[products]]", nil, true) ~= nil, "Should contain products array of tables heading")
-    --     it(string.find(encoded_str, "name = \"Laptop\"", nil, true) ~= nil, "First product name should be correct")
-    --     it(string.find(encoded_str, "\"型号\" = \"XPS 15\"", nil, true) ~= nil, "First product unicode key should be correct")
-    --     it(string.find(encoded_str, "\"颜色\" = \"黑色\"", nil, true) ~= nil, "Second product unicode key should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and escaped strings in values", function()
-    --     local test_table = {
-    --         messages = {
-    --             { sender = "Alice", content = "Hello\nWorld" },
-    --             { sender = "Bob", content = "He said \"Hi!\" again." }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[messages]]", nil, true) ~= nil, "Should contain messages array of tables heading")
-    --     it(string.find(encoded_str, "content = \"Hello\\nWorld\"", nil, true) ~= nil, "First message content with newline should be correct")
-    --     it(string.find(encoded_str, "content = \"He said \\\"Hi!\\\" again.\"", nil, true) ~= nil, "Second message content with escaped quotes should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and empty values", function()
-    --     local test_table = {
-    --         config = {
-    --             { name = "Config A", value = "" },
-    --             { name = "Config B", value = "some value" }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[config]]", nil, true) ~= nil, "Should contain config array of tables heading")
-    --     it(string.find(encoded_str, "value = \"\"", nil, true) ~= nil, "First config value should be empty string")
-    --     it(string.find(encoded_str, "value = \"some value\"", nil, true) ~= nil, "Second config value should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and boolean values", function()
-    --     local test_table = {
-    --         features = {
-    --             { name = "Feature A", enabled = true },
-    --             { name = "Feature B", enabled = false }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[features]]", nil, true) ~= nil, "Should contain features array of tables heading")
-    --     it(string.find(encoded_str, "enabled = true", nil, true) ~= nil, "First feature enabled should be true")
-    --     it(string.find(encoded_str, "enabled = false", nil, true) ~= nil, "Second feature enabled should be false")
-    -- end)
-    --
-    -- define("encode table with array of tables and integer/float values", function()
-    --     local test_table = {
-    --         metrics = {
-    --             { name = "Metric A", value = 100 },
-    --             { name = "Metric B", value = 10.5 }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[metrics]]", nil, true) ~= nil, "Should contain metrics array of tables heading")
-    --     it(string.find(encoded_str, "value = 100", nil, true) ~= nil, "First metric value should be integer")
-    --     it(string.find(encoded_str, "value = 10.5", nil, true) ~= nil, "Second metric value should be float")
-    -- end)
-    --
-    -- define("encode table with array of tables and date/time values", function()
-    --     local date_obj_offset = tomlua_default.new_date({ toml_type = tomlua_default.types.OFFSET_DATETIME, year = 1979, month = 5, day = 27, hour = 7, minute = 32, second = 0, fractional = 0, offset_hour = -7, offset_minute = 0 })
-    --     local date_obj_local = tomlua_default.new_date({ toml_type = tomlua_default.types.LOCAL_DATE, year = 1979, month = 5, day = 27 })
-    --     local test_table = {
-    --         logs = {
-    --             { timestamp = date_obj_offset, message = "Log entry 1" },
-    --             { timestamp = date_obj_local, message = "Log entry 2" }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[logs]]", nil, true) ~= nil, "Should contain logs array of tables heading")
-    --     it(string.find(encoded_str, "timestamp = 1979-05-27T07:32:00-07:00", nil, true) ~= nil, "First log timestamp should be correct")
-    --     it(string.find(encoded_str, "timestamp = 1979-05-27", nil, true) ~= nil, "Second log timestamp should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and multiline strings", function()
-    --     local mul_str1 = tomlua_default.str_2_mul("Line 1\nLine 2")
-    --     local mul_str2 = tomlua_default.str_2_mul("Another\nMultiline\nString", true)
-    --     local test_table = {
-    --         docs = {
-    --             { title = "Doc 1", content = mul_str1 },
-    --             { title = "Doc 2", content = mul_str2 }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[docs]]", nil, true) ~= nil, "Should contain docs array of tables heading")
-    --     it(string.find(encoded_str, [[content = \"""Line 1\nLine 2"""]], nil, true) ~= nil, "First doc content should be correct")
-    --     it(string.find(encoded_str, "content = '''Another\nMultiline\nString'''", nil, true) ~= nil, "Second doc content should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and mixed options", function()
-    --     local test_table = {
-    --         data = {
-    --             { key = 1, ["123"] = "value" },
-    --             { key = 2, ["key-with-dash"] = true }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[data]]", nil, true) ~= nil, "Should contain data array of tables heading")
-    --     it(string.find(encoded_str, "key = 1", nil, true) ~= nil, "First data key should be correct")
-    --     it(string.find(encoded_str, "\"123\" = \"value\"", nil, true) ~= nil, "First data numeric key should be correct")
-    --     it(string.find(encoded_str, "\"key-with-dash\" = true", nil, true) ~= nil, "Second data dashed key should be correct")
-    -- end)
-    --
-    -- define("encode table with array of tables and complex nested structures", function()
-    --     local test_table = {
-    --         servers = {
-    --             { name = "Web Server", config = setmetatable({ ip = "192.168.1.1", ports = setmetatable({80, 443}, { toml_type = tomlua_default.types.ARRAY_INLINE }), admin = setmetatable({ user = "admin", pass = "secret" }, { toml_type = tomlua_default.types.TABLE_INLINE }) }, { toml_type = tomlua_default.types.TABLE_INLINE }), status = "running" },
-    --             { name = "DB Server", config = setmetatable({ ip = "192.168.1.2", port = 5432 }, { toml_type = tomlua_default.types.TABLE_INLINE }), status = "stopped", logs = { setmetatable({ timestamp = tomlua_default.new_date({ toml_type = tomlua_default.types.OFFSET_DATETIME, year = 1979, month = 5, day = 27, hour = 7, minute = 32, second = 0, fractional = 0, offset_hour = -7, offset_minute = 0 }), message = "Error" }, { toml_type = tomlua_default.types.TABLE_INLINE }) } }
-    --         }
-    --     }
-    --     local encoded_str, err = tomlua_default.encode(test_table)
-    --     it(err == nil, "Should not error during encoding")
-    --     it(string.find(encoded_str, "[[servers]]", nil, true) ~= nil, "Should contain servers array of tables heading")
-    --     it(string.find(encoded_str, "name = \"Web Server\"", nil, true) ~= nil, "First server name should be correct")
-    --     it(string.find(encoded_str, "config = { ip = \"192.168.1.1\", ports = [80, 443], admin = { user = \"admin\", pass = \"secret\" } }", nil, true) ~= nil, "First server config should be correct")
-    --     it(string.find(encoded_str, "name = \"DB Server\"", nil, true) ~= nil, "Second server name should be correct")
-    --     it(string.find(encoded_str, "logs = [{ timestamp = 1979-05-27T07:32:00-07:00, message = \"Error\" }]", nil, true) ~= nil, "Second server logs should be correct")
-    -- end)
+    define("encode table with array of tables and nested arrays of tables", function()
+        local test_table = {
+            companies = {
+                { name = "Company A", departments = { { name = "Sales", employees = 10 }, { name = "Marketing", employees = 5 } } },
+                { name = "Company B", departments = { { name = "HR", employees = 3 } } }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[[companies]]", nil, true) ~= nil, "Should contain companies array of tables heading")
+        it(string.find(encoded_str, "name = \"Company A\"", nil, true) ~= nil, "First company name should be correct")
+        it(string.find(encoded_str, "[[companies.departments]]", nil, true) ~= nil, "Should contain nested array of tables heading")
+        it(string.find(encoded_str, "name = \"Sales\"", nil, true) ~= nil, "First department name should be correct")
+        it(string.find(encoded_str, "name = \"HR\"", nil, true) ~= nil, "Second company department name should be correct")
+    end)
 
+    define("encode table with array of tables and mixed key types", function()
+        local test_table = {
+            settings = {
+                { ["key-with-dash"] = 1, ["key with spaces"] = 2 },
+                { bare_key = 3, ["123"] = 4 }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[[settings]]", nil, true) ~= nil, "Should contain settings array of tables heading")
+        it(string.find(encoded_str, "key-with-dash = 1", nil, true) ~= nil, "First setting key-with-dash should be correct")
+        it(string.find(encoded_str, "\"key with spaces\" = 2", nil, true) ~= nil, "First setting key with spaces should be correct")
+        it(string.find(encoded_str, "bare_key = 3", nil, true) ~= nil, "Second setting bare_key should be correct")
+        it(string.find(encoded_str, "\"123\" = 4", nil, true) ~= nil, "Second setting numeric key as string should be correct")
+    end)
+
+    define("encode table with array of tables and unicode keys and values", function()
+        local test_table = {
+            products = {
+                { name = "Laptop", ["型号"] = "XPS 15" },
+                { name = "Mouse", ["颜色"] = "黑色" }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[[products]]", nil, true) ~= nil, "Should contain products array of tables heading")
+        it(string.find(encoded_str, "name = \"Laptop\"", nil, true) ~= nil, "First product name should be correct")
+        it(string.find(encoded_str, "\"型号\" = \"XPS 15\"", nil, true) ~= nil, "First product unicode key should be correct")
+        it(string.find(encoded_str, "\"颜色\" = \"黑色\"", nil, true) ~= nil, "Second product unicode key should be correct")
+    end)
+
+    define("encode table with array of tables and escaped strings in values", function()
+        local test_table = {
+            messages = {
+                { sender = "Alice", content = "Hello\nWorld" },
+                { sender = "Bob", content = "He said \"Hi!\" again." }
+            }
+        }
+        local encoded_str, err = tomlua_default.encode(test_table)
+        it(err == nil, "Should not error during encoding")
+        it(string.find(encoded_str, "[[messages]]", nil, true) ~= nil, "Should contain messages array of tables heading")
+        it(string.find(encoded_str, "content = \"Hello\\nWorld\"", nil, true) ~= nil, "First message content with newline should be correct")
+        it(string.find(encoded_str, "content = \"He said \\\"Hi!\\\" again.\"", nil, true) ~= nil, "Second message content with escaped quotes should be correct")
+    end)
 end
