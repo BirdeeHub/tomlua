@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/BirdeeHub/tomlua/compare/v0.0.15...v1.0.0) (2025-10-04)
+
+
+### Features
+
+* **release:** v1.0.0 ([8f2385f](https://github.com/BirdeeHub/tomlua/commit/8f2385f6194255009d9b5d48628b536993a20243))
+
 ## [0.0.15](https://github.com/BirdeeHub/tomlua/compare/v0.0.14...v0.0.15) (2025-10-04)
 
 
