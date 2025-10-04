@@ -152,6 +152,7 @@ The only option which affects encode is `int_keys`
 
 This option will allow tomlua to print mixed table/arrays or sparse arrays
 in such a way that `decode` with `int_keys` set to true will be able to faithfully recreate them.
+This distinction and option is because `toml` cannot represent mixed and sparse arrays.
 
 Outside of that, you may customize the values themselves.
 
