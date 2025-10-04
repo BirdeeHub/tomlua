@@ -154,9 +154,6 @@ local str, err = tomlua.encode({
     empty_toml_array = setmetatable({}, {
       toml_type = "ARRAY"
     }),
-    empty_inline_toml_array = setmetatable({}, {
-      toml_type = "ARRAY_INLINE"
-    }),
     now_a_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
       toml_type = tomlua.types.TABLE -- it also accepts the numbers
     })
