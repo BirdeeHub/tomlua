@@ -1,12 +1,19 @@
 return function(define, test_dir)
     -- Additional tests for TOMLUA decode functionality
 
+    ---@type Tomlua
     local tomlua_default = require("tomlua")
+    ---@type Tomlua
     local tomlua_fancy_dates = require("tomlua")({ fancy_dates = true })
+    ---@type Tomlua
     local tomlua_int_keys = require("tomlua")({ int_keys = true })
+    ---@type Tomlua
     local tomlua_multi_strings = require("tomlua")({ multi_strings = true })
+    ---@type Tomlua
     local tomlua_mark_inline = require("tomlua")({ mark_inline = true })
+    ---@type Tomlua
     local tomlua_overflow_errors = require("tomlua")({ overflow_errors = true })
+    ---@type Tomlua
     local tomlua_underflow_errors = require("tomlua")({ underflow_errors = true })
 
     define("decode example.toml", function()

@@ -103,15 +103,11 @@ tomlua.opts.fancy_dates = true
 local data, err = tomlua.decode(some_string)
 
 local defaults = {
-    tables_and_arrays = "defined in headings will extend the associated value",
-    and_inline = "values from the toml will override it instead", -- NOTE: <-- subject to change?
     example = {
-        if_defined = "as a heading",
         the_values_here = "will be recursively updated",
     },
     example2 = {
-        "if defined as a heading",
-        "it will append",
+        "and the values here will be appended to",
     },
 }
 local data, err = tomlua.decode(some_string, defaults)
