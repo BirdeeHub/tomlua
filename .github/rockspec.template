@@ -42,3 +42,8 @@ build = {
     LUADIR="$(LUADIR)",
   },
 }
+
+test = {
+   type = "command",
+   command = "make test",
+}

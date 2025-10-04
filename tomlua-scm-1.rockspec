@@ -19,11 +19,9 @@ dependencies = {
 
 build = {
    type = "make",
-   build_target = "build",
    build_variables = {
       LUA_INCDIR="$(LUA_INCDIR)",
    },
-   install_target = "install",
    install_variables = {
       LIBDIR="$(LIBDIR)",
       LUADIR="$(LUADIR)",
