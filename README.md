@@ -65,6 +65,8 @@ gcc -xc -E -v - <<< '#include <lua.h>' 2>&1 | grep lua.h | head -n 1 | awk '{pri
 
 ### Useage
 
+#### Options
+
 ```lua
 package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 
@@ -89,7 +91,9 @@ local tomlua2 = tomlua {
     -- such that it keeps track of what was inline or a heading in the file for encode
     mark_inline = false,
     -- causes multiline strings to be parsed into a userdata type
-    -- which can be converted to a lua string with tostring
+    -- which records that it was a multiline string
+    -- so that it may be emitted as a multiline string as well.
+    -- It may be converted to a lua string with tostring
     multi_strings = false,
     -- if tomlua.decode reads a number bigger than can fit in a lua number or integer
     -- with false it will set + or - math.huge for the value and return normally
@@ -107,7 +111,11 @@ local tomlua2 = tomlua {
 tomlua.opts.fancy_dates = true
 -- note, when setting options this way, do not replace the entire table.
 -- this is a proxy table for the settings, which are represented in C for performance reasons.
+```
 
+#### Decode
+
+```lua
 local some_string = [=[
 xmplarray = [ "this", "is", "an", "array" ]
 [example]
@@ -129,9 +137,11 @@ local defaults = {
 }
 
 local data, err = tomlua.decode(some_string, defaults)
+```
 
--- and encode, explained further below.
+#### Encode
 
+```lua
 local str, err = tomlua.encode(data)
 ```
 
@@ -150,6 +160,10 @@ You may create date objects, and you may decide to make some strings multiline w
 You may make arrays appear as tables, or empty tables appear as arrays.
 
 ```lua
+
+local toml_multiline_str = tomlua.str_2_mul("hello\nworld")
+local regular_str = tostring(toml_multiline_str)
+
 local str, err = tomlua.encode({
     empty_toml_array = setmetatable({}, {
       toml_type = "ARRAY"
@@ -170,32 +184,9 @@ There are some circumstances where this doesn't make sense, however,
 such as setting the tables within an array only and not the array itself.
 It will only be able to affect the child elements in that case.
 
+#### Dates
+
 ```lua
-tomlua.types = {
-    UNTYPED, -- 0  -- Untyped TOML Item
-    STRING, -- 1  -- lua string
-    STRING_MULTI, -- 2  -- lua string
-    INTEGER, -- 3  -- lua number
-    FLOAT, -- 4  -- lua number
-    BOOL, -- 5  -- lua bool
-    ARRAY, -- 6  -- lua table
-    TABLE, -- 7  -- lua table
-    ARRAY_INLINE, -- 8  -- same as ARRAY, but forces encode to print it as a inline
-    TABLE_INLINE, -- 9  -- same as TABLE, but forces encode to print it as a inline
-    LOCAL_DATE, -- 10  -- string, or userdata with fancy_dates
-    LOCAL_TIME, -- 11  -- string, or userdata with fancy_dates
-    LOCAL_DATETIME, -- 12  -- string, or userdata with fancy_dates
-    OFFSET_DATETIME, -- 13  -- string, or userdata with fancy_dates
-}
--- get the type tomlua thinks a lua value is
-tomlua.type(value) --> returns one of the names from tomlua.types
--- get the type tomlua thinks a lua value is
-tomlua.type_of(value) --> returns corresponding number from tomlua.types instead
-tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
-
-local toml_multiline_str = tomlua.str_2_mul("hello\nworld")
-local regular_str = tostring(toml_multiline_str)
-
 -- accepts utc_timestamp,
 -- toml date string,
 -- a table or array with the same fields as date,
@@ -225,6 +216,32 @@ print(date > date2) -- true
 print(date) -- print as toml date string
 ```
 
+#### Type checking
+
+```lua
+tomlua.types = {
+    UNTYPED, -- 0  -- Untyped TOML Item
+    STRING, -- 1  -- lua string
+    STRING_MULTI, -- 2  -- lua string
+    INTEGER, -- 3  -- lua number
+    FLOAT, -- 4  -- lua number
+    BOOL, -- 5  -- lua bool
+    ARRAY, -- 6  -- lua table
+    TABLE, -- 7  -- lua table
+    ARRAY_INLINE, -- 8  -- same as ARRAY, but forces encode to print it as a inline
+    TABLE_INLINE, -- 9  -- same as TABLE, but forces encode to print it as a inline
+    LOCAL_DATE, -- 10  -- string, or userdata with fancy_dates
+    LOCAL_TIME, -- 11  -- string, or userdata with fancy_dates
+    LOCAL_DATETIME, -- 12  -- string, or userdata with fancy_dates
+    OFFSET_DATETIME, -- 13  -- string, or userdata with fancy_dates
+}
+-- get the type tomlua thinks a lua value is
+tomlua.type(value) --> returns one of the names from tomlua.types
+-- get the type tomlua thinks a lua value is
+tomlua.type_of(value) --> returns corresponding number from tomlua.types instead
+tomlua.typename(typenumber) --> tomlua.types[result] = typenumber
+```
+
 ## Philosophy
 
 * TOML is usually a **config format**, not a serialization format.
@@ -232,6 +249,8 @@ print(date) -- print as toml date string
 * Editing or re-emitting TOML is **secondary**; using dedicated editor libraries for that may make sense still.
 
 On startup you may have many toml files to parse in some situations, if you used it in a package spec format of some kind for example.
+
+Or maybe you need to parse toml files in a mass CI script.
 
 This is a tiny c library designed to chew through those as if you were using cjson for parsing json.
 
@@ -246,4 +265,4 @@ As a result of that, editing existing toml files, or emitting them at all, only 
 
 This means that it makes a lot of sense to use a simple but fast parser to parse config files on startup.
 
-And then later you can use one which is better for editing but is slower when making things like a settings page which may edit the file.
+And then later you can use one which is better for editing but is slower when making things like a settings page or cargo add which may edit the file.
