@@ -72,7 +72,7 @@ package.cpath = package.cpath .. ";/path/to/tomlua/lib/?.so"
 ---@module 'tomlua.meta'
 local tomlua = require("tomlua")
 
--- you can call it like a function and get a copy of the library with a new options table
+-- you can call it like a function and get a fresh copy of the library with a new options table
 local tomlua2 = tomlua {
     -- causes keys that parse as lua integers to be interpreted as integer keys
     -- unless they were enclosed in "" or ''
