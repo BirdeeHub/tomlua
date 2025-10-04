@@ -105,6 +105,8 @@ local tomlua2 = tomlua {
 
 -- or you can set them directly on the current object
 tomlua.opts.fancy_dates = true
+-- note, when setting options this way, do not replace the entire table.
+-- this is a proxy table for the settings, which are represented in C for performance reasons.
 
 local some_string = [=[
 xmplarray = [ "this", "is", "an", "array" ]
@@ -152,6 +154,9 @@ local str, err = tomlua.encode({
     empty_toml_array = setmetatable({}, {
       toml_type = "ARRAY"
     }),
+    empty_inline_toml_array = setmetatable({}, {
+      toml_type = "ARRAY_INLINE"
+    }),
     now_a_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
       toml_type = tomlua.types.TABLE -- it also accepts the numbers
     })
@@ -159,8 +164,10 @@ local str, err = tomlua.encode({
 })
 ```
 
-you may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline
-there are some circumstances where this doesn't make sense, however. In that case, set it 1 level higher.
+You may do the same with the ARRAY_INLINE and TABLE_INLINE types to force them to display inline.
+There are some circumstances where this doesn't make sense, however,
+such as setting the tables within an array only and not the array itself.
+It will only be able to affect the child elements in that case.
 
 ```lua
 tomlua.types = {
