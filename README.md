@@ -54,7 +54,7 @@ make LUA_INCDIR=/path/to/lua/includes
 export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
 ```
 
-* Requires a C compiler (GCC, Clang, etc.). If not gcc, set CC variable as well
+* Requires a C compiler (GCC, Clang, MinGW). If not gcc, set CC variable as well
 * You should be in the root of the repository.
 
 If you do not know where your lua headers are, you may use some or all of this command to find out
