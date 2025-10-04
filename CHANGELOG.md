@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.15](https://github.com/BirdeeHub/tomlua/compare/v0.0.14...v0.0.15) (2025-10-04)
+
+
+### Bug Fixes
+
+* **decode_defaults:** now always recursively updates the defaults if provided ([6d15b51](https://github.com/BirdeeHub/tomlua/commit/6d15b51c146b36813e432c7847a954d3bfa82f04))
+* **decode_defaults:** now always recursively updates the defaults, heading or inline ([68f610f](https://github.com/BirdeeHub/tomlua/commit/68f610fa60ac4ebf0b5d79ecfcf842827d6220a8))
+
 ## [0.0.14](https://github.com/BirdeeHub/tomlua/compare/v0.0.13...v0.0.14) (2025-10-03)
 
 
