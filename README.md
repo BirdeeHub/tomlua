@@ -161,6 +161,10 @@ local str, err = tomlua.encode({
       toml_type = tomlua.types.TABLE -- it also accepts the numbers
     })
     multiline_str = tomlua.str_2_mul("hello\nworld") -- will be emitted with """ and multiline
+    some_normal = "values",
+    a_table = {
+        some = "stuff"
+    },
 })
 ```
 
