@@ -74,10 +74,6 @@ local tomlua = require("tomlua")
 
 -- you can call it like a function and get a copy of the library with a new options table
 local tomlua2 = tomlua {
-    -- fancy_tables allows multiline inline tables with a trailing comma
-    -- key = value still must be on the same line
-    -- the tables, much like arrays, must still start on the same line as their key as well
-    fancy_tables = false,
     -- causes keys that parse as lua integers to be interpreted as integer keys
     -- unless they were enclosed in "" or ''
     -- also allows encode to print a mixed lua table/array or sparse array
@@ -86,24 +82,37 @@ local tomlua2 = tomlua {
     -- i.e. it will quote integer keys if they weren't previously lua numbers
     int_keys = false,
     -- causes dates to be parsed into a userdata type
+    -- which can be used to read and work with dates.
     -- encode will write them correctly as well
     fancy_dates = false,
-    -- causes multiline strings to be parsed into a userdata type
-    -- which can be converted to a lua string with tostring
-    multi_strings = false,
     -- adds metafield toml_type to inline table and array decode results
     -- such that it keeps track of what was inline or a heading in the file for encode
     mark_inline = false,
+    -- causes multiline strings to be parsed into a userdata type
+    -- which can be converted to a lua string with tostring
+    multi_strings = false,
     -- if tomlua.decode reads a number bigger than can fit in a lua number or integer
     -- with false it will set + or - math.huge for the value and return normally
     -- with true it will return nil + an error
     overflow_errors = false,
     -- like overflow_errors setting, but for float precision underflow
     underflow_errors = false,
+    -- fancy_tables allows multiline inline tables with a trailing comma
+    -- key = value still must be on the same line
+    -- the tables, much like arrays, must still start on the same line as their key as well
+    fancy_tables = false,
 }
 
 -- or you can set them directly on the current object
 tomlua.opts.fancy_dates = true
+
+local some_string = [=[
+xmplarray = [ "this", "is", "an", "array" ]
+[example]
+test = "this is a test"
+[[example2]]
+test = "this is a test"
+]=]
 
 local data, err = tomlua.decode(some_string)
 
@@ -114,8 +123,12 @@ local defaults = {
     example2 = {
         "and the values here will be appended to",
     },
+    xmplarray = { "1", "2", "3" },
 }
+
 local data, err = tomlua.decode(some_string, defaults)
+
+-- and encode, explained further below.
 
 local str, err = tomlua.encode(some_table)
 ```
@@ -130,16 +143,19 @@ in such a way that `decode` with `int_keys` set to true will be able to faithful
 
 Outside of that, you may customize the values themselves.
 
-You may create date objects, and you may decide to make some strings multiline with tomlua.str_2_mul
+You may create date objects, and you may decide to make some strings multiline with `tomlua.str_2_mul`
 
 You may make arrays appear as tables, or empty tables appear as arrays.
 
 ```lua
-local empty_toml_array = setmetatable({}, {
-  toml_type = "ARRAY"
-})
-local a_toml_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
-  toml_type = tomlua.types.TABLE -- it also accepts the numbers
+local str, err = tomlua.encode({
+    empty_toml_array = setmetatable({}, {
+      toml_type = "ARRAY"
+    }),
+    now_a_table = setmetatable({ "a", "table", "with", "integer", "keys" }, {
+      toml_type = tomlua.types.TABLE -- it also accepts the numbers
+    })
+    multiline_str = tomlua.str_2_mul("hello\nworld") -- will be emitted with """ and multiline
 })
 ```
 
@@ -178,7 +194,7 @@ local regular_str = tostring(toml_multiline_str)
 -- or another date
 ---@type fun(string|number|table|userdata?): userdata
 local date = tomlua.new_date({
-    toml_type = tomlua.types.OFFSET_DATETIME,
+    toml_type = tomlua.types.OFFSET_DATETIME, -- or "OFFSET_DATETIME"
     year = 3333,
     month = 3,
     day = 3,
