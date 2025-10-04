@@ -32,19 +32,6 @@ Basic benchmarking shows promising results:
 
 ## Installation
 
-### Using Make
-
-```bash
-# Ensure LUA_INCDIR points to Lua headers directory
-make LUA_INCDIR=/path/to/lua/includes
-
-# Add the resulting module to Lua's package.cpath
-export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
-```
-
-* Requires a C compiler (GCC, Clang, etc.). If not gcc, set CC variable as well
-* You should be in the root of the repository.
-
 ### Using LuaRocks
 
 ```bash
@@ -57,6 +44,27 @@ luarocks install tomlua
 * Overlay and packages available for Lua versions 5.1+, as well as a neovim plugin.
 * Dev shell included for building via `make`.
 * Not yet on nixpkgs
+
+### Using Make
+
+To build and add to your environment:
+
+```bash
+# Ensure LUA_INCDIR points to Lua headers directory
+make LUA_INCDIR=/path/to/lua/includes
+
+# Add the resulting module to Lua's package.cpath
+export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
+```
+
+* Requires a C compiler (GCC, Clang, etc.). If not gcc, set CC variable as well
+* You should be in the root of the repository.
+
+If you do not know where your lua headers are, you may use some or all of this command to find out
+
+```bash
+gcc -xc -E -v - <<< '#include <lua.h>' 2>&1 | grep lua.h | head -n 1 | awk '{print $3}' | tr -d '"' | xargs dirname
+```
 
 ### Useage
 
