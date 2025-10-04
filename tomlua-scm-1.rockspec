@@ -19,14 +19,22 @@ dependencies = {
 
 build = {
    type = "make",
+   build_target = "build",
    build_variables = {
       LUA_INCDIR="$(LUA_INCDIR)",
    },
+   install_target = "install",
    install_variables = {
       LIBDIR="$(LIBDIR)",
       LUADIR="$(LUADIR)",
    },
 }
+
+test = {
+   type = "command",
+   command = "make test",
+}
+
 -- How do I specify CFLAGS -O3 and maybe -flto here?
 -- build = {
 --    type = "builtin",
