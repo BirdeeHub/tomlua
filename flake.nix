@@ -26,6 +26,11 @@
               version = "scm-1";
               knownRockspec = "${self}/${APPNAME}-scm-1.rockspec";
               src = self;
+              installCheckPhase = ''
+                runHook preInstallCheck
+                luarocks test
+                runHook postInstallCheck
+              '';
             }) {};
         };
       }) l_pkg_enum;
@@ -44,15 +49,6 @@
         };
       };
     };
-  in {
-    overlays.default = overlay;
-    checks = forAllSys (system: let
-      pkgs = getpkgswithoverlay system;
-      mkCheck = luaname: _: pkgs.runCommandCC ("tests-tom" + luaname) {
-        src = self;
-        lua = (pkgs.${luaname}.withPackages (lp: [lp.${APPNAME}])).interpreter;
-      } "$lua $src/tests/test.lua | tee $out";
-    in builtins.mapAttrs mkCheck l_pkg_enum);
     packages = forAllSys (system: let
       pkgs = getpkgswithoverlay system;
     in (with builtins; pkgs.lib.pipe l_pkg_enum [
@@ -66,6 +62,10 @@
       default = pkgs.vimPlugins.${APPNAME};
       "vimPlugins-${APPNAME}" = pkgs.vimPlugins.${APPNAME};
     });
+  in {
+    overlays.default = overlay;
+    inherit packages;
+    checks = forAllSys (system: builtins.mapAttrs (_: p: p.overrideAttrs { doInstallCheck = true; }) packages.${system});
     devShells = forAllSys (system: let
       pkgs = getpkgs system;
       lua = pkgs.luajit.withPackages (lp: [lp.inspect lp.cjson lp.toml-edit lp.luarocks]);
