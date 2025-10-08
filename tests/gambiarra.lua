@@ -61,16 +61,16 @@ return setmetatable({
 	gambiarrahandler = function(self, e, desc, msg, err)
 		local suffix = tostring(msg) .. (err and "\n   (with error: " .. err .. ")" or "")
 		if e == 'pass' then
-			print("   [32m✔[0m " .. suffix)
+			io.stdout:write("   [32m✔[0m " .. suffix .. "\n")
 			self.tests_passed = self.tests_passed + 1
 		elseif e == 'fail' then
-			print("   [31m✘[0m " .. suffix)
+			io.stdout:write("   [31m✘[0m " .. suffix .. "\n")
 			self.tests_failed = self.tests_failed + 1
 		elseif e == 'except' then
-			print(" [35m‼[0m " .. suffix)
+			io.stdout:write(" [35m‼[0m " .. suffix .. "\n")
 			self.tests_failed = self.tests_failed + 1
 		elseif e == 'begin' then
-			print(" [36m▶[0m " .. desc)
+			io.stdout:write(" [36m▶[0m " .. desc .. "\n")
 		elseif e == 'end' then
 		end
 	end,
@@ -83,9 +83,9 @@ return setmetatable({
 			end
 		elseif key == 'report' then
 			return function()
-				print("Tests ran: " .. tostring(self.tests_failed or 0) + tostring(self.tests_passed or 0))
-				print("Tests passed: " .. tostring(self.tests_passed))
-				print("Tests failed: " .. tostring(self.tests_failed))
+				io.stdout:write("Tests ran: " .. tostring(self.tests_failed or 0) + tostring(self.tests_passed or 0) .. "\n")
+				io.stdout:write("Tests passed: " .. tostring(self.tests_passed) .. "\n")
+				io.stdout:write("Tests failed: " .. tostring(self.tests_failed) .. "\n")
 			end
 		elseif key == 'assert_passing' then
 			return function()
