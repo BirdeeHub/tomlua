@@ -7,7 +7,6 @@
       then nixpkgs.appendOverlays [ overlay ] else import nixpkgs { inherit system; overlays = [ overlay ]; };
     getpkgs = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "system" "appendOverlays" ]
       then nixpkgs else import nixpkgs { inherit system; };
-    APPNAME = "tomlua";
     l_pkg_enum = {
       lua5_1 = "lua51Packages";
       lua5_2 = "lua52Packages";
@@ -16,6 +15,7 @@
       luajit = "luajitPackages";
       lua = "luaPackages";
     };
+    APPNAME = "tomlua";
     overlay = final: prev: let
       # lua5_1 = prev.lua5_1.override { packageOverrides };
       l_pkg_main = builtins.mapAttrs (n: _: (prev.lib.attrByPath [ n "override" ] null prev) {
