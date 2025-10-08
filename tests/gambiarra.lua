@@ -126,8 +126,8 @@ return setmetatable({
 					.currentline
 				end
 				if type(cond) == 'function' then
-					local control, value = pcall(cond)
-					if should_fail and not control or not should_fail and control then
+					local ok, value = pcall(cond)
+					if should_fail and not ok or not should_fail and ok then
 						handler(self, 'pass', name, msg)
 					else
 						handler(self, 'fail', name, msg, not should_fail and tostring(value) or "Task failed successfully. No error, that is the problem.")
