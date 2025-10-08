@@ -51,14 +51,10 @@
     };
     packages = forAllSys (system: let
       pkgs = getpkgswithoverlay system;
-    in (with builtins; pkgs.lib.pipe l_pkg_enum [
-      attrNames
-      (map (n: {
-        name = "${n}-${APPNAME}";
-        value = pkgs.lib.attrByPath [ n "pkgs" APPNAME ] null pkgs;
-      }))
-      listToAttrs
-    ]) // {
+    in (with builtins; listToAttrs (map (n: {
+      name = "${n}-${APPNAME}";
+      value = pkgs.lib.attrByPath [ n "pkgs" APPNAME ] null pkgs;
+    }) (attrNames l_pkg_enum))) // {
       default = pkgs.vimPlugins.${APPNAME};
       "vimPlugins-${APPNAME}" = pkgs.vimPlugins.${APPNAME};
     });
