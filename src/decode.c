@@ -74,13 +74,13 @@ static bool recursive_lua_nav(
         int deftype = lua_type(L, defidx); // get the type of the new defidx
         if (key_idx < keys_end) {  // NOTE: not last key
             lua_Integer len = lua_tointeger(L, defidx);
-            lua_pop(L, 1);
             if (len < 0) {
                 TMLErr *err = new_tmlerr(L, DECODE_DEFINED_IDX);
                 set_tmlerr(err, false, 33, "value already defined inline at: ");
                 return err_push_keys(L, err, keys_start, keys_end);
             }
             if (deftype == LUA_TNUMBER) {
+                lua_pop(L, 1);
                 lua_rawgeti(L, validx, len);
                 lua_replace(L, validx);
                 lua_settop(L, validx);

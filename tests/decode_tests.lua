@@ -163,6 +163,16 @@ key = 2
 ]]
         local data, err = tomlua_default.decode(toml_str)
         it(err ~= nil, "should error on duplicate table")
+        toml_str = [[
+[table]
+key = 1
+[table.ha]
+key = 1
+[table]
+key2 = 2
+]]
+        data, err = tomlua_default.decode(toml_str)
+        it(err ~= nil, "shouldn't forget about the duplicate tables")
         toml_str = [=[
 [fruit.oops]
 whelp = "hmmmm"
