@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/BirdeeHub/tomlua/compare/v1.0.0...v1.0.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* **tables:** fixed edge case that allowed duplicate tables to be valid ([9dccf39](https://github.com/BirdeeHub/tomlua/commit/9dccf39477234dce645a00642a28ffab7d1953c2))
+
 ## [1.0.0](https://github.com/BirdeeHub/tomlua/compare/v0.0.15...v1.0.0) (2025-10-04)
 
 
