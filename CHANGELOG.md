@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/BirdeeHub/tomlua/compare/v1.0.1...v1.0.2) (2025-11-04)
+
+
+### Bug Fixes
+
+* **deprecated_pkgs.system:** nixpkgs is deprecating pkgs.system ([4ac85dd](https://github.com/BirdeeHub/tomlua/commit/4ac85dd56a96d9c5e3a748781c7b2ac5e6b47145))
+
 ## [1.0.1](https://github.com/BirdeeHub/tomlua/compare/v1.0.0...v1.0.1) (2025-10-14)
 
 
