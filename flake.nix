@@ -2,11 +2,12 @@
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   outputs = { self, nixpkgs, ... }@inputs: let
     genAttrs = names: f: builtins.listToAttrs (map (n: { name = n; value = f n; }) names);
-    forAllSys = genAttrs inputs.systems or nixpkgs.lib.platforms.all or [ inputs.system or builtins.throw "No systems list provided!" ];
+    forAllSys = genAttrs inputs.systems or nixpkgs.lib.platforms.all or [ (inputs.system or throw "No systems list provided!") ];
     getpkgswithoverlay = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "stdenv" "appendOverlays" ]
       then nixpkgs.appendOverlays [ overlay ] else import nixpkgs { inherit system; overlays = [ overlay ]; };
     getpkgs = system: if builtins.all (v: nixpkgs ? "${v}") [ "path" "stdenv" "appendOverlays" ]
       then nixpkgs else import nixpkgs { inherit system; };
+    mapAttrsToList = f: attrs: builtins.attrValues (builtins.mapAttrs f attrs);
     l_pkg_enum = {
       lua5_1 = "lua51Packages";
       lua5_2 = "lua52Packages";
@@ -35,7 +36,7 @@
         };
       }) l_pkg_enum;
       # lua51Packages = final.lua5_1.pkgs;
-      l_pkg_sets = builtins.listToAttrs (prev.lib.mapAttrsToList (n: v: {
+      l_pkg_sets = builtins.listToAttrs (mapAttrsToList (n: v: {
         name = v;
         value = prev.lib.attrByPath [ n "pkgs" ] null final;
       }) l_pkg_enum);
