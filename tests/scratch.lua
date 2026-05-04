@@ -24,14 +24,14 @@ connection_max = 5000
 enabled = true
 ]]
         local data, err = tomlua_default.decode(toml_str)
-        it(err == nil, "Should not error")
-        it(data.owner.name == "Tom Preston-Werner", "Nested table owner.name should be correct")
-        it(data.database.server == "192.168.1.1", "Nested table database.server should be correct")
-        it(eq(data.database.ports, { 8001, 8001, 8002 }), "Nested table database.ports should be correct")
+        ok(err == nil, "Should not error")
+        ok(data.owner.name == "Tom Preston-Werner", "Nested table owner.name should be correct")
+        ok(data.database.server == "192.168.1.1", "Nested table database.server should be correct")
+        ok(eq(data.database.ports, { 8001, 8001, 8002 }), "Nested table database.ports should be correct")
     end)
 
     define("SCRATCH TEST PRINT", function()
-        it(true, "DOING RANDOM STUFF FOR DEBUGGING")
+        ok(true, "DOING RANDOM STUFF FOR DEBUGGING")
 
         -- local toml = tomlua { fancy_tables = false, fancy_dates = true, multi_strings = true }
         -- print()

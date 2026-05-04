@@ -13,6 +13,7 @@
       lua5_2 = "lua52Packages";
       lua5_3 = "lua53Packages";
       lua5_4 = "lua54Packages";
+      lua5_5 = "lua55Packages";
       luajit = "luajitPackages";
       lua = "luaPackages";
     };
@@ -27,6 +28,7 @@
               version = "scm-1";
               knownRockspec = "${self}/${APPNAME}-scm-1.rockspec";
               src = self;
+              checkPhase = "runHook preCheck; runHook preCheck";
               installCheckPhase = ''
                 runHook preInstallCheck
                 luarocks test
@@ -72,10 +74,9 @@
         packages = [ lua ];
         LUA_INCDIR = "${lua}/include";
         LUA = lua.interpreter;
-        GREP = "${pkgs.gnugrep}/bin/grep";
         BEAR = "${pkgs.bear}/bin/bear";
         shellHook = ''
-          make clean bear build
+          make clean bear
           [ "$(whoami)" == "birdee" ] && exec zsh
         '';
       };
