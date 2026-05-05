@@ -288,10 +288,13 @@ if not fn then
     fn = function (...)
         local res = {}
         for _, v in ipairs({...}) do
+            local err
             if dont_read then
-                res = tomlua.decode(read_file(v), res)
+                res, err = tomlua.decode(read_file(v), res)
+                assert(not err, ("failed to decode file '%s': %s"):format(v, err))
             else
-                res = tomlua.decode(v, res)
+                res, err = tomlua.decode(v, res)
+                assert(not err, ("failed to decode file: %s"):format(err))
             end
         end
         return res
@@ -300,12 +303,16 @@ end
 local result = fn((unpack or table.unpack)(inputs))
 if result then
     if outpath then
+        local v, msg = tomlua.encode(result)
+        assert(not msg, ("failed to encode result: %s"):format(msg))
         local f, err = io.open(outpath, "wb")
         assert(f, ("failed to open file '%s' for writing: %s"):format(outpath, err))
-        local success, werr = f:write(tomlua.encode(result))
+        local success, werr = f:write(v)
         f:close()
         assert(success, ("failed to write file '%s': %s"):format(outpath, werr))
     else
-        print(tomlua.encode(result))
+        local v, msg = tomlua.encode(result)
+        assert(not msg, ("failed to encode result: %s"):format(msg))
+        io.write(v)
     end
 end
