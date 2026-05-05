@@ -31,13 +31,18 @@
           pname = APPNAME;
           version = "${(finalAttrs.passthru.luaModule or lua).luaversion}.dev";
           src = self;
-          LUA = (finalAttrs.passthru.luaModule or lua).interpreter;
-          LUA_INC = (finalAttrs.passthru.luaModule or lua) + "/include";
+          doCheck = false;
+          __structuredAttrs = true;
+          strictDeps = true;
           propagatedBuildInputs = [ (finalAttrs.passthru.luaModule or lua) ];
-          BINDIR = placeholder "out" + "/bin";
-          LIBDIR = placeholder "out" + "/lib/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
-          LUADIR = placeholder "out" + "/share/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
-          LIBFLAG = if (finalAttrs.passthru.luaModule or lua).stdenv.isDarwin then "-bundle -undefined dynamic_lookup" else "-shared";
+          env = {
+            LUA = (finalAttrs.passthru.luaModule or lua).interpreter;
+            LUA_INC = (finalAttrs.passthru.luaModule or lua) + "/include";
+            BINDIR = placeholder "out" + "/bin";
+            LIBDIR = placeholder "out" + "/lib/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
+            LUADIR = placeholder "out" + "/share/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
+            LIBFLAG = if (finalAttrs.passthru.luaModule or lua).stdenv.isDarwin then "-bundle -undefined dynamic_lookup" else "-shared";
+          };
           meta = {
             mainProgram = "tomlua";
             maintainers = [ lib.maintainers.birdee ];
@@ -45,7 +50,6 @@
             homepage = "https://github.com/BirdeeHub/tomlua";
             description = "Speedy toml parsing for lua, implemented in C";
           };
-          doCheck = false;
         }));
       # lua5_1 = prev.lua5_1.override { packageOverrides };
       l_pkg_main = builtins.mapAttrs (
@@ -66,10 +70,12 @@
       );
     in l_pkg_main // l_pkg_sets // {
       vimPlugins = prev.vimPlugins // {
-        ${APPNAME} = final.vimUtils.toVimPlugin ((final.neovim-unwrapped.lua.pkgs.callPackage luaCallPackageFn {}).overrideAttrs {
-          LIBDIR = placeholder "out" + "/lua";
-          LUADIR = placeholder "out" + "/lua";
-        });
+        ${APPNAME} = final.vimUtils.toVimPlugin ((final.neovim-unwrapped.lua.pkgs.callPackage luaCallPackageFn {}).overrideAttrs (old: {
+          env = (old.env or {}) // rec {
+            LUADIR = placeholder "out" + "/lua";
+            LIBDIR = LUADIR;
+          };
+        }));
       };
     };
     packages = forAllSys (system: let
