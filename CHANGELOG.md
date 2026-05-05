@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/BirdeeHub/tomlua/compare/v1.1.0...v1.1.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* **fix_shebang:** now fixed ([1b04dba](https://github.com/BirdeeHub/tomlua/commit/1b04dba78ab76a98cafd4a493b9898c28b9ac1a1))
+* **fix_shebang:** now fixed ([31eca51](https://github.com/BirdeeHub/tomlua/commit/31eca514236017cf82e045471583bfe14bfbc5e0))
+
 ## [1.1.0](https://github.com/BirdeeHub/tomlua/compare/v1.0.2...v1.1.0) (2026-05-05)
 
 
