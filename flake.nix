@@ -37,6 +37,8 @@
           BINDIR = placeholder "out" + "/bin";
           LIBDIR = placeholder "out" + "/lib/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
           LUADIR = placeholder "out" + "/share/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
+          meta.mainProgram = "tomlua";
+          meta.maintainers = [ lib.maintainers.birdee ];
           doCheck = false;
         }));
       # lua5_1 = prev.lua5_1.override { packageOverrides };
