@@ -26,7 +26,7 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 Basic benchmarking shows promising results:
 
 * Slightly slower than `cjson` (2x longer), despite parsing TOML instead of JSON.
-* Around 7x faster than `toml_edit` for parsing (not accounting for the added ability to read directly into an existing lua table).
+* Significantly faster than `toml_edit` (not accounting for the added ability to read directly into an existing lua table).
 
 ## Installation
 
