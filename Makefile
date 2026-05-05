@@ -28,7 +28,9 @@ LUADIR       ?= $(PREFIX)/lua
 LIBDIR       ?= $(PREFIX)/lib
 endif
 
-FIX_SHEBANG  := io.write(string.format("\#!%s%cpackage.cpath = %q .. [[/?.so;]] .. package.cpath%c-- ", arg[1], 10, arg[2], 10))
+define FIX_SHEBANG
+io.write(string.format("#!%s%cpackage.cpath = %q .. [[/?.so;]] .. package.cpath%c-- ", arg[1], 10, arg[2], 10))
+endef
 
 check_lua_incdir = \
 	@if [ -z "$(LUA_INCDIR)" ]; then \
@@ -99,9 +101,9 @@ endif
 ifdef BINDIR
 	@mkdir -p "$(BINDIR)";
 ifeq ($(filter /%,$(LUA)),)
-	@echo '$(FIX_SHEBANG)' | $(LUA) - "/usr/bin/env $(LUA)" "$(LIBDIR)" > "$(BINDIR)/tomlua"
+	@echo '$(FIX_SHEBANG)' | $(LUA) - "/usr/bin/env $(LUA)" "$(abspath $(LIBDIR))" > "$(BINDIR)/tomlua"
 else
-	@echo '$(FIX_SHEBANG)' | $(LUA) - "$(LUA)" "$(LIBDIR)" > "$(BINDIR)/tomlua"
+	@echo '$(FIX_SHEBANG)' | $(LUA) - "$(LUA)" "$(abspath $(LIBDIR))" > "$(BINDIR)/tomlua"
 endif
 	@cat "$(SRC)/bin/tomlua" >> "$(BINDIR)/tomlua";
 	@chmod +x "$(BINDIR)/tomlua";
