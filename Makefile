@@ -28,7 +28,7 @@ LUADIR       ?= $(PREFIX)/lua
 LIBDIR       ?= $(PREFIX)/lib
 endif
 
-FIX_SHEBANG  := print(string.format("\#!%s\\npackage.cpath = %q .. [[/?.so;]] .. package.cpath\\n-- ", arg[1], arg[2]))
+FIX_SHEBANG  := io.write(string.format("\#!%s%cpackage.cpath = %q .. [[/?.so;]] .. package.cpath%c-- ", arg[1], 10, arg[2], 10))
 
 check_lua_incdir = \
 	@if [ -z "$(LUA_INCDIR)" ]; then \
