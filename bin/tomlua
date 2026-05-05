@@ -1,0 +1,311 @@
+#!/usr/bin/env lua
+
+---@type fun(default_action: fun(has_arg: boolean, name: string, val?: string), parse_end_action: fun(string), flags: table<string, { arg?: boolean|"bool", action?: fun(has_arg: boolean, v?: string), desc?: string }>, tail_usage_str?: string)
+local function argus(default_action, parse_end_action, flags, tail_usage_str)
+    -- Auto-insert --help flag
+    if not flags.help then
+        flags.help = {
+            arg = false,
+            desc = "Show this help message and exit",
+            action = function(_, _)
+                print("Usage: " .. arg[0] .. " [OPTIONS] [-- " .. (tail_usage_str or "[ ... ]") .. "]")
+                print()
+                print("Options:")
+                local names = {}
+                for name in pairs(flags) do
+                    table.insert(names, name)
+                end
+                table.sort(names)
+                for _, name in ipairs(names) do
+                    local info = flags[name]
+                    local arg_spec = ""
+                    if info.arg == true then
+                        arg_spec = " <value>"
+                    elseif info.arg == "bool" then
+                        arg_spec = " [true|false]"
+                    end
+                    local desc = info.desc or ""
+                    if type(desc) == "table" then
+                        print(("  --%-35s %s"):format(name .. arg_spec, desc[1]))
+                        for i = 2, #desc do
+                            print(("    %-35s %s"):format("", desc[i]))
+                        end
+                    else
+                        print(("  --%-35s %s"):format(name .. arg_spec, desc))
+                    end
+                    print()
+                end
+                os.exit(0)
+            end
+        }
+    end
+    if #arg == 0 then
+        flags.help.action(false)
+        os.exit(0)
+    end
+    local parse_end = false
+    local skip = false
+    for i = 1, #arg do
+        local v = arg[i]
+        if parse_end then
+            if parse_end_action then
+                parse_end_action(v)
+            end
+        else
+            if skip then
+                skip = false
+            else
+                if v:sub(1, 2) == "--" then
+                    if v == "--" then
+                        parse_end = true
+                    else
+                        local name = v:sub(3)
+                        local flag_info = flags[name]
+                        if not flag_info then
+                            error("unknown flag: " .. v)
+                        end
+                        local arg_type = flag_info.arg
+                        local has_arg = false
+                        local arg_val = nil
+                        if arg_type == "bool" then
+                            if i < #arg then
+                                local next_v = arg[i+1]
+                                if next_v:sub(1, 2) ~= "--" or (next_v ~= "--" and not flags[next_v:sub(3)]) then
+                                    has_arg = true
+                                    arg_val = next_v
+                                    skip = true
+                                end
+                            end
+                        elseif arg_type == true then
+                            if i >= #arg then
+                                error("flag --" .. name .. " requires an argument")
+                            end
+                            local next_v = arg[i+1]
+                            if next_v:sub(1, 2) == "--" and (next_v == "--" or flags[next_v:sub(3)]) then
+                                error("flag --" .. name .. " requires an argument")
+                            end
+                            has_arg = true
+                            arg_val = next_v
+                            skip = true
+                        end
+                        if flag_info.action then
+                            flag_info.action(has_arg, arg_val)
+                        else
+                            default_action(has_arg, name, arg_val)
+                        end
+                    end
+                else
+                    error("positional arg before --")
+                end
+            end
+        end
+    end
+end
+
+local cfg = package.config:gmatch("([^\n]+)")
+local dirsep, pathsep, pathmark = cfg() or "/", cfg() or ";", cfg() or "?"
+local dircat = function(...) return table.concat({...}, dirsep) end
+local pathcat = function(...) return table.concat({...}, pathsep) end
+local opts = { fancy_dates = true }
+local files = {}
+local outpath = nil
+local dont_read = false
+---@type false|string
+local command = false
+---@type false|string
+local script = false
+local flags = {
+    int_keys = {
+        arg = "bool",
+        desc = "Support reading mixed tables (Careful!)"
+    },
+    fancy_dates = {
+        arg = "bool",
+        desc = {
+            "Enable proper date/time handling in input (default: true)",
+            "Unlike the normal lua library, defaults to `true` to allow dates to survive round-trip encoding by default.",
+        },
+        action = function (has_arg, v)
+            if has_arg then
+                opts.fancy_dates = v == "true"
+            else
+                opts.fancy_dates = true
+            end
+        end,
+    },
+    mark_inline = {
+        arg = "bool",
+        desc = "Mark tables as inline for output"
+    },
+    multi_strings = {
+        arg = "bool",
+        desc = "Mark multi-line strings as multi-line for output"
+    },
+    overflow_errors = {
+        arg = "bool",
+        desc = "Report overflow errors"
+    },
+    underflow_errors = {
+        arg = "bool",
+        desc = "Report underflow errors"
+    },
+    fancy_tables = {
+        arg = "bool",
+        desc = "Allow reading inline toml tables that are multi-line and with optional trailing commas"
+    },
+
+    ldir = {
+        arg = true,
+        desc = "Add directory to Lua module search path",
+        action = function (_, v)
+            package.path = pathcat(package.path, dircat(v, pathmark .. ".lua"), dircat(v, pathmark, "init.lua"))
+        end
+    },
+    cdir = {
+        arg = true,
+        desc = "Add directory to Lua C module search path",
+        action = function (_, v)
+            package.cpath = pathcat(package.cpath, dircat(v, pathmark .. ".so"))
+        end
+    },
+    lpath = {
+        arg = true,
+        desc = "Append to Lua module search path",
+        action = function (_, v)
+            package.path = pathcat(package.path, v)
+        end
+    },
+    lcpath = {
+        arg = true,
+        desc = "Append to Lua C module search path",
+        action = function (_, v)
+            package.cpath = pathcat(package.cpath, v)
+        end
+    },
+
+    cmd = {
+        arg = true,
+        desc = {
+            "Execute Lua command string, exclusive with --script.",
+            "Recieves file content (or paths if --dont_read) via ... arguments, return a value to auto re-encode",
+        },
+        action = function (_, v)
+            command = v
+        end
+    },
+    script = {
+        arg = true,
+        desc = {
+            "Execute Lua script file, exclusive with --cmd.",
+            "Recieves file content (or paths if --dont_read) via ... arguments, return a value to auto re-encode",
+        },
+        action = function (_, v)
+            script = v
+        end
+    },
+
+    output = {
+        arg = true,
+        desc = "Output file path (default: stdout)",
+        action = function (_, v)
+            outpath = v
+        end
+    },
+
+    file = {
+        arg = true,
+        desc = "Input file (can be specified multiple times)",
+        action = function (_, v)
+            table.insert(files, v)
+        end
+    },
+
+    dont_read = {
+        arg = "bool",
+        desc = "Do not pre-read files before passing them to --cmd or --script options (default: false)",
+        action = function (has_arg, v)
+            if has_arg then
+                dont_read = v ~= "false"
+            else
+                dont_read = true
+            end
+        end
+    },
+}
+
+
+argus(function(has_arg, n, v)
+    if has_arg then
+        opts[n] = v ~= "false"
+    else
+        opts[n] = true
+    end
+end, function(v)
+    table.insert(files, v)
+end, flags, "[FILES...]")
+
+
+if command and script then
+    error("cannot specify both --cmd and --script")
+end
+local ok, tomlua_pre = pcall(require, "tomlua")
+if ok then
+    _G.tomlua = tomlua_pre(opts)
+else
+    package.cpath = pathcat(dircat(".", "build", "lib", pathmark .. ".so"), package.cpath)
+    ok, tomlua_pre = pcall(require, "tomlua")
+    if ok then
+        _G.tomlua = tomlua_pre(opts)
+    else
+        error("cannot load tomlua!")
+    end
+end
+
+local function read_file(path)
+  local f, err = io.open(path, "rb")
+  assert(f, ("failed to open file '%s': %s"):format(path, err))
+  local content = f:read("*a")
+  f:close()
+  return content
+end
+
+local inputs = {}
+if dont_read then
+    inputs = files
+else
+    for _, f in ipairs(files) do
+        table.insert(inputs, read_file(f))
+    end
+end
+
+local fn
+if command then
+    fn = (loadstring or load)(command)
+elseif script then
+    fn = (script and loadfile)(script)
+end
+if not fn then
+    fn = function (...)
+        local res = {}
+        for _, v in ipairs({...}) do
+            if dont_read then
+                res = tomlua.decode(read_file(v), res)
+            else
+                res = tomlua.decode(v, res)
+            end
+        end
+        return res
+    end
+end
+local result = fn((unpack or table.unpack)(inputs))
+if result then
+    if outpath then
+        local f, err = io.open(outpath, "wb")
+        assert(f, ("failed to open file '%s' for writing: %s"):format(outpath, err))
+        local success, werr = f:write(tomlua.encode(result))
+        f:close()
+        assert(success, ("failed to write file '%s': %s"):format(outpath, werr))
+    else
+        print(tomlua.encode(result))
+    end
+end

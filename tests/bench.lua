@@ -4,7 +4,7 @@ return function(test_dir, iterations, run_toml_edit)
     local inspect = require('inspect')
     local cjson = require("cjson.safe")
 
-    local f = io.open(test_dir .. "/example.toml", "r")
+    local f = io.open(test_dir .. "example.toml", "r")
     local contents
     if f then
         contents = f:read("*a")

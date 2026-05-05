@@ -13,6 +13,7 @@ It is not intended to replace packages like [toml\_edit](https://github.com/nvim
 * Compatible with Lua 5.1+.
 * Some advanced TOML compliance features are optional (`fancy_dates`, etc.).
 * Allows you to read directly into an existing lua table of defaults. This cuts out the step of merging them yourself, making it even more performant and easier to use!
+* Command for using the library from the command line. (`tomlua --help` to see the list of options).
 
 ## Limitations
 

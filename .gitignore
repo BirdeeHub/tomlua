@@ -1,4 +1,6 @@
 **/result
-**/lib
+**/result-*
+**/repl-result-*
 **/.cache
+build/
 **/compile_commands.json
