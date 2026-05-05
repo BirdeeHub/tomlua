@@ -28,7 +28,7 @@ LUADIR       ?= $(PREFIX)/lua
 LIBDIR       ?= $(PREFIX)/lib
 endif
 
-BENCH_ITERS  ?= 100000
+FIX_SHEBANG  := print(string.format("\#!%s\\npackage.cpath = %q .. [[/?.so;]] .. package.cpath\\n-- ", arg[1], arg[2]))
 
 check_lua_incdir = \
 	@if [ -z "$(LUA_INCDIR)" ]; then \
@@ -59,6 +59,8 @@ infile:close();
 outfile:close();
 assert(os.rename(tmp, input));
 endef
+
+BENCH_ITERS  ?= 100000
 
 build: $(SRC)/src/*
 	$(check_lua_incdir)
@@ -97,9 +99,9 @@ endif
 ifdef BINDIR
 	@mkdir -p "$(BINDIR)";
 ifeq ($(filter /%,$(LUA)),)
-	@printf '%s\npackage.cpath = '\''%q/?.so'\''\n-- ' "#!/usr/bin/env $(LUA)" "$(LIBDIR)" > "$(BINDIR)/tomlua";
+	@echo '$(FIX_SHEBANG)' | $(LUA) - "/usr/bin/env $(LUA)" "$(LIBDIR)" > "$(BINDIR)/tomlua"
 else
-	@printf '%s\npackage.cpath = '\''%q/?.so'\''\n-- ' "#!$(LUA)" "$(LIBDIR)" > "$(BINDIR)/tomlua";
+	@echo '$(FIX_SHEBANG)' | $(LUA) - "$(LUA)" "$(LIBDIR)" > "$(BINDIR)/tomlua"
 endif
 	@cat "$(SRC)/bin/tomlua" >> "$(BINDIR)/tomlua";
 	@chmod +x "$(BINDIR)/tomlua";
