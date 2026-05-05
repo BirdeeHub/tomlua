@@ -42,6 +42,7 @@
             mainProgram = "tomlua";
             maintainers = [ lib.maintainers.birdee ];
             license = lib.licenses.mit;
+            homepage = "https://github.com/BirdeeHub/tomlua";
             description = "Speedy toml parsing for lua, implemented in C";
           };
           doCheck = false;
