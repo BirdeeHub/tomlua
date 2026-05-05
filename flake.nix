@@ -37,7 +37,7 @@
           BINDIR = placeholder "out" + "/bin";
           LIBDIR = placeholder "out" + "/lib/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
           LUADIR = placeholder "out" + "/share/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
-          LIBFLAG = if lua.stdenv.isDarwin then "-bundle -undefined dynamic_lookup" else "-shared";
+          LIBFLAG = if (finalAttrs.passthru.luaModule or lua).stdenv.isDarwin then "-bundle -undefined dynamic_lookup" else "-shared";
           meta.mainProgram = "tomlua";
           meta.maintainers = [ lib.maintainers.birdee ];
           doCheck = false;
