@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/BirdeeHub/tomlua/compare/v1.0.2...v1.1.0) (2026-05-05)
+
+
+### Features
+
+* **cli:** bin/tomlua for quick cli access ([9f3b92a](https://github.com/BirdeeHub/tomlua/commit/9f3b92a4005170690d8b74b323b40ca8329b5490))
+* **cli:** tomlua command ([0464f99](https://github.com/BirdeeHub/tomlua/commit/0464f9996ce935fd13e46b99da75d384805c70b2))
+
 ## [1.0.2](https://github.com/BirdeeHub/tomlua/compare/v1.0.1...v1.0.2) (2025-11-04)
 
 
