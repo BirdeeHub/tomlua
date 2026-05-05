@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/BirdeeHub/tomlua/compare/v1.1.2...v1.1.3) (2026-05-05)
+
+
+### Bug Fixes
+
+* **cli:** error handling improvements ([f0c3ff9](https://github.com/BirdeeHub/tomlua/commit/f0c3ff9ca5414b53142a37fa523ef07a61a4bb18))
+* **cli:** error handling improvements ([e9a4091](https://github.com/BirdeeHub/tomlua/commit/e9a4091b26971b1a35f1945aa351acc0905015f5))
+
 ## [1.1.2](https://github.com/BirdeeHub/tomlua/compare/v1.1.1...v1.1.2) (2026-05-05)
 
 
