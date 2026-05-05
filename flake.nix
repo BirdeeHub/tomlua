@@ -38,8 +38,12 @@
           LIBDIR = placeholder "out" + "/lib/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
           LUADIR = placeholder "out" + "/share/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
           LIBFLAG = if (finalAttrs.passthru.luaModule or lua).stdenv.isDarwin then "-bundle -undefined dynamic_lookup" else "-shared";
-          meta.mainProgram = "tomlua";
-          meta.maintainers = [ lib.maintainers.birdee ];
+          meta = {
+            mainProgram = "tomlua";
+            maintainers = [ lib.maintainers.birdee ];
+            license = lib.licenses.mit;
+            description = "Speedy toml parsing for lua, implemented in C";
+          };
           doCheck = false;
         }));
       # lua5_1 = prev.lua5_1.override { packageOverrides };
