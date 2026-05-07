@@ -100,12 +100,16 @@ ifdef LUADIR
 endif
 ifdef BINDIR
 	@mkdir -p "$(BINDIR)";
+ifneq ($(WRAP),false)
 ifeq ($(filter /%,$(LUA)),)
 	@echo '$(FIX_SHEBANG)' | $(LUA) - "/usr/bin/env $(LUA)" "$(abspath $(LIBDIR))" > "$(BINDIR)/tomlua"
 else
 	@echo '$(FIX_SHEBANG)' | $(LUA) - "$(LUA)" "$(abspath $(LIBDIR))" > "$(BINDIR)/tomlua"
 endif
 	@cat "$(SRC)/bin/tomlua" >> "$(BINDIR)/tomlua";
+else
+	@cat "$(SRC)/bin/tomlua" > "$(BINDIR)/tomlua";
+endif
 	@chmod +x "$(BINDIR)/tomlua";
 	@echo "Installed binary to $(BINDIR)";
 endif
