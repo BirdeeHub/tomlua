@@ -21,8 +21,10 @@ build = {
    type = "make",
    build_variables = {
       LUA_INCDIR="$(LUA_INCDIR)",
+      LIBFLAG="$(LIBFLAG)",
    },
    install_variables = {
+      WRAP = "false",
       LIBDIR="$(LIBDIR)",
       BINDIR="$(BINDIR)",
       LUADIR="$(LUADIR)",
@@ -33,16 +35,3 @@ test = {
    type = "command",
    command = "make test",
 }
-
--- How do I specify CFLAGS -O3 and maybe -flto here?
--- build = {
---    type = "builtin",
---    modules = {
---       tomlua = {
---           "./src/tomlua.c",
---           "./src/decode.c",
---           "./src/encode.c",
---           "./src/dates.c",
---       },
---    }
--- }

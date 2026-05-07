@@ -36,8 +36,10 @@ build = {
   copy_directories = $copy_directories,
   build_variables = {
     LUA_INCDIR="$(LUA_INCDIR)",
+    LIBFLAG="$(LIBFLAG)",
   },
   install_variables = {
+    WRAP = "false",
     LIBDIR="$(LIBDIR)",
     BINDIR="$(BINDIR)",
     LUADIR="$(LUADIR)",
