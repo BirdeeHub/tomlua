@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/BirdeeHub/tomlua/compare/v1.1.4...v1.1.5) (2026-05-07)
+
+
+### Bug Fixes
+
+* **ci:** rockspec ([#77](https://github.com/BirdeeHub/tomlua/issues/77)) ([444844a](https://github.com/BirdeeHub/tomlua/commit/444844ab4064d4f6317ea354cfa9146460301cfe))
+
 ## [1.1.4](https://github.com/BirdeeHub/tomlua/compare/v1.1.3...v1.1.4) (2026-05-05)
 
 
