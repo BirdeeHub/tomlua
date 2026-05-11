@@ -42,3 +42,12 @@ define("opts({ int_keys = true }) doesn't copy", function()
     local opts = tomlua.opts()
     ok(type(opts) == "table", "opts when called with no args should return a table")
 end)
+
+define("require('tomlua.env') tests", function()
+    local env = require("tomlua.env")
+    ok(env ~= nil, "tomlua.env should be available")
+    env.TESTVARIABLE = "HELLO"
+    ok(env.TESTVARIABLE == os.getenv("TESTVARIABLE"), "tomlua.env should get the env var")
+    env.TESTVARIABLE = nil
+    ok(env.TESTVARIABLE == os.getenv("TESTVARIABLE"), "tomlua.env should be removed just like the env var")
+end)
