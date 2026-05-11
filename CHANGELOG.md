@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/BirdeeHub/tomlua/compare/v1.1.5...v1.1.6) (2026-05-11)
+
+
+### Bug Fixes
+
+* **change opts:** fix the ability to change opts of current tomlua ([#80](https://github.com/BirdeeHub/tomlua/issues/80)) ([b5a0296](https://github.com/BirdeeHub/tomlua/commit/b5a0296646ca7c58ea679693a355d1c84ba2f640))
+
 ## [1.1.5](https://github.com/BirdeeHub/tomlua/compare/v1.1.4...v1.1.5) (2026-05-07)
 
 
