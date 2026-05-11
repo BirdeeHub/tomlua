@@ -63,7 +63,7 @@ make build LUA_INCDIR=/path/to/lua/includes LUA=luajit
 ```
 
 You may need to pass `LUA_DIR` (e.g. `/usr`) instead, must contain `include` and `lib` directories,
-in which case it will also attempt to detect luajit automatically.
+in which case it will also attempt to detect luajit automatically using the `bin` directory if present.
 
 You can also set `LUA_LIBDIR` and `LUALIB` individually instead, to be passed to `-L` and `-l` flags for the cli binary
 
