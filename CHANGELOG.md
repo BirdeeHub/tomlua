@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/BirdeeHub/tomlua/compare/v1.1.6...v1.2.0) (2026-05-11)
+
+
+### Features
+
+* **all C again:** implemented cli version in C instead of as a lua wrapper script ([#82](https://github.com/BirdeeHub/tomlua/issues/82)) ([337d22b](https://github.com/BirdeeHub/tomlua/commit/337d22b123689b9fe44be9de45f82badd579a864))
+
 ## [1.1.6](https://github.com/BirdeeHub/tomlua/compare/v1.1.5...v1.1.6) (2026-05-11)
 
 
