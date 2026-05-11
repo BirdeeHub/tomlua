@@ -39,7 +39,7 @@ static inline TomluaUserOpts *toml_user_opts_copy(TomluaUserOpts dst, TomluaUser
 }
 
 // negative taridx means all false
-static bool opts_parse(lua_State *L, TomluaUserOpts dst, int taridx, int optidx) {
+static bool opts_parse(lua_State *L, TomluaUserOpts dst, int taridx) {
     if (taridx > 0) {
         luaL_checktype(L, taridx, LUA_TTABLE);
         for (int i = 0; i < TOMLOPTS_LENGTH; i++) {
@@ -50,15 +50,19 @@ static bool opts_parse(lua_State *L, TomluaUserOpts dst, int taridx, int optidx)
     } else {
         memset(dst, false, sizeof(TomluaUserOpts));
     }
-    for (int i = 0; i < TOMLOPTS_LENGTH; i++) {
-        lua_pushboolean(L, dst[i]);
-        lua_setfield(L, optidx, toml_opts_names[i]);
-    }
     return false;
 }
 static int opts_call(lua_State *L) {
     TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
-    opts_parse(L, *opts, 2, 1);
+    if (lua_gettop(L) == 1) {
+        lua_newtable(L);
+        for (int i = 0; i < TOMLOPTS_LENGTH; i++) {
+            lua_pushboolean(L, (*opts)[i]);
+            lua_setfield(L, -2, toml_opts_names[i]);
+        }
+        return 1;
+    }
+    opts_parse(L, *opts, 2);
     return 0;
 }
 static int opts_index(lua_State *L) {
@@ -77,20 +81,15 @@ static int opts_newindex(lua_State *L) {
     TomluaUserOpts *opts = (TomluaUserOpts *)lua_touserdata(L, lua_upvalueindex(1));
     const char *key = luaL_checkstring(L, 2);
     int value = lua_toboolean(L, 3);
-    lua_pop(L, 1);
-    lua_pushboolean(L, value);
     int i = 0;
     while (i < TOMLOPTS_LENGTH) {
         if (strcmp(key, toml_opts_names[i]) == 0) {
             (*opts)[i] = value;
-            break;
+            return 0;
         }
         i++;
     }
-    if (i >= TOMLOPTS_LENGTH) return luaL_error(L, "invalid option '%s'", key);
-    // mirror into table so `print(inspect(opts))` shows it
-    lua_rawset(L, 1);
-    return 0;
+    return luaL_error(L, "invalid option '%s'", key);
 }
 
 
