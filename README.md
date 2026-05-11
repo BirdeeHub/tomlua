@@ -41,27 +41,48 @@ luarocks install tomlua
 * Flake or flakeless support, both methods return according to the [flake outputs schema](https://wiki.nixos.org/wiki/Flakes).
 * Overlay and packages available for Lua versions 5.1+, as well as a neovim plugin.
 * Dev shell included for building via `make`.
-* Not yet on nixpkgs
+* `nix build nixpkgs#${lua,luajit,lua5_${1..5}}.pkgs.tomlua`
 
 ### Using Make
 
-To build and add to your environment:
+Requires a C compiler (GCC, Clang, MinGW). If not gcc, set `CC` as well.
+Run from the root of the repository.
 
-```bash
-# Ensure LUA_INCDIR points to Lua headers directory
-make LUA_INCDIR=/path/to/lua/includes
-
-# Add the resulting module to Lua's package.cpath
-export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/lib/?.so"
-```
-
-* Requires a C compiler (GCC, Clang, MinGW). If not gcc, set CC variable as well
-* You should be in the root of the repository.
-
-If you do not know where your lua headers are, you may use some or all of this command to find out
+If you don't know where your Lua headers are, find them with:
 
 ```bash
 gcc -xc -E -v - <<< '#include <lua.h>' 2>&1 | grep lua.h | head -n 1 | awk '{print $3}' | tr -d '"' | xargs dirname
+```
+
+**Build the library:**
+
+```bash
+make build LUA_INCDIR=/path/to/lua/includes
+# or luajit
+make build LUA_INCDIR=/path/to/lua/includes LUA=luajit
+```
+
+You may need to pass `LUA_DIR` (e.g. `/usr`) instead, must contain `include` and `lib` directories,
+in which case it will also attempt to detect luajit automatically.
+
+You can also set `LUA_LIBDIR` and `LUALIB` individually instead, to be passed to `-L` and `-l` flags for the cli binary
+
+Output goes to `DESTDIR` (defaults to `./build`). The library ends up at `build/lib/tomlua.so` and the CLI binary at `build/bin/tomlua`.
+
+**Add to Lua's `package.cpath` after building:**
+
+```bash
+export LUA_CPATH="$LUA_CPATH;/path/to/tomlua/build/lib/?.so"
+```
+
+**Install Artifacts:**
+
+Install to `PREFIX` (`LIBDIR`, `LUADIR`, `BINDIR`) |
+
+`LUADIR` just contains type definitions for `lua_ls`
+
+```bash
+make install prefix=/path/to/install/location LUADIR=/dev/null
 ```
 
 ### Useage

@@ -35,11 +35,16 @@ build = {
   type = "make",
   copy_directories = $copy_directories,
   build_variables = {
-    LUA_INCDIR="$(LUA_INCDIR)",
     LIBFLAG="$(LIBFLAG)",
+    LUA_BINDIR="$(LUA_BINDIR)",
+    LUA_INCDIR="$(LUA_INCDIR)",
+    LUA="$(LUA)",
+    LUA_VERSION="$(LUA_VERSION)",
+    LUA_LIBDIR="$(LUA_LIBDIR)",
+    LUALIB="$(LUALIB)",
   },
   install_variables = {
-    WRAP = "false",
+    PREFIX="$(PREFIX)",
     LIBDIR="$(LIBDIR)",
     BINDIR="$(BINDIR)",
     LUADIR="$(LUADIR)",
@@ -47,6 +52,6 @@ build = {
 }
 
 test = {
-   type = "command",
-   command = "make test",
+  type = "command",
+  command = "make test",
 }

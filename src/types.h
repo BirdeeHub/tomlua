@@ -280,6 +280,21 @@ static bool buf_push_str(str_buf *buf, const char *str, size_t len) {
     return true;
 }
 
+static bool buf_grow(str_buf *buf, size_t new_cap) {
+    if (!buf) return false;
+    if (new_cap <= buf->cap) {
+        new_cap = buf->cap;
+        return true;
+    }
+    size_t cap = buf->cap;
+    while (cap < new_cap) cap *= 2;
+    char *tmp = (char *)realloc(buf->data, cap * sizeof(char));
+    if (!tmp) return false;
+    buf->data = tmp;
+    buf->cap = cap;
+    return true;
+}
+
 static bool buf_null_terminate(str_buf *buf) {
     if (!buf || buf->len == 0) return false;
     if (buf->len >= buf->cap) {

@@ -26,23 +26,24 @@
     };
     APPNAME = "tomlua";
     overlay = final: prev: let
-      luaCallPackageFn = { toLuaModule, lua, }:
-        toLuaModule (lua.stdenv.mkDerivation (finalAttrs: {
+      luaCallPackageFn = { buildLuarocksPackage, }:
+        buildLuarocksPackage {
           pname = APPNAME;
-          version = "${(finalAttrs.passthru.luaModule or lua).luaversion}.dev";
+          version = "scm-1";
           src = self;
-          doCheck = false;
-          __structuredAttrs = true;
-          strictDeps = true;
-          propagatedBuildInputs = [ (finalAttrs.passthru.luaModule or lua) ];
-          env = {
-            LUA = (finalAttrs.passthru.luaModule or lua).interpreter;
-            LUA_INC = (finalAttrs.passthru.luaModule or lua) + "/include";
-            BINDIR = placeholder "out" + "/bin";
-            LIBDIR = placeholder "out" + "/lib/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
-            LUADIR = placeholder "out" + "/share/lua/" + (finalAttrs.passthru.luaModule or lua).luaversion;
-            LIBFLAG = if (finalAttrs.passthru.luaModule or lua).stdenv.isDarwin then "-bundle -undefined dynamic_lookup" else "-shared";
-          };
+          postConfigure = ''
+            chmod +w "$rockspecFilename"
+            echo "deploy = { wrap_bin_scripts = false, }" >> "$rockspecFilename"
+          '';
+          checkPhase = ''
+            runHook preCheck
+            runHook postCheck
+          '';
+          installCheckPhase = ''
+            runHook preInstallCheck
+            make test
+            runHook postInstallCheck
+          '';
           meta = {
             mainProgram = "tomlua";
             maintainers = [ lib.maintainers.birdee ];
@@ -50,7 +51,7 @@
             homepage = "https://github.com/BirdeeHub/tomlua";
             description = "Speedy toml parsing for lua, implemented in C";
           };
-        }));
+        };
       # lua5_1 = prev.lua5_1.override { packageOverrides };
       l_pkg_main = builtins.mapAttrs (
         n: _: (prev.lib.attrByPath [ n "override" ] null prev) {
@@ -70,12 +71,14 @@
       );
     in l_pkg_main // l_pkg_sets // {
       vimPlugins = prev.vimPlugins // {
-        ${APPNAME} = final.vimUtils.toVimPlugin ((final.neovim-unwrapped.lua.pkgs.callPackage luaCallPackageFn {}).overrideAttrs (old: {
-          env = (old.env or {}) // rec {
-            LUADIR = placeholder "out" + "/lua";
-            LIBDIR = LUADIR;
+        ${APPNAME} = (final.neovimUtils.buildNeovimPlugin {
+          luaAttr = final.neovim-unwrapped.lua.pkgs.${APPNAME};
+        }).overrideAttrs (old: {
+          luarocksConfig = (old.luarocksConfig or {}) // {
+            lua_modules_path = "lua";
+            lib_modules_path = "lua";
           };
-        }));
+        });
       };
     };
     packages = forAllSys (system: let
@@ -94,22 +97,35 @@
   in {
     overlays.default = overlay;
     inherit packages;
-    checks = forAllSys (system: builtins.mapAttrs (_: p: p.overrideAttrs { doCheck = true; }) packages.${system});
+    checks = forAllSys (system: builtins.mapAttrs (_: p: p.overrideAttrs { doInstallCheck = true; }) packages.${system});
     devShells = forAllSys (system: let
       pkgs = getPkgs system [];
       lua = pkgs.luajit.withPackages (lp: [ lp.inspect lp.cjson lp.toml-edit lp.luarocks ]);
-    in {
       default = pkgs.mkShell {
         name = "${APPNAME}-dev";
         packages = [ lua ];
-        LUA_INCDIR = "${lua}/include";
-        LUA = lua.interpreter;
+        LUA_INC = "${lua}/include";
+        LUA = lua.lua.pname;
         BEAR = "${pkgs.bear}/bin/bear";
         shellHook = ''
-          make clean bear
-          [ "$(whoami)" == "birdee" ] && exec zsh
+          ogdir=$(pwd)
+          gitdir="$(git rev-parse --show-toplevel)"
+          if [ -n "$gitdir" ]; then
+            export PREFIX="$gitdir/build/test"
+            cd "$gitdir"
+            make clean bear
+            cd "$ogdir"
+          fi
+          unset gitdir ogdir
         '';
       };
+    in {
+      inherit default;
+      zsh = default.overrideAttrs (old: {
+        shellHook = old.shellHook + ''
+          exec zsh
+        '';
+      });
     });
   };
 }
