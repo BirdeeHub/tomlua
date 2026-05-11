@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/BirdeeHub/tomlua/compare/v1.2.0...v1.2.1) (2026-05-11)
+
+
+### Bug Fixes
+
+* **arg parsing:** optional value args could swallow -- ([#84](https://github.com/BirdeeHub/tomlua/issues/84)) ([c4f9c0d](https://github.com/BirdeeHub/tomlua/commit/c4f9c0dc553124f9feaffa8cac9bef903664f470))
+
 ## [1.2.0](https://github.com/BirdeeHub/tomlua/compare/v1.1.6...v1.2.0) (2026-05-11)
 
 
