@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/BirdeeHub/tomlua/compare/v1.2.1...v1.2.2) (2026-05-11)
+
+
+### Bug Fixes
+
+* **bump version:** README ([#87](https://github.com/BirdeeHub/tomlua/issues/87)) ([cd26f09](https://github.com/BirdeeHub/tomlua/commit/cd26f096b457b92886a660c54bc732cf48d4fb5e))
+
 ## [1.2.1](https://github.com/BirdeeHub/tomlua/compare/v1.2.0...v1.2.1) (2026-05-11)
 
 
