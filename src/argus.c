@@ -126,10 +126,9 @@ int argus_parse(ArgusConfig *config) {
                         if (i + 1 < config->argc) {
                             const char *next = config->argv[i + 1];
                             bool next_is_flag = starts_with_dashdash(next)
-                                && strcmp(next, "--") != 0
                                 && (find_flag(config->flags, next + 2)
-                                    || (!has_help && strcmp(next + 2, "help") == 0));
-                            if (!next_is_flag) {
+                                    || strcmp(next, "--help") == 0);
+                            if (!next_is_flag && strcmp(next, "--") != 0) {
                                 has_arg = true;
                                 arg_val = next;
                                 i++;
