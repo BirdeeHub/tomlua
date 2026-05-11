@@ -76,6 +76,7 @@ TESTDIR         := $(SRC)/tests
 SRCS            := $(SRC)/src/tomlua.c \
                   $(SRC)/src/decode.c \
                   $(SRC)/src/encode.c \
+                  $(SRC)/src/env.c \
                   $(SRC)/src/dates.c
 
 CLI_SRCS        := $(SRC)/src/tomlua_cli.c \

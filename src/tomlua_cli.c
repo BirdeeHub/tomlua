@@ -8,6 +8,7 @@
 #include <string.h>
 
 extern int luaopen_tomlua(lua_State *L);
+extern int luaopen_tomlua_env(lua_State *L);
 
 static void inject_tomlua(lua_State *L) {
     lua_getglobal(L, "package");
@@ -15,6 +16,9 @@ static void inject_tomlua(lua_State *L) {
 
     lua_pushcfunction(L, luaopen_tomlua);
     lua_setfield(L, -2, "tomlua");
+
+    lua_pushcfunction(L, luaopen_tomlua_env);
+    lua_setfield(L, -2, "tomlua.env");
 
     lua_pop(L, 2);
 }
