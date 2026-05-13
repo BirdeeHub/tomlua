@@ -82,10 +82,10 @@ Install to `PREFIX` (`LIBDIR`, `LUADIR`, `BINDIR`) |
 `LUADIR` just contains type definitions for `lua_ls`
 
 ```bash
-make install prefix=/path/to/install/location LUADIR=/dev/null
+make install PREFIX=/path/to/install/location LUADIR=/dev/null
 ```
 
-### Useage
+### Usage
 
 #### Options
 
