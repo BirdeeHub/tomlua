@@ -42,7 +42,22 @@ static int env__index(lua_State *L) {
     return 1;
 }
 
+#define DEPRECATION_WARNING "require('tomlua.env'): deprecation warning:\nThis should not have been added to this library.\nAs such, it has been moved to a new package, `osenv`, at https://github.com/BirdeeHub/lua-osenv\nIn the future it will only be offered there.\n"
+
 int luaopen_tomlua_env(lua_State *L) {
+    lua_getglobal(L, "io");
+    if (lua_istable(L, -1)) {
+        lua_getfield(L, -1, "stderr");
+        if (!lua_isnil(L, -1)) {
+            lua_getfield(L, -1, "write");
+            if (lua_isfunction(L, -1)) {
+                lua_pushvalue(L, -2);  // stderr
+                lua_pushliteral(L, DEPRECATION_WARNING);
+                lua_call(L, 2, 0);
+            }
+        }
+    }
+    lua_settop(L, 0);
     lua_newtable(L); // module table
     lua_newtable(L); // metatable
     lua_pushcfunction(L, env__index);
