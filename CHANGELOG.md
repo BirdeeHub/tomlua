@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/BirdeeHub/tomlua/compare/v1.2.2...v1.2.3) (2026-05-13)
+
+
+### Bug Fixes
+
+* **tomlua.env:** moved to https://github.com/BirdeeHub/lua-osenv ([#89](https://github.com/BirdeeHub/tomlua/issues/89)) ([1fd08a2](https://github.com/BirdeeHub/tomlua/commit/1fd08a2497c184ba284c08a1cb7e9c25227aab62))
+
 ## [1.2.2](https://github.com/BirdeeHub/tomlua/compare/v1.2.1...v1.2.2) (2026-05-11)
 
 
